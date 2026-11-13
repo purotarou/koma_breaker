@@ -348,7 +348,7 @@ function explode(x,y,z,S,o){o=o||{};fxStar(x,y,z,S*3.4,C.white,0.1);fxBall(x,y,z
 fxSmoke(x,y,z,Math.round(5+S*2),S*1.2,o.ink?C.ink:C.smoke,S*2.4);fxSmoke(x,y,z,3,S,C.smokeD,S*2);fxDebris(x,y,z,6,S*4+4,C.ink,0.1*S+0.08);fxBlobs(x,y,z,8,S*4+4,C.ink,0.16);
 if(y<S*1.2+1.2)fxRing(x,0.1,z,S*5.5,C.white,0.32);
 const k=sat(1.3-Math.hypot(x-cam.x,z-cam.z)/45);shake(0.2+0.45*k*Math.min(1.6,S));flash(0.1+0.22*k);stopT(0.04+0.025*S);lines(0.55*k,'#fff');
-if(!o.quiet)sfxAt(o.text||pick(['ドカァン！','ズガァン！','ボカァン！']),x,y+S*0.5,z,{size:60+S*26,st:'boom',life:0.75});snd('boom',S)}
+if(!o.quiet&&(!pl.sp||lim('spx',0.5)))sfxAt(o.text||pick(['ドカァン！','ズガァン！','ボカァン！']),x,y+S*0.5,z,{size:60+S*26,st:'boom',life:0.75});snd('boom',S)}
 // ---- hand-lettered katakana (stroke font) ----
 const KS={'ト':[[[40,6],[40,94]],[[40,36],[82,60]]],'ン':[[[12,18],[40,36]],[[12,90],[48,80],[70,60],[88,24]]],'タ':[[[44,6],[20,44]],[[40,22],[82,22],[68,62],[30,94]],[[34,44],[62,62]]],
 'ハ':[[[38,20],[30,56],[10,88]],[[60,20],[72,54],[92,86]]],'ス':[[[18,14],[78,14],[56,52],[14,90]],[[52,54],[88,90]]],'キ':[[[16,36],[84,24]],[[14,64],[88,52]],[[40,6],[60,94]]],
@@ -380,8 +380,17 @@ for(const k in STY){const g=ctx.createLinearGradient(0,0,0,100);g.addColorStop(0
 function layout(str,size,grow,jit){const L=[];let px=0,i=0;for(const ch of str){const small='ッァィゥォャュ'.includes(ch),s=1+grow*i,adv=size*s*(small?0.62:ch==='！'?0.56:0.9);L.push({p:glyph(ch),x:px+adv*0.5,y:jit?rnd(-0.08,0.08)*size:0,r:jit?rnd(-0.14,0.14):0,s});px+=adv;i++}for(const l of L)l.x-=px/2;L.w=px;return L}
 function drawGlyphs(L,size,st,shadow){ctx.lineJoin='miter';ctx.miterLimit=2.5;for(let pass=shadow?-1:0;pass<3;pass++)for(const l of L){ctx.save();ctx.translate(l.x+(pass<0?size*0.07:0),l.y+(pass<0?size*0.08:0));ctx.rotate(l.r);const s=l.s*size/100;ctx.scale(s,s);ctx.translate(-50,-50);
 if(pass<=0){ctx.strokeStyle=pass<0?st.ink:st.halo;ctx.lineWidth=pass<0?16:26;ctx.stroke(l.p)}else if(pass===1){ctx.strokeStyle=st.ink;ctx.lineWidth=13;ctx.stroke(l.p);ctx.fillStyle=st.ink;ctx.fill(l.p)}else{ctx.fillStyle=st.g;ctx.fill(l.p)}ctx.restore()}}
-function addText(str,x,y,o){o=o||{};const size=o.size||60,L=layout(str,size,o.grow==null?0.09:o.grow,true);x=clamp(x,L.w/2+40,W-L.w/2-40);y=clamp(y,size*0.7+20,H-size*0.7-20);
-const t={L,x,y,size,rot:o.rot==null?rnd(-0.28,0.12):o.rot,life:o.life||0.5,age:0,st:STY[o.st||'fire'],vx:o.vx||0,vy:o.vy||0};texts.push(t);if(texts.length>16)texts.shift();return t}
+let eRects=[],eRectsT=-1;
+function enemyRects(){if(eRectsT===now)return eRects;eRectsT=now;eRects=[];const f=H/2/Math.tan(cam.fov/2);
+for(const e of enemies){if(e.dead)continue;const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)continue;const r=Math.min(c[3]*f/p.w*1.15,e.type==='boss'?330:300);eRects.push([p.x-r,p.y-r*1.3,p.x+r,p.y+r*1.1,e.type==='boss'?1.5:1])}
+for(const o of others){if(o.dead)continue;const p=project(o.x,o.y+1.1,o.z);if(!p)continue;const r=Math.min(1.1*f/p.w,260);eRects.push([p.x-r*0.6,p.y-r*1.2,p.x+r*0.6,p.y+r*1.2,1])}return eRects}
+function ovl(a0,a1,a2,a3,b){const w=Math.min(a2,b[2])-Math.max(a0,b[0]),h=Math.min(a3,b[3])-Math.max(a1,b[1]);return w>0&&h>0?w*h:0}
+function placeText(x0,y0,w,h){const R=enemyRects(),hw=w/2,hh=h/2,CR=[W/2-120,H/2-90,W/2+120,H/2+90,2.5],step=Math.max(70,Math.min(w,h*2)*0.55);let bx=x0,by=y0,bs=1e18;
+for(let ring=0;ring<5;ring++){const n=ring?10:1;for(let k=0;k<n;k++){const a=k/n*TAU+ring*0.4,x=clamp(x0+Math.cos(a)*step*ring*1.4,hw+30,W-hw-30),y=clamp(y0+Math.sin(a)*step*ring*0.9,hh+24,H-hh-24),a0=x-hw,a1=y-hh,a2=x+hw,a3=y+hh;
+let sc=ovl(a0,a1,a2,a3,CR)*CR[4];for(const r of R)sc+=ovl(a0,a1,a2,a3,r)*r[4];for(const t of texts)sc+=ovl(a0,a1,a2,a3,[t.x-t.L.w/2,t.y-t.size*0.6,t.x+t.L.w/2,t.y+t.size*0.6])*0.5;sc+=Math.hypot(x-x0,y-y0)*40;
+if(sc<bs){bs=sc;bx=x;by=y}}if(bs<ring*step*60+1)break}return[bx,by]}
+function addText(str,x,y,o){o=o||{};const size=o.size||60,L=layout(str,size,o.grow==null?0.09:o.grow,true);x=clamp(x,L.w/2+40,W-L.w/2-40);y=clamp(y,size*0.7+20,H-size*0.7-20);if(!o.fixed){const q=placeText(x,y,L.w,size*1.2);x=q[0];y=q[1]}
+const t={L,x,y,size,rot:o.rot==null?rnd(-0.28,0.12):o.rot,life:o.life||0.5,age:0,st:STY[o.st||'fire'],vx:o.vx||0,vy:o.vy||0};texts.push(t);if(texts.length>10)texts.shift();return t}
 function sfxAt(str,x,y,z,o){const p=project(x,y,z);if(!p)return;o=o||{};o.size=(o.size||60)*clamp(14/p.w,0.6,1.25);addText(str,p.x+(o.ox||0),p.y+(o.oy||0),o)}
 function ageTexts(dt){for(let i=texts.length-1;i>=0;i--){const t=texts[i];t.age+=dt;if(t.age>=t.life){texts.splice(i,1);continue}t.x+=t.vx*dt;t.y+=t.vy*dt}}
 function drawTexts(){
@@ -636,7 +645,7 @@ pl.moving=lerp(pl.moving,pl.y>0?0:Math.min(1,Math.hypot(pl.vx,pl.vz)/5),k);pl.bo
 pl.dashCd-=dt;pl.inv-=dt;pl.cool-=dt;pl.flashT-=dt;pl.kick*=Math.exp(-10*dt);pl.rec*=Math.exp(-14*dt);pl.tilt*=Math.exp(-6*dt);
 if(pl.reload>0){pl.reload-=dt;if(pl.reload<=0)pl.ammo=16}if(inp.reload&&!pl.sp)startReload();inp.reload=false;
 if(inp.special&&pl.gauge>=100&&!pl.sp&&!cine){pl.sp=1;pl.spT=0;pl.gauge=0;cutSp=0.6;snd('charge');if(!net.on){slowT=0.55;slowK=0.3}}inp.special=false;
-if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;snd('beam');addText('ズドォォォン！',W/2,H*0.2,{size:96,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1}}
+if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1}}
 else if(pl.sp===2){pl.spT+=dt;trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt);if(pl.spT>0.8)pl.sp=0}
 if(inp.fire&&pl.cool<=0&&pl.reload<=0&&!pl.sp&&!cine){if(pl.ammo>0)shoot();else startReload()}
 pl.gunDip=lerp(pl.gunDip,pl.reload>0?1:0,1-Math.exp(-14*dt))}
@@ -652,7 +661,7 @@ else if(lim('bh'+e.seed,0.07)){fxStar(hx+rnd(-1,1),hy+rnd(-1,1),hz,1.8,C.cyan,0.
 if(isCli()){net.dacc[e.id]=(net.dacc[e.id]||0)+dmg;return}e.hp-=dmg;if(e.hp<=0)kill(e,pl.slot)}
 function killFx(e){const mine=!net.on||e.mine>now-0.7,y=e.type==='lan'?e.y:e.type==='bru'?1.6:0.6;
 if(mine){G.combo++;G.comboT=2.6;G.comboPop=0.3;pl.gauge=Math.min(100,pl.gauge+({imp:6,lan:8,bru:25})[e.type])}
-if(e.type==='imp'){if(e.v)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
+if(e.type==='imp'){if(e.v)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);if(!pl.sp||lim('spx',0.5))sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
 else if(e.type==='lan')explode(e.x,y,e.z,1.1);else{explode(e.x,1.8,e.z,2.3,{text:'ズドォォン！'});fxBlobs(e.x,1.5,e.z,20,10,C.ink,0.25);stopT(0.12);invA=1}
 for(let i=0;i<(e.type==='bru'?8:3);i++)fxOrb(e.x,y,e.z)}
 function kill(e,by){if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;if(!net.on){slowT=2.2;slowK=0.45;stopT(0.2)}musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
