@@ -714,31 +714,37 @@ else{cyl(0,-0.06,0,0.46,0.5,0.46,C.cyan,0,1);cyl(0,0.26,0,0.22,0.18,0.22,C.white
 bill(STAR,it.x+Math.sin(it.t*4)*0.5,y+0.5,it.z+Math.cos(it.t*4)*0.5,0.22,it.t*5,C.white,NF)}
 for(const s of shocks)if(s.r>0.5){put(RING2,s.x,0.16,s.z,0,0,0,s.r*2,1,s.r*2,C.red,0,0,NF);put(RING2,s.x,0.18,s.z,0,0,0,s.r*2-1.4,1,s.r*2-1.4,C.white,0,0,NF)}}
 // ================= NET (MQTT over WebSocket relay) =================
-const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
-{const m=/[?&]mq=([^&]+)/.exec(location.search);if(m)BROKERS.unshift(decodeURIComponent(m[1]))}
-const net={on:false,host:false,ws:null,ready:false,code:'',id:Math.random().toString(36).slice(2,10),slot:0,roster:[],mode:'coop',stage:0,started:false,buf:new Uint8Array(0),st:'',err:'',sendT:0,snapT:0,lobT:0,joinT:0,hostSeen:0,seen:{},evq:[],evseq:0,evDone:0,hq:[],dacc:{},pvAcc:{},q:{f:[],pk:[],kb:[],ps:[]},picked:{},ping:0,input:''};
+const BROKERS=[{u:'wss://broker.emqx.io:8084/mqtt'},{u:'wss://broker.hivemq.com:8884/mqtt'},{u:'wss://test.mosquitto.org:8081/mqtt'},{u:'wss://mqtt.eclipseprojects.io:443/mqtt'},{u:'wss://public.cloud.shiftr.io:443',user:'public',pass:'public'},{u:'wss://broker-cn.emqx.io:8084/mqtt'}];
+{const m=/[?&]mq=([^&]+)/.exec(location.search);if(m)BROKERS.unshift({u:decodeURIComponent(m[1])})}
+const net={on:false,host:false,ws:null,ready:false,code:'',id:Math.random().toString(36).slice(2,10),slot:0,roster:[],mode:'coop',stage:0,started:false,st:'',err:'',sendT:0,snapT:0,lobT:0,joinT:0,hostSeen:0,seen:{},evq:[],evseq:0,evDone:0,hq:[],dacc:{},pvAcc:{},q:{f:[],pk:[],kb:[],ps:[]},picked:{},ping:0,input:'',csp:false,tries:[],gen:0};
+try{document.addEventListener('securitypolicyviolation',()=>{net.csp=true})}catch(e){}
 const te=new TextEncoder(),td=new TextDecoder();
 function mqStr(s){const b=te.encode(s),o=new Uint8Array(b.length+2);o[0]=b.length>>8;o[1]=b.length&255;o.set(b,2);return o}
 function mqPkt(type,parts){let n=0;for(const p of parts)n+=p.length;const len=[];let m=n;do{let d=m%128;m=(m/128)|0;if(m)d|=128;len.push(d)}while(m);const o=new Uint8Array(1+len.length+n);o[0]=type;o.set(len,1);let k=1+len.length;for(const p of parts){o.set(p,k);k+=p.length}return o}
 const netTopic=()=>'komabreaker/v2/r'+net.code;
-function netClose(){if(net.ping)clearInterval(net.ping);net.ping=0;const ws=net.ws;net.ws=null;net.ready=false;if(ws){try{ws.close()}catch(e){}}}
-function netOpen(bi,onReady,onFail){netClose();net.buf=new Uint8Array(0);let ws,done=false;try{ws=new WebSocket(BROKERS[bi],'mqtt')}catch(e){onFail();return}net.ws=ws;ws.binaryType='arraybuffer';
-const fail=()=>{if(done)return;done=true;clearTimeout(to);if(net.ws===ws)net.ws=null;try{ws.close()}catch(e){}onFail()};const to=setTimeout(()=>{if(!done&&!(net.ready&&net.ws===ws))fail()},7000);
-ws.onopen=()=>ws.send(mqPkt(0x10,[mqStr('MQTT'),new Uint8Array([4,2,0,60]),mqStr('kb'+net.id+((Math.random()*1e6)|0))]));
-ws.onmessage=e=>{if(net.ws!==ws)return;let b=new Uint8Array(net.buf.length+e.data.byteLength);b.set(net.buf);b.set(new Uint8Array(e.data),net.buf.length);
- for(;;){if(b.length<2)break;let i=1,mul=1,len=0,ok=false;while(i<b.length&&i<5){const d=b[i++];len+=(d&127)*mul;mul*=128;if(!(d&128)){ok=true;break}}if(!ok||b.length<i+len)break;const t=b[0]>>4,body=b.subarray(i,i+len);
-  if(t===2){if(body[1]!==0){fail();return}ws.send(mqPkt(0x82,[new Uint8Array([0,1]),mqStr(netTopic()),new Uint8Array([0])]))}
-  else if(t===9){if(!done){done=true;clearTimeout(to);net.ready=true;onReady()}}
-  else if(t===3){const tl=(body[0]<<8)|body[1];let m=null;try{m=JSON.parse(td.decode(body.subarray(2+tl)))}catch(er){}if(m&&m.i&&m.i!==net.id){try{netMsg(m)}catch(er){console.error(er)}}}
-  b=b.subarray(i+len)}net.buf=b.slice()};
-ws.onerror=fail;ws.onclose=()=>{if(!done)fail();else if(net.ws===ws&&net.on)netLeave('通信が切断されました')};
-net.ping=setInterval(()=>{if(net.ws===ws&&ws.readyState===1)ws.send(new Uint8Array([0xC0,0]))},25000)}
+function netClose(){net.gen++;if(net.ping)clearInterval(net.ping);net.ping=0;for(const w of net.tries){try{w.close()}catch(e){}}net.tries=[];const ws=net.ws;net.ws=null;net.ready=false;if(ws){try{ws.close()}catch(e){}}}
+// open all listed brokers at once; first one that completes CONNECT+SUBSCRIBE wins
+function netOpen(list,topicFor,onReady,onFail){netClose();const gen=net.gen;let left=list.length,won=false;
+for(const bi of list){const B=BROKERS[bi];let ws,done=false,buf=new Uint8Array(0),to=0;
+ const fail=()=>{if(done)return;done=true;clearTimeout(to);try{ws&&ws.close()}catch(e){}if(--left<=0&&!won&&gen===net.gen)onFail()};
+ try{ws=new WebSocket(B.u,'mqtt')}catch(e){fail();continue}net.tries.push(ws);ws.binaryType='arraybuffer';to=setTimeout(fail,10000);
+ ws.onopen=()=>{const parts=[mqStr('MQTT'),new Uint8Array([4,B.user?0xC2:0x02,0,60]),mqStr('kb'+net.id+((Math.random()*1e5)|0))];if(B.user){parts.push(mqStr(B.user),mqStr(B.pass||''))}ws.send(mqPkt(0x10,parts))};
+ ws.onmessage=e=>{if(gen!==net.gen)return;if(won&&net.ws!==ws)return;let b=new Uint8Array(buf.length+e.data.byteLength);b.set(buf);b.set(new Uint8Array(e.data),buf.length);
+  for(;;){if(b.length<2)break;let i=1,mul=1,len=0,ok=false;while(i<b.length&&i<5){const d=b[i++];len+=(d&127)*mul;mul*=128;if(!(d&128)){ok=true;break}}if(!ok||b.length<i+len)break;const t=b[0]>>4,body=b.subarray(i,i+len);
+   if(t===2){if(body[1]!==0){fail();return}ws.send(mqPkt(0x82,[new Uint8Array([0,1]),mqStr(topicFor(bi)),new Uint8Array([0])]))}
+   else if(t===9&&!done){if(body[2]===0x80){fail();return}done=true;clearTimeout(to);if(won){try{ws.close()}catch(er){}return}won=true;
+    for(const w of net.tries)if(w!==ws){try{w.close()}catch(er){}}net.tries=[];net.ws=ws;net.ready=true;
+    net.ping=setInterval(()=>{if(net.ws===ws&&ws.readyState===1)ws.send(new Uint8Array([0xC0,0]))},20000);onReady(bi)}
+   else if(t===3&&net.ws===ws){const tl=(body[0]<<8)|body[1];let m=null;try{m=JSON.parse(td.decode(body.subarray(2+tl)))}catch(er){}if(m&&m.i&&m.i!==net.id){try{netMsg(m)}catch(er){console.error(er)}}}
+   b=b.subarray(i+len)}buf=b.slice()};
+ ws.onerror=()=>{if(!done)fail()};ws.onclose=()=>{if(!done)fail();else if(net.ws===ws&&net.on&&gen===net.gen)netLeave('通信が切断されました')}}}
+function failMsg(){return net.csp?'この開き方では通信できません。Safariで直接ページを開いてください':'サーバーに接続できませんでした（別のWi-Fi・モバイル回線でもお試しください）'}
 function netSend(o){const ws=net.ws;if(!net.ready||!ws||ws.readyState!==1)return;o.i=net.id;ws.send(mqPkt(0x30,[mqStr(netTopic()),te.encode(JSON.stringify(o))]))}
 function netReset(){Object.assign(net,{roster:[],started:false,seen:{},evq:[],evseq:0,evDone:0,hq:[],dacc:{},pvAcc:{},q:{f:[],pk:[],kb:[],ps:[]},picked:{},err:'',st:'接続中…',hostSeen:now,joinT:0,lobT:0});others.length=0}
-function netHost(){netReset();net.on=true;net.host=true;G.menu='lobby';const tryB=bi=>{if(!net.on)return;if(bi>=BROKERS.length){net.on=false;net.err='サーバーに接続できませんでした';G.menu='online';return}
-net.code=String(bi+1)+String(1000+((Math.random()*9000)|0));netOpen(bi,()=>{net.st='';net.slot=0;pl.slot=0;net.roster=[{id:net.id,slot:0}]},()=>tryB(bi+1))};tryB(0)}
+function netHost(){netReset();net.on=true;net.host=true;G.menu='lobby';const pin=String(1000+((Math.random()*9000)|0)),list=BROKERS.map((_,k)=>k).slice(0,9);
+net.code='';netOpen(list,bi=>'komabreaker/v2/r'+String(bi+1)+pin,bi=>{net.code=String(bi+1)+pin;net.st='';net.slot=0;pl.slot=0;net.roster=[{id:net.id,slot:0}]},()=>{net.on=false;net.err=failMsg();G.menu='online'})}
 function netJoin(code){const bi=+code[0]-1;if(!(bi>=0&&bi<BROKERS.length)||code.length!==5){net.err='コードが正しくありません';return}netReset();net.on=true;net.host=false;net.code=code;G.menu='lobby';
-netOpen(bi,()=>{net.st='部屋を探しています…';net.hostSeen=now},()=>netLeave('サーバーに接続できませんでした'))}
+netOpen([bi],()=>'komabreaker/v2/r'+code,()=>{net.st='部屋を探しています…';net.hostSeen=now},()=>netLeave(failMsg()))}
 function netLeave(err){if(net.ready)netSend({t:'x',h:net.host?1:0});const was=net.on;net.on=false;netClose();others.length=0;net.err=err||'';if(G.state!=='menu'&&G.state!=='title'&&was){resetWorld();G.state='menu'}if(G.state==='menu')G.menu='online';G.mode='solo';G.np=1;G.paused=false}
 const lobbyMsg=()=>({t:'l',r:net.roster.map(r=>[r.id,r.slot]),m:net.mode,s:net.stage,go:net.started});
 function dropPeer(id){const i=net.roster.findIndex(r=>r.id===id);if(i>=0)net.roster.splice(i,1);syncOthers()}
@@ -845,11 +851,11 @@ function drawMenu(dt){ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);fo
 if(mn==='main'){head('モードを選ぼう');B(330,236,620,116,'オフラインで遊ぶ',()=>{G.menu='stage'},{col:'#ffd91a',size:50});B(330,392,620,116,'オンラインで遊ぶ',()=>{G.menu='online';net.err=''},{col:'#59d8ff',size:50});txt('ひとりでじっくり　全２ステージ',640,372,22,'#fff',INK,6);txt('最大４人　協力プレイ／対人対戦',640,528,22,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26})}
 else if(mn==='stage'){head('ステージ選択');for(let n=0;n<2;n++){const x=120+n*540,s=STG[n];btns.push({x,y:206,w:500,h:380,cb:()=>{G.stage=n;startWipe(startGame)}});panel(x,206,500,380);stageArt(n,x+20,226,460,190);para(x+20,430,170,40,12);ctx.fillStyle=n?'#7a3fd0':'#e5402b';ctx.fill();txt(s.sub,x+110,451,24,'#fff');txt(s.name,x+250,500,50,INK);txt(s.desc,x+250,546,20,INK);const hi=getHi(n);txt('ハイスコア '+hi,x+472,451,22,INK,null,0,'right')}
  B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
-else if(mn==='online'){head('オンライン');B(330,236,620,116,'部屋を作る',()=>netHost(),{col:'#ffd91a',size:50});B(330,392,620,116,'部屋に入る',()=>{G.menu='join';net.input='';net.err=''},{col:'#59d8ff',size:50});txt('友だちにルームコードを伝えて、いっしょに遊ぼう（インターネット接続が必要）',640,548,21,'#fff',INK,6);if(net.err)txt(net.err,640,596,28,'#ff5a4d',INK,8);B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
+else if(mn==='online'){head('オンライン');B(330,236,620,116,'部屋を作る',()=>netHost(),{col:'#ffd91a',size:50});B(330,392,620,116,'部屋に入る',()=>{G.menu='join';net.input='';net.err=''},{col:'#59d8ff',size:50});txt('友だちにルームコードを伝えて、いっしょに遊ぼう（インターネット接続が必要）',640,548,21,'#fff',INK,6);if(net.err)txt(net.err,640,596,net.err.length>30?21:28,'#ff5a4d',INK,8);B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
 else if(mn==='join'){head('ルームコード入力');for(let i=0;i<5;i++){ctx.fillStyle='#fff';ctx.fillRect(150+i*88,250,76,100);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(150+i*88,250,76,100);if(net.input[i])txt(net.input[i],188+i*88,302,64,INK)}
  txt('ホストの画面に出ている５けたの数字',368,392,22,'#fff',INK,6);if(net.err)txt(net.err,368,440,26,'#ff5a4d',INK,8);
  ['1','2','3','4','5','6','7','8','9','←','0','OK'].forEach((k,i)=>{const x=690+(i%3)*150,y=200+((i/3)|0)*104;B(x,y,134,90,k,()=>{if(k==='←')net.input=net.input.slice(0,-1);else if(k==='OK'){if(net.input.length===5)netJoin(net.input);else net.err='５けた入力してください'}else if(net.input.length<5)net.input+=k},{sk:0,size:k==='OK'?40:50,col:k==='OK'?'#ffd91a':'#fff'})});B(60,628,220,56,'もどる',()=>{G.menu='online'},{size:26})}
-else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');panel(70,206,520,400);txt('ルームコード',330,238,22,INK);txt(net.code.split('').join(' '),330,290,74,'#e5402b',INK,6);
+else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');panel(70,206,520,400);txt('ルームコード',330,238,22,INK);txt(net.code?net.code.split('').join(' '):'・・・',330,290,74,'#e5402b',INK,6);
  for(let s=0;s<4;s++){const r=net.roster.find(q=>q.slot===s),y=340+s*62;para(100,y,460,50,10);ctx.fillStyle=r?PCSS[s]:'#d8d8e0';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('P'+(s+1),150,y+26,30,'#fff',INK,6);txt(r?(r.id===net.id?'あなた':'参加中')+(s===0?'（ホスト）':''):'― 空き ―',350,y+26,24,r?'#fff':'#8a8a99',r?INK:null,5)}
  panel(640,206,570,400);if(net.st){txt(net.st,925,400,30,INK)}
  else if(net.host){txt('あそびかた',925,238,22,INK);B(670,262,250,70,'協力プレイ',()=>{net.mode='coop';net.lobT=0},{col:net.mode==='coop'?'#ffd91a':'#fff',size:30});B(940,262,250,70,'対人対戦',()=>{net.mode='pvp';net.lobT=0},{col:net.mode==='pvp'?'#ffd91a':'#fff',size:30});
