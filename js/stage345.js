@@ -18,7 +18,7 @@ function along(x0,z0,x1,z1,f){const len=Math.hypot(x1-x0,z1-z0);mPush();mT((x0+x
 // ---------------- Stage 3: 黄昏の町 — a wide wooden bridge over the river at sunset, row houses on both banks ----------------
 function buildStage3Code(){const R=mulberry(31),NF=F_UNLIT|F_NOCAST,G0=-2.2;
 //#river
-box(0,-5,0,1700,1,1700,C.river,7,1);
+box(0,-5,0,1700,1,1700,C.river,0,1);
 for(const s of[-1,1]){box(0,-3.4,s<0?-334:330,1700,2.4,600,C.bank,1);box(0,-3.3,s<0?-33.6:29.6,1700,2.6,0.8,C.stoneD,5)}
 //#bridge
 box(0,-0.35,-2,46.6,0.7,68,C.deck,3);
@@ -255,7 +255,7 @@ for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=200+R()*160,h=40+R()*50,cx=Math.c
 // ---------------- Stage 5: 墨の池 — a pale stone platform in a black ink pond; ink-wash greys, only the seal is red ----------------
 function buildStage5Code(){const R=mulberry(53),NF=F_UNLIT|F_NOCAST;
 //#ink_pond
-box(0,-1.2,0,1700,1,1700,C.inkP,7,1);
+box(0,-1.2,0,1700,1,1700,C.inkP,0,1);
 //#platform
 box(0,-0.4,-2,46.6,0.8,50.6,C.paperS,1);for(const s of[-1,1]){box(s*23.7,0.1,-2,0.8,0.5,51.4,C.inkG,5);box(0,0.1,s<0?-27.7:23.7,48.2,0.5,0.8,C.inkG,5)}
 //#barrier
