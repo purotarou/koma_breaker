@@ -5,7 +5,7 @@
 // fallback when the GLB can't be loaded, ?stageN=code for comparisons, and the reference for tools/check_stage_parity.js.
 // "//#name" comments mark prop groups for tools/dump_stage.js (they become Blender collections).
 Object.assign(C,{
- deck:hex(0xb98552),deckD:hex(0x6f4329),river:hex(0xf0a060),bank:hex(0xa3825c),twall:hex(0xf2dcc0),troof:hex(0x51496a),troofD:hex(0x372f4d),glow:hex(0xffc75a),
+ deck:hex(0xb98552),deckD:hex(0x6f4329),river:hex(0xf0a060),bank:hex(0xa3825c),twall:hex(0xf2dcc0),troof:hex(0x51496a),troofD:hex(0x372f4d),glow:hex(0xffc75a),road:hex(0xd2b98e),
  sun:hex(0xffe08a),cloudP:hex(0xffa88f),cloudV:hex(0xc98bb8),mountP:hex(0x9a6aa0),mountP2:hex(0xc58ea8),hillS:hex(0x9b7f7a),willow:hex(0x86b24c),willowD:hex(0x5f9440),bronze:hex(0xb08a3a),noren:hex(0x2f3f7a),bamboo:hex(0xc9b56a),
  snow:hex(0xf4f7ff),ice:hex(0xbfe9ff),twood:hex(0x6b3f2c),troof4:hex(0x3f4a5e),ochre:hex(0xdcbc7e),bronze4:hex(0x5d6b5c),mountW:hex(0xdfe7f5),mountR:hex(0x8090ae),
  paperS:hex(0xe9e5da),inkG:hex(0x56545e),inkM:hex(0x8d8c94),inkL:hex(0xb9b8bf),inkP:hex(0x141218),seal:hex(0xd9262c),ropeG:hex(0xbdb8aa)});
@@ -39,11 +39,37 @@ const tower=(x,z)=>{const h=15;for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])p
  box(x,G0+h-0.5,z,2.8,0.2,2.8,C.deck,3);for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])cyl(x+dx*1.2,G0+h+0.5,z+dz*1.2,0.14,1.9,0.14,C.deckD);
  put(PYR,x,G0+h+2.0,z,0,0,0,3.8,1.6,3.8,C.troofD);put(CONE,x,G0+h+0.6,z,0,0,0,0.6,0.8,0.6,C.bronze,0,.8);
  for(const s of[-1,1])put(CYL,x+s*0.45,G0+h/2-0.6,z+1.9,-0.12,0,0,0.12,h-1,0.12,C.deck);for(let i=1;i<7;i++)box(x,G0+i*2,z+1.98-i*0.24,0.9,0.1,0.14,C.deck)};
-tower(-16,-42);tower(16,-42);
+tower(-20,-40);tower(20,-40);tower(34,52);
 //#houses
-const house=(x,z,w,d,h,face)=>{box(x,G0+h/2,z,w,h,d,C.twall);box(x,G0+0.6,z,w+0.04,1.2,d+0.04,C.wood,2);put(PRISM,x,G0+h+1.0,z,0,PI/2,0,d+1.4,2.0,w+0.6,R()<.5?C.troof:C.troofD,3);
- box(x+(R()-0.5)*w*0.4,G0+h*0.62,z+face*(d/2+0.02),w*0.32,0.9,0.08,C.glow,0,0,F_UNLIT);if(R()<0.25)sph(x+(R()-0.5)*w*0.5,G0+h+1.5,z,w*0.32,0.8,d*0.5,C.ink)};
-for(const[zf,face]of[[-39.5,1],[35.5,-1]])for(const s of[-1,1]){let x=27;while(x<108){const w=8+R()*6,cx=s*(x+w/2);house(cx,zf,w,7,3.2+R()*0.8,face);if(R()<0.8)house(cx+(R()-0.5)*3,zf-face*8.5,w*0.9,7,5.2+R()*1.2,face);x+=w+0.6+R()*1.5}}
+// a row house / shop in its own frame: width along local x, front (the street side) at local +z.
+// kind 0 = river-front house, 1 = shop on the main street (sign, lantern), 2 = plain house in the back row
+const bldg=(x,z,ry,w,d,h,kind)=>{mPush();mT(x,G0,z);mRY(ry);box(0,h/2,0,w,h,d,C.twall);box(0,0.6,0,w+0.04,1.2,d+0.04,C.wood,2);
+ put(PRISM,0,h+1.0,0,0,PI/2,0,d+1.4,2.0,w+0.6,R()<.5?C.troof:C.troofD,3);
+ if(kind<2){box(0,1.35,d/2+0.03,w*0.72,1.7,0.06,C.deckD,2);put(BOX,0,2.75,d/2+0.6,0.32,0,0,w+0.3,0.12,1.3,C.troofD,3);
+  box((R()-0.5)*w*0.3,1.95,d/2+0.1,1.8,0.9,0.04,[C.noren,C.red,C.white,C.orange][(R()*4)|0]);
+  if(h>4.5)box(0,h-1.3,d/2+0.03,w*0.5,0.7,0.07,C.glow,0,0,F_UNLIT)
+  else box(w*0.28,2.1,d/2+0.04,w*0.18,0.5,0.06,C.glow,0,0,F_UNLIT);
+  if(kind===1){box(-w/2+0.6,1.6,d/2+1.0,0.1,2.4,0.55,C.paper);if(R()<0.5)chochin(w/2-0.8,1.7,d/2+0.7,R()<.5?C.red:C.lant,F_UNLIT)}}
+ else box(0,h*0.6,d/2+0.02,w*0.32,0.9,0.08,C.glow,0,0,F_UNLIT);
+ if(R()<0.2)sph((R()-0.5)*w*0.5,h+1.5,0,w*0.32,0.8,d*0.5,C.ink);mPop()};
+for(const[zf,face]of[[-39.5,1],[35.5,-1]])for(const s of[-1,1]){let x=27;while(x<104){const w=8+R()*6,cx=s*(x+w/2);bldg(cx,zf,face>0?0:PI,w,7,3.4+R()*0.8,0);if(R()<0.8)bldg(cx+(R()-0.5)*3,zf-face*8.5,face>0?0:PI,w*0.9,7,5.2+R()*1.2,2);x+=w+0.6+R()*1.5}}
+//#main_road
+box(0,0.03,-2,9,0.06,68,C.stoneL,1);for(const s of[-1,1])box(s*4.6,0.07,-2,0.3,0.14,68,C.deckD);
+box(0,-2.15,-169,9.4,0.1,270,C.road,1);box(0,-2.15,166,9.4,0.1,272,C.road,1);put(CYL,0,-2.14,-62,0,0,0,15,0.1,15,C.road,1);
+//#street_houses
+for(const[z0,z1]of[[-44,-55],[-69,-118],[38,96]])for(const s of[-1,1]){let z=z0;const dir=z1>z0?1:-1;while(dir>0?z<z1:z>z1){const w=7+R()*3.5;bldg(s*8.6,z+dir*w/2,s>0?-PI/2:PI/2,w,7,R()<0.75?5.4+R()*1.2:3.8,1);
+ if(R()<0.4)bldg(s*17.4,z+dir*w/2,s>0?-PI/2:PI/2,w*0.95,7,4.6+R()*1.4,2);z+=dir*(w+0.4)}}
+//#street_lanterns
+for(const[z0,z1]of[[-40,-112],[34,90]])for(let z=z0;Math.abs(z)<=Math.abs(z1);z+=(z1>z0?1:-1)*14)for(const s of[-1,1]){if(Math.abs(z+62)<9)continue;cyl(s*5.3,-1.4,z,0.14,1.6,0.14,C.deckD);box(s*5.3,-0.35,z,0.55,0.6,0.55,C.glow,0,0,F_UNLIT);put(PYR,s*5.3,0.05,z,0,0,0,0.8,0.25,0.8,C.troofD)}
+//#festival_yagura
+{const x=0,z=-62,b=G0,top=[x,b+10.4,z];for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])box(x+dx*3.6,b+4.5,z+dz*3.6,0.5,9,0.5,C.deckD);
+ box(x,b+5,z,8.4,0.4,8.4,C.deck,3);for(let k=0;k<4;k++)for(let i=0;i<8;i++){const u=-3.5+i,c=i%2?C.white:C.red;if(k<2)box(x+u,b+2.55,z+(k?3.85:-3.85),1.0,4.5,0.06,c);else box(x+(k>2?3.85:-3.85),b+2.55,z+u,0.06,4.5,1.0,c)}
+ for(const s of[-1,1]){box(x,b+5.8,z+s*4.1,8.4,0.14,0.14,C.deckD);box(x+s*4.1,b+5.8,z,0.14,0.14,8.4,C.deckD)}
+ for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])cyl(x+dx*2.2,b+7.0,z+dz*2.2,0.18,3.6,0.18,C.deckD);put(PYR,x,b+9.6,z,0,0,0,6.6,2.0,6.6,C.troofD);put(CONE,x,b+10.9,z,0,0,0,0.4,0.8,0.4,C.bronze,0,.8);
+ put(CYL,x,b+6.0,z,0,0,PI/2,1.8,1.6,1.8,C.red);put(CYL,x,b+6.0,z,0,0,PI/2,1.4,1.64,1.4,C.paper);
+ for(const[ex,ez]of[[-6.4,-55.5],[6.4,-55.5],[-6.4,-68.5],[6.4,-68.5],[0,-50],[0,-74]]){const e=[ex,b+4.2,ez],dx=e[0]-top[0],dy=e[1]-top[1],dz=e[2]-top[2],hl=Math.hypot(dx,dz),l=Math.hypot(hl,dy);
+  mPush();mT((top[0]+e[0])/2,(top[1]+e[1])/2,(top[2]+e[2])/2);mRY(Math.atan2(-dz,dx));mRZ(Math.atan2(dy,hl));put(CYL,0,0,0,0,0,PI/2,0.05,l,0.05,C.black);mPop();
+  for(let i=1;i<=5;i++){const t=i/6;sph(top[0]+dx*t,top[1]+dy*t-0.35,top[2]+dz*t,0.48,0.6,0.48,i%2?C.red:C.glow,6,0,F_UNLIT)}}}
 //#willows
 const willow=(x,z,s)=>{put(CYL,x,G0+2.2*s,z,0,0,0.12,0.5*s,4.4*s,0.5*s,C.trunk,9);for(let i=0;i<6;i++){const a=i/6*TAU+R(),r=1.3*s;put(CONE,x+0.5*s+Math.cos(a)*r,G0+3.4*s,z+Math.sin(a)*r,PI,0,0,1.5*s,3.6*s,1.5*s,i%2?C.willow:C.willowD,8,0,F_SWAY)}sph(x+0.5*s,G0+4.9*s,z,2.6*s,1.2*s,2.6*s,C.willowD,8,0,F_SWAY)};
 for(const s of[-1,1]){willow(s*31,-35.4,1.1);willow(s*62,-35.4,1);willow(s*33,31.4,1);willow(s*70,31.4,1.1)}
