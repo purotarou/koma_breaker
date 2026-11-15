@@ -136,7 +136,7 @@ if(mine){G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.
 if(e.type==='imp'){if(e.v)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);if(!pl.sp||lim('spx',0.5))sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
 else if(e.type==='lan')explode(e.x,y,e.z,1.1);else{explode(e.x,1.8,e.z,2.3,{text:'ズドォォン！'});fxBlobs(e.x,1.5,e.z,20,10,C.ink,0.25);stopT(0.12);invA=1}
 for(let i=0;i<(e.type==='bru'?8:3);i++)fxOrb(e.x,y,e.z)}
-function kill(e,by){if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
+function kill(e,by){if(e.monk&&e.phase<2&&e.st!=='die'){e.hp=Math.max(1,e.mhp*0.5-1);monkBreak(e);return}if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
 if(e.dead)return;e.dead=true;G.kills++;if(by>=0)G.pk[by]++;G.score+=({imp:100,lan:150,bru:500})[e.type]*(10+Math.min(G.combo,10))/10|0;killFx(e);
 if(boss===null&&Math.random()<(e.type==='bru'?1:0.12))spawnItem((Math.random()*3)|0,e.x,e.z);
 if(e.v){areaHurt(e.x,e.z,2.8,14);for(const o of enemies)if(!o.dead&&o.type!=='boss'&&Math.hypot(o.x-e.x,o.z-e.z)<3.8){o.hp-=70;o.flash=0.1;if(o.hp<=0)kill(o,by)}}}

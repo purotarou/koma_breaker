@@ -69,6 +69,7 @@ const contact=d=>{for(const p of allP())if(Math.hypot(p.x-b.x,p.z-b.z)<MK_R+0.7&
 if(b.st==='drop'){const u=(b.stT-1.0)/0.9;if(u<0)return;const k=Math.min(1,u);b.x=0;b.z=lerp(-42,-18,k);b.y=lerp(16,0,k)+Math.sin(k*PI)*8;b.yaw=0;
  if(u>=1){b.y=0;b.st='roar';b.stT=0;ev('mland',0,-18,0,1)}return}
 if(b.st==='die'){b.y=Math.max(0,b.y-dt*14);monkDieFx(b);if(b.stT>BDIE_END){ev('mend',r1(b.x),r1(b.z));b.dead=true;G.endT=0;G.score+=5000;G.kills++}return}
+if(b.phase<2&&b.hp<b.mhp*0.5&&b.st!=='die'&&b.st!=='break'&&b.st!=='air'){monkBreak(b);return}
 if(b.st==='roar'){if(b.stT>1.5){b.st='idle';b.stT=0;b.cdT=0.4}return}
 if(b.st==='break'){if(b.stT>1.8){b.st='idle';b.stT=0;b.cdT=0.2}return}
 if(b.st==='stun'){if(b.stT>1.9){b.st='idle';b.stT=0;b.cdT=0.25;b.rcd=1.2}return}
