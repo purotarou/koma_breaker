@@ -48,7 +48,7 @@ for(const[x,z]of[[-1.5,-1.1],[1.5,-1.1],[-1.5,1.1],[1.5,1.1]])box(15+x,1.4,9+z,0
 for(const[bx,by]of[[-1.3,0.6],[0,0.6],[1.3,0.6],[-0.65,1.72],[0.65,1.72],[0,2.84]]){put(CYL,-17.5,by,10+bx,0,0,PI/2,1.2,1.1,1.2,C.paper,6);put(CYL,-17.5,by,10+bx,0,0,PI/2,1.24,0.3,1.24,C.red)}colB.push({x0:-18.2,x1:-16.8,z0:8,z1:12,h:3.4});
 [C.flag1,C.flag2,C.flag3,C.flag1].forEach((c,i)=>{nobori(-3.5,-12+i*7,c);nobori(3.5,-12+i*7,i%2?C.flag1:C.flag2)});
 // forest
-for(let i=0;i<64;i++){const a=i/64*TAU+R()*0.08,d=34+R()*26,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<26&&z>-31&&z<27)continue;if(Math.abs(x)<16&&z>26&&z<48)continue;if(R()<0.72)cedar(x,z,0.8+R()*0.7,R);else leafy(x,z,1.3+R()*0.6,R,C.leaf,C.leafD,0)}
+for(let i=0;i<64;i++){const a=i/64*TAU+R()*0.08,d=34+R()*26,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<26&&z>-31&&z<27)continue;if(Math.abs(x)<20&&z>24&&z<50)continue;if(R()<0.72)cedar(x,z,0.8+R()*0.7,R);else leafy(x,z,1.3+R()*0.6,R,C.leaf,C.leafD,0)}
 // hills / mountains / clouds
 for(let i=0;i<10;i++){const a=i/10*TAU+R()*0.3,d=140+R()*120;sph(Math.cos(a)*d,-6,Math.sin(a)*d,150+R()*90,50+R()*40,130+R()*60,i%2?C.hill:C.hill2)}
 put(CONE,-150,48,-540,0,0,0,420,120,420,C.mount);put(CONE,-150,91,-540,0,0,0,123,34.6,123,C.white);put(CONE,230,24,-470,0,0,0,330,74,330,C.mount2);put(CONE,420,20,-150,0,0,0,300,66,300,C.mount2);put(CONE,-430,22,120,0,0,0,320,70,320,C.mount);

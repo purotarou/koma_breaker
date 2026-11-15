@@ -5,7 +5,7 @@
 // fallback when the GLB can't be loaded, ?stageN=code for comparisons, and the reference for tools/check_stage_parity.js.
 // "//#name" comments mark prop groups for tools/dump_stage.js (they become Blender collections).
 Object.assign(C,{
- deck:hex(0xb98552),deckD:hex(0x6f4329),river:hex(0xf0a060),bank:hex(0xa3825c),twall:hex(0xf2dcc0),troof:hex(0x51496a),troofD:hex(0x372f4d),glow:hex(0xffc75a),road:hex(0xd2b98e),
+ deck:hex(0xb98552),deckD:hex(0x6f4329),river:hex(0xf0a060),bank:hex(0xbdb3a2),twall:hex(0xf2dcc0),troof:hex(0x51496a),troofD:hex(0x372f4d),glow:hex(0xffc75a),road:hex(0xd2b98e),
  sun:hex(0xffe08a),cloudP:hex(0xffa88f),cloudV:hex(0xc98bb8),mountP:hex(0x9a6aa0),mountP2:hex(0xc58ea8),hillS:hex(0x9b7f7a),willow:hex(0x86b24c),willowD:hex(0x5f9440),bronze:hex(0xb08a3a),noren:hex(0x2f3f7a),bamboo:hex(0xc9b56a),
  snow:hex(0xf4f7ff),ice:hex(0xbfe9ff),twood:hex(0x6b3f2c),troof4:hex(0x3f4a5e),ochre:hex(0xdcbc7e),bronze4:hex(0x5d6b5c),mountW:hex(0xdfe7f5),mountR:hex(0x8090ae),
  paperS:hex(0xe9e5da),inkG:hex(0x56545e),inkM:hex(0x8d8c94),inkL:hex(0xb9b8bf),inkP:hex(0x141218),seal:hex(0xd9262c),ropeG:hex(0xbdb8aa)});
@@ -19,7 +19,7 @@ function along(x0,z0,x1,z1,f){const len=Math.hypot(x1-x0,z1-z0);mPush();mT((x0+x
 function buildStage3Code(){const R=mulberry(31),NF=F_UNLIT|F_NOCAST,G0=-2.2;
 //#river
 box(0,-5,0,1700,1,1700,C.river,7,1);
-for(const s of[-1,1]){box(0,-3.4,s<0?-334:330,1700,2.4,600,C.bank,4);box(0,-3.3,s<0?-33.6:29.6,1700,2.6,0.8,C.stoneD,5)}
+for(const s of[-1,1]){box(0,-3.4,s<0?-334:330,1700,2.4,600,C.bank,1);box(0,-3.3,s<0?-33.6:29.6,1700,2.6,0.8,C.stoneD,5)}
 //#bridge
 box(0,-0.35,-2,46.6,0.7,68,C.deck,3);
 for(const s of[-1,1]){box(s*23.6,-0.95,-2,0.9,1.3,68,C.deckD);for(let z=-30;z<=26;z+=8)cyl(s*22.6,-2.6,z,1.1,4.4,1.1,C.deckD)}
@@ -39,7 +39,7 @@ const tower=(x,z)=>{const h=15;for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])p
  box(x,G0+h-0.5,z,2.8,0.2,2.8,C.deck,3);for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])cyl(x+dx*1.2,G0+h+0.5,z+dz*1.2,0.14,1.9,0.14,C.deckD);
  put(PYR,x,G0+h+2.0,z,0,0,0,3.8,1.6,3.8,C.troofD);put(CONE,x,G0+h+0.6,z,0,0,0,0.6,0.8,0.6,C.bronze,0,.8);
  for(const s of[-1,1])put(CYL,x+s*0.45,G0+h/2-0.6,z+1.9,-0.12,0,0,0.12,h-1,0.12,C.deck);for(let i=1;i<7;i++)box(x,G0+i*2,z+1.98-i*0.24,0.9,0.1,0.14,C.deck)};
-tower(-20,-40);tower(20,-40);tower(34,52);
+tower(-16,-40);tower(16,-40);tower(34,52);
 //#houses
 // a row house / shop in its own frame: width along local x, front (the street side) at local +z.
 // kind 0 = river-front house, 1 = shop on the main street (sign, lantern), 2 = plain house in the back row
@@ -52,13 +52,18 @@ const bldg=(x,z,ry,w,d,h,kind)=>{mPush();mT(x,G0,z);mRY(ry);box(0,h/2,0,w,h,d,C.
   if(kind===1){box(-w/2+0.6,1.6,d/2+1.0,0.1,2.4,0.55,C.paper);if(R()<0.5)chochin(w/2-0.8,1.7,d/2+0.7,R()<.5?C.red:C.lant,F_UNLIT)}}
  else box(0,h*0.6,d/2+0.02,w*0.32,0.9,0.08,C.glow,0,0,F_UNLIT);
  if(R()<0.2)sph((R()-0.5)*w*0.5,h+1.5,0,w*0.32,0.8,d*0.5,C.ink);mPop()};
-for(const[zf,face]of[[-39.5,1],[35.5,-1]])for(const s of[-1,1]){let x=27;while(x<104){const w=8+R()*6,cx=s*(x+w/2);bldg(cx,zf,face>0?0:PI,w,7,3.4+R()*0.8,0);if(R()<0.8)bldg(cx+(R()-0.5)*3,zf-face*8.5,face>0?0:PI,w*0.9,7,5.2+R()*1.2,2);x+=w+0.6+R()*1.5}}
+// river-front rows run without gaps out to the fog (cheaper houses far away), leaving room only for the willows; the back row is always built
+for(const[zf,face,x0,xb,wl]of[[-39.5,1,19,22,[31,62]],[35.5,-1,21.5,21.5,[33,70]]])for(const s of[-1,1]){const ry=face>0?0:PI;
+ let x=x0;while(x<230){const far=x>=104,w=far?14+R()*8:8+R()*6,v=wl.find(v=>x<v+4.3&&x+w>v-3.8);if(v){x=v+4.3;continue}bldg(s*(x+w/2),zf,ry,w,7,3.4+R()*0.8,far?2:0);x+=w+0.3}
+ x=xb;while(x<230){const w=x>=104?14+R()*8:8+R()*6;bldg(s*(x+w/2),zf-face*8.5,ry,w,7,5.2+R()*1.2,2);x+=w+0.3}
+ if(face<0)bldg(s*16.8,34.5,PI,8,6,4,0)}
+bldg(0,-124,0,14,7,6.2,2);bldg(0,102,PI,14,7,6.2,2);
 //#main_road
 box(0,0.03,-2,9,0.06,68,C.stoneL,1);for(const s of[-1,1])box(s*4.6,0.07,-2,0.3,0.14,68,C.deckD);
 box(0,-2.15,-169,9.4,0.1,270,C.road,1);box(0,-2.15,166,9.4,0.1,272,C.road,1);put(CYL,0,-2.14,-62,0,0,0,15,0.1,15,C.road,1);
 //#street_houses
 for(const[z0,z1]of[[-44,-55],[-69,-118],[38,96]])for(const s of[-1,1]){let z=z0;const dir=z1>z0?1:-1;while(dir>0?z<z1:z>z1){const w=7+R()*3.5;bldg(s*8.6,z+dir*w/2,s>0?-PI/2:PI/2,w,7,R()<0.75?5.4+R()*1.2:3.8,1);
- if(R()<0.4)bldg(s*17.4,z+dir*w/2,s>0?-PI/2:PI/2,w*0.95,7,4.6+R()*1.4,2);z+=dir*(w+0.4)}}
+ bldg(s*17.4,z+dir*w/2,s>0?-PI/2:PI/2,w*0.95,7,4.6+R()*1.4,2);z+=dir*(w+0.4)}}
 //#street_lanterns
 for(const[z0,z1]of[[-40,-112],[34,90]])for(let z=z0;Math.abs(z)<=Math.abs(z1);z+=(z1>z0?1:-1)*14)for(const s of[-1,1]){if(Math.abs(z+62)<9)continue;cyl(s*5.3,-1.4,z,0.14,1.6,0.14,C.deckD);box(s*5.3,-0.35,z,0.55,0.6,0.55,C.glow,0,0,F_UNLIT);put(PYR,s*5.3,0.05,z,0,0,0,0.8,0.25,0.8,C.troofD)}
 //#festival_yagura
@@ -100,7 +105,6 @@ nobori(-7,-12,C.orange);nobori(7,-12,C.noren);nobori(-7,2,C.noren);nobori(7,2,C.
 for(const[x,z,r]of[[-19,-21,1.6],[18,-9,1.2],[-20,13,1.4],[10,-24,1.0]]){put(CYL,x,0.012,z,0,R()*PI,0,r*1.6,0.02,r,C.ink,0,0,F_NOCAST);sph(x+r*0.9,0.02,z+r*0.3,r*0.5,0.03,r*0.4,C.ink,0,0,F_NOCAST)}
 //#background
 put(SPH,-640,190,-230,0,0,0,24,230,230,C.sun,0,0,NF);
-for(let i=0;i<8;i++){const a=i/8*TAU+R()*0.3,d=170+R()*90;sph(Math.cos(a)*d,-6,Math.sin(a)*d,150+R()*90,40+R()*30,130+R()*60,C.hillS)}
 put(CONE,-420,26,-380,0,0,0,360,80,360,C.mountP);put(CONE,300,24,-460,0,0,0,330,72,330,C.mountP2);put(CONE,460,20,120,0,0,0,300,64,300,C.mountP2);put(CONE,-460,22,200,0,0,0,320,70,320,C.mountP);
 put(CONE,190,40,-330,0,0,0,170,110,170,C.mountP);for(let i=0;i<4;i++){box(190,93+i*3.4,-330,4-i*0.6,2,4-i*0.6,C.troofD);put(PYR,190,94.6+i*3.4,-330,0,0,0,7-i*0.9,1.4,7-i*0.9,C.troofD)}put(CONE,190,109,-330,0,0,0,0.6,4,0.6,C.troofD);
 for(let k=0;k<9;k++){const a=k/9*TAU+R()*0.4,d=260+R()*180,h=70+R()*70,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<3;i++){const w=70+R()*60;sph(cx+(i-1)*48+R()*14,h+R()*6,cz+R()*16,w,w*0.12,w*0.34,i%2?C.cloudP:C.cloudV,0,0,NF|F_DRIFT)}}
@@ -151,7 +155,7 @@ for(const[x,z]of[[-7,-6],[7,-6],[-7,9],[7,9]]){toro(x,z);put(PYR,x,3.14,z,0,0,0,
 //#cedars
 for(const[x,z,s]of[[18.5,-22,0.75],[18.5,18,0.7],[-18.5,18,0.75]]){cedarSnow(x,z,s,R);colC.push({x,z,r:0.7,h:6})}
 //#forest
-for(let i=0;i<40;i++){const a=i/40*TAU+R()*0.08,d=32+R()*22,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<26&&z>-31&&z<27)continue;if(Math.abs(x)<17&&z<-30&&z>-50)continue;cedarSnow(x,z,0.8+R()*0.6,R)}
+for(let i=0;i<40;i++){const a=i/40*TAU+R()*0.08,d=32+R()*22,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<29&&z>-34&&z<30)continue;if(Math.abs(x)<22&&z<-28&&z>-56)continue;cedarSnow(x,z,0.8+R()*0.6,R)}
 //#background
 for(const[x,z,w,h]of[[-260,-330,300,190],[120,-420,340,230],[380,-160,280,170],[-400,60,300,160],[200,300,320,150]]){put(CONE,x,h/2-8,z,0,0,0,w,h,w,C.mountR);put(CONE,x,h-8-h*0.21,z,0,0,0,w*0.43,h*0.42,w*0.43,C.mountW)}
 for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=200+R()*160,h=40+R()*50,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<3;i++){const w=60+R()*50;sph(cx+(i-1)*44,h+R()*8,cz+R()*20,w,w*0.22,w*0.6,C.white,0,0,F_NOCAST|F_DRIFT)}}

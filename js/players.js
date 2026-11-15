@@ -41,7 +41,7 @@ for(const[bx,by]of[[-1.3,0.6],[0,0.6],[1.3,0.6],[-0.65,1.72],[0.65,1.72]]){put(C
 for(const[bx,by]of[[-0.65,0.6],[0.65,0.6],[0,1.72]]){put(CYL,16,by,-12+bx,0,0,PI/2,1.2,1.5,1.2,C.straw,6);put(CYL,16,by,-12+bx,0,0,PI/2,1.24,0.2,1.24,C.woodD)}colB.push({x0:15.1,x1:16.9,z0:-13.4,z1:-10.6,h:2.4});
 leafy(-18.5,-22,1,R,C.cedar,C.cedarD,1);leafy(18.5,-22,1.1,R,C.cedar,C.cedarD,1);leafy(18.5,17.5,1,R,C.cedar,C.cedarD,1);leafy(-18.5,18,0.9,R,C.cedar,C.cedarD,1);
 [C.flag3,C.flag2,C.flag1,C.flag3].forEach((c,i)=>{nobori(-3.5,-12+i*7,c);nobori(3.5,-12+i*7,i%2?C.flag2:C.flag3)});
-for(let i=0;i<56;i++){const a=i/56*TAU+R()*0.08,d=34+R()*22,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<28&&z>-33&&z<29)continue;cedar(x,z,0.8+R()*0.7,R)}
+for(let i=0;i<56;i++){const a=i/56*TAU+R()*0.08,d=34+R()*22,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<28&&z>-33&&z<29)continue;if([[-24,-28],[24,-28],[-24,24],[24,24]].some(([tx,tz])=>Math.hypot(x-tx,z-tz)<9.5))continue;cedar(x,z,0.8+R()*0.7,R)}
 for(let i=0;i<44;i++){const a=i/44*TAU+R()*0.1,d=66+R()*90,x=Math.cos(a)*d,z=Math.sin(a)*d;if(x>30&&z<-70)continue;R();R()}
 box(72,6,-125,62,12,52,C.stoneD,5);for(let i=0;i<4;i++){const w=48-10*i,d=40-9*i,y=12+i*11;box(72,y+4,-125,w,8,d,C.plaster);put(PRISM,72,y+10,-125,0,PI/2,0,d+10,4.4,w+12,C.black,3);for(let j=0;j<4-i;j++){box(72-w/2+w*(j+0.5)/(4-i),y+4,-125+d/2,2.4,3.4,0.6,C.yellow,0,0,NF);box(72-w/2,y+4,-125-d/2+d*(j+0.5)/(4-i),0.6,3.4,2.4,C.yellow,0,0,NF)}}
 for(const s of[-1,1])put(CONE,72+s*7,59.4,-125,0,0,-s*0.4,2,5,2,C.gold,0,.8);
