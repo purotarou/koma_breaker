@@ -8,7 +8,9 @@ water:hex(0x59c7f0),cyan:hex(0x6fe6ff),cyanD:hex(0x2a7fa8),smoke:hex(0xf2f0f5),s
 gunM:hex(0x4a5378),gunD:hex(0x272b44),glove:hex(0x2b2b3a),sleeve:hex(0xd8342c),flag1:hex(0xe5402b),flag2:hex(0x2f6fd8),flag3:hex(0x7a3fd0),tongue:hex(0xf0355a),
 rope:hex(0xe8cf8a),ema:hex(0xf0d6a0),tuft:hex(0x5fae55),steel:hex(0xdfe3ee)};
 const colC=[],colB=[];
-const BX=21.6,BZ0=-25.6,BZ1=21.6;
+// play-area bounds (player/enemy clamp, shot walls). Per stage via STG[n].arena=[half width, north z, south z]; the boss always rises at z -21.5.
+let BX=21.6,BZ0=-25.6,BZ1=21.6;
+function setArena(a){a=a||[21.6,-25.6,21.6];BX=a[0];BZ0=a[1];BZ1=a[2]}
 let WT=null;
 function wall(x0,z0,x1,z1){const cx=(x0+x1)/2,cz=(z0+z1)/2,len=Math.hypot(x1-x0,z1-z0),a=Math.atan2(-(z1-z0),x1-x0);mPush();mT(cx,0,cz);mRY(a);
 box(0,0.35,0,len,0.7,1.0,WT.base,5);box(0,1.6,0,len,1.8,0.6,WT.pl);put(PRISM,0,2.85,0,0,PI/2,0,1.7,0.7,len+0.3,WT.roof,3);box(0,3.22,0,len+0.3,0.14,0.26,WT.roofD);mPop()}
@@ -76,6 +78,6 @@ function collide(o,r){o.x=clamp(o.x,-BX+r,BX-r);o.z=clamp(o.z,BZ0+r,BZ1-r);
 for(const c of colC){const dx=o.x-c.x,dz=o.z-c.z,rr=r+c.r,d2=dx*dx+dz*dz;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2);o.x=c.x+dx/d*rr;o.z=c.z+dz/d*rr}}
 for(const b of colB){const nx=clamp(o.x,b.x0,b.x1),nz=clamp(o.z,b.z0,b.z1),dx=o.x-nx,dz=o.z-nz,d2=dx*dx+dz*dz;if(d2<r*r){if(d2>1e-8){const d=Math.sqrt(d2);o.x=nx+dx/d*r;o.z=nz+dz/d*r}else{o.z=b.z1+r}}}}
 function rayWorld(ox,oy,oz,dx,dy,dz,maxT){let t=maxT;if(dy<0){const tg=-oy/dy;if(tg<t)t=tg}
-const pl4=[[dx,ox,22.6],[-dx,-ox,22.6],[dz,oz,22.6],[-dz,-oz,26.6]];for(const[d,o,lim]of pl4){if(d>1e-5){const tt=(lim-o)/d;if(tt>0&&tt<t&&oy+dy*tt<3.3)t=tt}}
+const pl4=[[dx,ox,BX+1],[-dx,-ox,BX+1],[dz,oz,BZ1+1],[-dz,-oz,1-BZ0]];for(const[d,o,lim]of pl4){if(d>1e-5){const tt=(lim-o)/d;if(tt>0&&tt<t&&oy+dy*tt<3.3)t=tt}}
 const slab=(x0,x1,z0,z1,h)=>{let t0=0,t1=t;const ax=[[ox,dx,x0,x1],[oy,dy,0,h],[oz,dz,z0,z1]];for(const[o,d,a,b]of ax){if(Math.abs(d)<1e-6){if(o<a||o>b)return}else{let u=(a-o)/d,v=(b-o)/d;if(u>v){const w=u;u=v;v=w}if(u>t0)t0=u;if(v<t1)t1=v;if(t0>t1)return}}if(t0>0&&t0<t)t=t0};
 for(const c of colC)slab(c.x-c.r*.8,c.x+c.r*.8,c.z-c.r*.8,c.z+c.r*.8,c.h);for(const b of colB)slab(b.x0,b.x1,b.z0,b.z1,b.h);return t}
