@@ -11,7 +11,7 @@
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
 // Phase 2 with bell: waves x4 (always followed by tired), stomp x3, charge, run -> striker slams (right, left).
-// Phase 2 without bell: no sound waves, faster; every charge ends in tired. A charge into the fallen bell -> long tired (a wall only ends the charge).
+// Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
 const MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_BIG=1.15,MK_TF=3.0;
@@ -106,7 +106,7 @@ else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?1
 else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=Math.sin(b.yaw);b.dz=Math.cos(b.yaw)}}
 else if(b.st==='charge'){const ox=b.x,oz=b.z,sp=fast?23:21;b.x+=b.dx*sp*dt;b.z+=b.dz*sp*dt;collide(b,MK_R);contact(20);
  if(lim('mkdust',0.06))fxSmoke(b.x,0.3,b.z,1,1.2,C.snow,2);
- const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>{if(fast)tired(1.8);else toStop(0.6)},c=b.bell2;
+ const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>toStop(fast?0.45:0.6),c=b.bell2;
  if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(5);else end()}else if(b.stT>1.05)end()}
 else if(b.st==='tired'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
 else if(b.st==='stop'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}
