@@ -32,9 +32,9 @@ for(const[bx,by]of[[-0.65,0.6],[0.65,0.6],[0,1.72]]){put(CYL,16,by,-12+bx,0,0,PI
 leafy(-18.5,-22,1,R,C.cedar,C.cedarD,1);leafy(18.5,-22,1.1,R,C.cedar,C.cedarD,1);leafy(18.5,17.5,1,R,C.cedar,C.cedarD,1);leafy(-18.5,18,0.9,R,C.cedar,C.cedarD,1);
 [C.flag3,C.flag2,C.flag1,C.flag3].forEach((c,i)=>{nobori(-3.5,-12+i*7,c);nobori(3.5,-12+i*7,i%2?C.flag2:C.flag3)});
 for(let i=0;i<56;i++){const a=i/56*TAU+R()*0.08,d=34+R()*22,x=Math.cos(a)*d,z=Math.sin(a)*d-2;if(Math.abs(x)<28&&z>-33&&z<29)continue;cedar(x,z,0.8+R()*0.7,R)}
-for(let i=0;i<44;i++){const a=i/44*TAU+R()*0.1,d=66+R()*90,x=Math.cos(a)*d,z=Math.sin(a)*d;if(x>30&&z<-70)continue;const w=7+R()*4;box(x,2.5,z,w,5,w*0.8,C.navy);put(PRISM,x,6,z,0,R()*3,0,w*0.9,2.2,w+1.5,C.black,3);box(x-Math.cos(a)*w*0.42,2.8,z-Math.sin(a)*w*0.42,1.7,1.5,1.7,C.yellow,0,0,NF)}
+for(let i=0;i<44;i++){const a=i/44*TAU+R()*0.1,d=66+R()*90,x=Math.cos(a)*d,z=Math.sin(a)*d;if(x>30&&z<-70)continue;R();R()}
 box(72,6,-125,62,12,52,C.stoneD,5);for(let i=0;i<4;i++){const w=48-10*i,d=40-9*i,y=12+i*11;box(72,y+4,-125,w,8,d,C.plaster);put(PRISM,72,y+10,-125,0,PI/2,0,d+10,4.4,w+12,C.black,3);for(let j=0;j<4-i;j++){box(72-w/2+w*(j+0.5)/(4-i),y+4,-125+d/2,2.4,3.4,0.6,C.yellow,0,0,NF);box(72-w/2,y+4,-125-d/2+d*(j+0.5)/(4-i),0.6,3.4,2.4,C.yellow,0,0,NF)}}
-for(const s of[-1,1])put(CONE,72+s*7,61.5,-125,0,0,-s*0.4,2,5,2,C.gold,0,.8);
+for(const s of[-1,1])put(CONE,72+s*7,59.4,-125,0,0,-s*0.4,2,5,2,C.gold,0,.8);
 put(SPH,-70,200,-700,0,0,0,240,240,20,C.moon,0,0,NF);
 for(let i=0;i<10;i++){const a=i/10*TAU+R()*0.3,d=190+R()*110;sph(Math.cos(a)*d,-6,Math.sin(a)*d,150+R()*90,46+R()*36,130+R()*60,C.nHill)}
 put(CONE,260,24,-420,0,0,0,330,74,330,C.nMount);put(CONE,430,20,-120,0,0,0,300,66,300,C.nMount);put(CONE,-430,22,120,0,0,0,320,70,320,C.nMount);
