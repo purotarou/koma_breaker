@@ -1,7 +1,8 @@
-"""One-time migration: rebuild the code-generated shrine stage (buildStage1) in Blender.
+"""One-time migration: rebuild a code-generated stage (buildStage1Code / buildStage2Code) in Blender.
 
-Input: JSON dumped from js/stage.js by tools/dump_stage.js (instances, unit-primitive geometry, colliders).
-Run inside Blender:  exec(open('tools/blender_build_shrine.py').read(), {'DUMP': '/path/stage1.json'})
+Input: JSON from `node tools/dump_stage.js <1|2> out.json` (instances, unit-primitive geometry, colliders).
+Run inside Blender (in an empty file):
+    exec(open('tools/blender_build_stage.py').read(), {'DUMP': '/path/stage1.json', 'SCENE': 'Stage_Shrine', 'ROOT': 'Shrine'})
 
 Conventions (read by js/glb.js):
   * Game space is Y-up; Blender is Z-up.  game(x,y,z) -> blender(x,-z,y).  The glTF exporter (+Y up) converts back.
@@ -12,13 +13,13 @@ Conventions (read by js/glb.js):
 import bpy, json, bmesh
 from mathutils import Matrix, Vector
 
-D = json.load(open(globals().get('DUMP') or DUMP))
+D = json.load(open(DUMP))
 C = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))  # game -> blender
 CI = C.inverted()
 
-SCN_NAME = 'Stage_Shrine'
+SCN_NAME = SCENE
 scn = bpy.data.scenes.get(SCN_NAME) or bpy.data.scenes.new(SCN_NAME)
-root = bpy.data.collections.new('Shrine')
+root = bpy.data.collections.new(ROOT)
 scn.collection.children.link(root)
 
 def coll(name, parent=root):

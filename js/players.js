@@ -13,7 +13,10 @@ const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:5}]},{
 [{ch:'第一話',name:'爆弾鬼、乱入！',g:[{imp:3,bom:3},{imp:4,bom:3}],say:['赤いのは','爆発する!']},{ch:'第二話',name:'提灯地獄',g:[{lan:5},{lan:4,bom:3}]},{ch:'第三話',name:'双鬼の門番',g:[{bru:2,imp:3},{lan:4,bom:4},{bru:1,lan:3}],say:['二体も','いるのか!']},{ch:'最終話',name:'紅蓮魔王アカベタ',boss:1}]];
 const SPAWN=[[0,16,0],[-4,18,0],[4,18,0],[0,20,0]],PSPAWN=[[-17,17],[17,-20],[17,17],[-17,-20],[0,17],[0,-13]];
 function setStage(n){if(curStage===n)return;curStage=n;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();(n?buildStage2:buildStage1)();mReset();curLayer=1}
-function buildStage2(){const R=mulberry(23),NF=F_UNLIT|F_NOCAST;WT={base:C.stoneD,pl:C.plaster,roof:C.black,roofD:C.inkD};
+// Stage 2 (castle) is authored in Blender: blender/stage_castle.blend -> assets/stage_castle.glb (loaded by js/glb.js).
+// buildStage2Code() is the original code-built version (fallback, and ?stage2=code for comparisons).
+function buildStage2(){if(STAGE_GLB[1])emitGlbStage(STAGE_GLB[1]);else buildStage2Code()}
+function buildStage2Code(){const R=mulberry(23),NF=F_UNLIT|F_NOCAST;WT={base:C.stoneD,pl:C.plaster,roof:C.black,roofD:C.inkD};
 box(0,-0.62,0,1700,1,1700,C.nGrass,4);box(0,-0.1,-2,46.6,0.2,50.6,C.wood,2);put(CYL,0,0,2,0,0,0,17,0.06,17,C.stoneD,1);box(0,0.02,-2,5,0.1,49,C.stone,1);
 wall(-23,-27,23,-27);wall(-23,23,-4.4,23);wall(4.4,23,23,23);wall(-23,-27,-23,23);wall(23,-27,23,23);
 for(const[x,z]of[[-24,-28],[24,-28],[-24,24],[24,24]]){box(x,3,z,5.4,6,5.4,C.stoneD,5);box(x,7.6,z,4.4,3.2,4.4,C.plaster);box(x,7.8,z,4.5,0.9,1.2,C.yellow,0,0,F_UNLIT);box(x,7.8,z,1.2,0.9,4.5,C.yellow,0,0,F_UNLIT);put(PYR,x,10.3,z,0,0,0,6.6,2.2,6.6,C.black);put(CONE,x,11.8,z,0,0,0,0.5,1.2,0.5,C.gold)}

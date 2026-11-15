@@ -23,7 +23,7 @@ function fox(x,z,s){mPush();mT(x,0,z);box(0,0.7,0,1.4,1.4,1.4,C.stoneD,5);box(0,
 put(CONE,-0.2,3.42,0.05,0,0,0.15,0.22,0.45,0.22,C.paper);put(CONE,0.2,3.42,0.05,0,0,-0.15,0.22,0.45,0.22,C.paper);box(0,2.55,0.3,0.6,0.3,0.25,C.red);put(CONE,-s*0.3,2.3,-0.7,-0.9,0,0,0.4,1.1,0.4,C.paper);mPop();colB.push({x0:x-0.8,x1:x+0.8,z0:z-0.8,z1:z+0.8,h:3.4})}
 // Stage 1 (shrine) is authored in Blender: blender/stage_shrine.blend -> assets/stage_shrine.glb (loaded by js/glb.js).
 // buildStage1Code() is the original code-built version, kept as a fallback when the GLB can't be loaded and for ?stage1=code comparisons.
-function buildStage1(){if(SHRINE)emitGlbStage(SHRINE);else buildStage1Code()}
+function buildStage1(){if(STAGE_GLB[0])emitGlbStage(STAGE_GLB[0]);else buildStage1Code()}
 function buildStage1Code(){const R=mulberry(11);WT={base:C.stoneD,pl:C.plaster,roof:C.roof,roofD:C.roofD};
 box(0,-0.62,0,1700,1,1700,C.grass,4);box(0,-0.1,-2,46.6,0.2,50.6,C.sand,4);put(CYL,0,0,2,0,0,0,17,0.06,17,C.stone,1);box(0,0.02,-2,5,0.1,49,C.stoneL,1);
 wall(-23,-27,23,-27);wall(-23,23,-4.4,23);wall(4.4,23,23,23);wall(-23,-27,-23,23);wall(23,-27,23,23);

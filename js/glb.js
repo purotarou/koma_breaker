@@ -62,8 +62,8 @@ for(let i=0;i<items.length;i++){const a=bb[i];near.fill(Infinity);
 // Emit a loaded stage into the current (static) layer.
 function emitGlbStage(st){for(const it of st.items){mPush();M.set(it.m);gId=it.id;emit(it.pi,it.c,it.mat,it.gloss,it.fl,it.rim);gId=0;mPop()}
 for(const c of st.colC)colC.push({...c});for(const b of st.colB)colB.push({...b})}
-// ---- shrine stage (stage 1). ?stage1=code forces the old code-built version (for comparison / fallback). ----
-let SHRINE=null;
-const stageReady=(new URLSearchParams(location.search).get('stage1')==='code'?Promise.resolve():
- fetch('assets/stage_shrine.glb').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>{SHRINE=glbStage(b)}))
- .catch(e=>console.warn('[stage] shrine GLB failed to load, using the code-built stage:',e));
+// ---- stages authored in Blender. ?stage1=code / ?stage2=code force the old code-built version (comparison / fallback). ----
+const STAGE_FILES=['assets/stage_shrine.glb','assets/stage_castle.glb'],STAGE_GLB=STAGE_FILES.map(()=>null);
+const stageReady=Promise.all(STAGE_FILES.map((f,i)=>new URLSearchParams(location.search).get('stage'+(i+1))==='code'?null:
+ fetch(f).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>{STAGE_GLB[i]=glbStage(b)})
+ .catch(e=>console.warn('[stage] '+f+' failed to load, using the code-built stage:',e))));

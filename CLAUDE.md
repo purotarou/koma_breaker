@@ -14,12 +14,13 @@
 
 ## 3Dモデルの制作フロー（予定）
 - キャラ・武器: Meshy AI で生成 → Blender に取り込み、ポリゴン削減・向き/スケール調整・リグ/アニメ追加 → GLB で書き出して `assets/` に配置。
-- 地形・ステージ: **神社ステージ（ステージ1）は Blender 化済み**。月下の天守（ステージ2）はまだコード生成（`buildStage2`）。
-  - 元データ: `blender/stage_shrine.blend` → `tools/blender_export_stage.py` で `assets/stage_shrine.glb` に書き出す（Blender MCP から `exec`）。
-  - ゲーム側は `js/glb.js` が GLB を読み、既存のインスタンス描画（輪郭線・トーン）にそのまま流す。読めなければ `buildStage1Code()`（旧コード版）で起動。`?stage1=code` で旧版を強制表示できる（見比べ用）。
+- 地形・ステージ: **両ステージとも Blender 化済み**（朱の神社 = ステージ1、月下の天守 = ステージ2）。
+  - 元データ: `blender/stage_shrine.blend` / `blender/stage_castle.blend` → `tools/blender_export_stage.py` で `assets/stage_shrine.glb` / `assets/stage_castle.glb` に書き出す（Blender MCP から `exec`）。
+  - ゲーム側は `js/glb.js` が起動時に両方の GLB を読み、既存のインスタンス描画（輪郭線・トーン）にそのまま流す。読めなかったステージだけ旧コード版（`buildStage1Code()` は stage.js、`buildStage2Code()` は players.js）で起動。`?stage1=code` / `?stage2=code` で旧版を強制表示できる（見比べ用）。
+  - コード版から Blender への移行は `node tools/dump_stage.js <1|2> out.json` → `tools/blender_build_stage.py`（空のファイルで実行）。
   - Blender 側の約束: 座標は Blender Z-up（書き出しで Y-up に変換）。色はマテリアルの Base Color（ゲームの値をそのまま）。マテリアルのカスタムプロパティ `kb_mat`（模様 0〜6）, `kb_gloss`, `kb_flags`（1=陰影なし, 2=輪郭なし, 4=影を落とさない）, `kb_rim`。当たり判定は Empty にカスタムプロパティ `kb_col`（`cyl`=円の Empty、スケール r,r,高さ / `box`=立方体の Empty、半サイズ、地面に接地）。
   - 同じメッシュを使うオブジェクト（リンク複製）は1回の描画にまとまる。新しい形を増やすほど描画回数が増えるので注意。
-  - 見た目の一致確認: `node tools/check_stage_parity.js`（Blender 版がコード版と同一であることの検査。Blender で意図的に作り変えた後は差が出て当然）。
+  - 見た目の一致確認: `node tools/check_stage_parity.js [1|2]`（Blender 版がコード版と同一であることの検査。Blender で意図的に作り変えた後は差が出て当然）。
 - Blender は Blender MCP 経由で操作する。
 
 ## 技術メモ
