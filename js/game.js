@@ -56,13 +56,14 @@ para(-440,-34,190,68,26);ctx.fillStyle='#ffd91a';ctx.fill();txt(b.ch,-332,2,b.ch
 function drawCross(){const g=6+pl.rec*10,cx=W/2,cy=H/2;ctx.lineCap='butt';for(const[col,lw]of[[INK,7],['#fff',3]]){ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){ctx.moveTo(cx+dx*g,cy+dy*g);ctx.lineTo(cx+dx*(g+13),cy+dy*(g+13))}ctx.stroke()}
 ctx.fillStyle=INK;ctx.fillRect(cx-3,cy-3,6,6);ctx.fillStyle='#fff';ctx.fillRect(cx-1.5,cy-1.5,3,3);
 if(hitMark>0){ctx.strokeStyle=hitCrit?'#ffd91a':'#fff';ctx.lineWidth=5;ctx.beginPath();for(const[dx,dy]of[[1,1],[-1,1],[1,-1],[-1,-1]]){ctx.moveTo(cx+dx*12,cy+dy*12);ctx.lineTo(cx+dx*26,cy+dy*26)}ctx.strokeStyle=INK;ctx.lineWidth=9;ctx.stroke();ctx.strokeStyle=hitCrit?'#ffd91a':'#fff';ctx.lineWidth=4;ctx.stroke()}}
-function drawHUD(){gauge(100,30,300,30,pl.hp/100,pl.hp>50?'#35d06a':pl.hp>25?'#ffc21a':'#ff3b30','HP');const full=pl.gauge>=100;gauge(100,74,210,20,pl.gauge/100,full?(Math.sin(now*14)>0?'#fff':'#35e0ff'):'#35b8ff','必殺');
+function drawHUD(){if(SK.rev&&!pl.revU){para(392,662,86,26,8);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('復活×1',438,676,17,INK)}
+gauge(100,30,300,30,pl.hp/SK.hp,pl.hp>50?'#35d06a':pl.hp>25?'#ffc21a':'#ff3b30','HP');const full=pl.gauge>=100;gauge(100,74,210,20,pl.gauge/100,full?(Math.sin(now*14)>0?'#fff':'#35e0ff'):'#35b8ff','必殺');
 if(full){ctx.save();ctx.translate(372,84);ctx.rotate(-0.1);const s=1+0.12*Math.sin(now*10);ctx.scale(s,s);burstPath(0,0,56,26,10,1.3,3);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('OK!!',0,1,24,INK);ctx.restore()}
 txt('撃破',W-150,40,22,'#fff',INK,6,'right');txt(String(G.kills),W-40,40,44,'#ffd91a',INK,8,'right');txt(String(G.score).padStart(6,'0'),W-40,82,26,'#fff',INK,6,'right');
 if(G.combo>=2){const s=1+Math.max(0,G.comboPop)*1.2;ctx.save();ctx.translate(W-110,128);ctx.rotate(-0.1);ctx.scale(s,s);txt(G.combo+'連撃!',0,0,38,'#ff3b30',INK,8,'center','#fff',14);ctx.restore()}
 if(boss&&boss.st!=='rise'){const v=sat(boss.hp/boss.mhp);gauge(480,28,520,24,v,boss.phase>1?'#ff3b30':'#a04cff','魔王');txt(STG[G.stage].boss,740,70,22,'#fff',INK,6)}
 // ammo
-const bx=W/2-16*9;for(let i=0;i<16;i++){const x=bx+i*18,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+6,y-14);ctx.lineTo(x+12,y-2);ctx.lineTo(x+12,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
+const na=SK.mag,st=Math.min(18,288/na),iw=st*0.67,bx=W/2-na*st/2;for(let i=0;i<na;i++){const x=bx+i*st,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+iw/2,y-14);ctx.lineTo(x+iw,y-2);ctx.lineTo(x+iw,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
 if(pl.reload>0&&Math.sin(now*20)>-0.3)txt('装填中…',W/2,640,26,'#fff',INK,6);
 drawCross()}
 function drawTouch(){if(!hasTouch)return;ctx.save();ctx.globalAlpha=0.8;const sx=touch.ox,sy=touch.oy;ctx.beginPath();ctx.arc(sx,sy,78,0,TAU);ctx.fillStyle='rgba(255,255,255,.28)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();

@@ -7,7 +7,7 @@ const G={state:'title',demoOn:false,idle:0,t:0,wave:-1,waveT:0,grp:0,clearT:-1,k
 let boss=null,hitMark=0,hitCrit=false,cutSp=0,cutBoss=0,touchMode=false,RDT=0;const muz=[0,0,0];
 const aimDir=()=>{const cp=Math.cos(pl.pitch);return[-Math.sin(pl.yaw)*cp,Math.sin(pl.pitch),-Math.cos(pl.yaw)*cp]};
 function raySph(ox,oy,oz,d,cx,cy,cz,r){const px=cx-ox,py=cy-oy,pz=cz-oz,t=px*d[0]+py*d[1]+pz*d[2];if(t<0)return-1;const d2=px*px+py*py+pz*pz-t*t;if(d2>r*r)return-1;return Math.max(0.01,t-Math.sqrt(r*r-d2))}
-function startReload(){if(pl.reload>0||pl.ammo>=16)return;pl.reload=1.0;snd('reload');addText(pl.ammo===0?'カチッ':'ガシャッ',W*0.72,H*0.62,{size:50,st:'cyan',life:0.4})}
+function startReload(){if(pl.reload>0||pl.ammo>=SK.mag)return;pl.reload=SK.rel;snd('reload');addText(pl.ammo===0?'カチッ':'ガシャッ',W*0.72,H*0.62,{size:50,st:'cyan',life:0.4})}
 function spheres(e){const fx=Math.sin(e.yaw),fz=Math.cos(e.yaw);
 if(e.type==='imp')return[[e.x,e.y+0.62*e.sc,e.z,0.68*e.sc,1]];
 if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.3,2]];
@@ -119,7 +119,7 @@ put(CYL,0.07,-0.25,0.36,1.05,0,-0.2,0.14,0.6,0.14,C.sleeve);put(CYL,0.025,-0.155
 if(pl.flashT>0){bill(BURST,muz[0],muz[1],muz[2],0.55,pl.spin*3,C.yellow,F_UNLIT);bill(STAR,muz[0],muz[1],muz[2],0.3,pl.spin,C.white,F_UNLIT)}
 if(pl.sp===1){const s=0.15+pl.spT*0.6;bill(BURST,muz[0],muz[1],muz[2],s,now*20,C.cyan,F_UNLIT);bill(STAR,muz[0],muz[1],muz[2],s*0.5,-now*20,C.white,F_UNLIT)}
 mPop();curLayer=1;
-if(pl.sp===2){const d=aimDir(),u=sat(pl.spT/0.1)*(pl.spT>0.6?sat((0.8-pl.spT)/0.2):1),ox=muz[0],oy=muz[1],oz=muz[2],NF=F_UNLIT|F_NOCAST;
+if(pl.sp===2){const d=aimDir(),u=sat(pl.spT/0.1)*(pl.spT>SK.beam-0.2?sat((SK.beam-pl.spT)/0.2):1),ox=muz[0],oy=muz[1],oz=muz[2],NF=F_UNLIT|F_NOCAST;
 mPush();mT(ox+d[0]*50,oy+d[1]*50,oz+d[2]*50);orient(d[0],d[1],d[2]);mRX(PI/2);mPush();mS(1.5*u,94,1.5*u);emit(CYL,C.white,0,0,NF,0);mPop();mPop();
 for(let i=0;i<9;i++){const tt=((now*3+i/9)%1)*80+2;mPush();mT(ox+d[0]*tt,oy+d[1]*tt,oz+d[2]*tt);orient(d[0],d[1],d[2]);mRX(PI/2);const s=(3+i%3*1.2)*u;mS(s,1,s);emit(RING,i%2?C.cyan:C.white,0,0,NF,0);mPop()}
 bill(BURST,ox+d[0]*2.6,oy+d[1]*2.6,oz+d[2]*2.6,2.6*u,now*25,C.cyan,NF);bill(STAR,ox+d[0]*2.4,oy+d[1]*2.4,oz+d[2]*2.4,1.3*u,-now*25,C.white,NF)}}

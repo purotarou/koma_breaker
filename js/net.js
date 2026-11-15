@@ -52,7 +52,7 @@ m.sh=shots.filter(s=>!s.dead).map(s=>[s.id,s.k,r1(s.x),r1(s.y),r1(s.z),r1(s.vx),
 const b=boss;if(b)m.b=[b.id,b.st,r2(b.stT),Math.ceil(b.hp),Math.ceil(b.mhp),r1(b.yo),b.phase,r2(b.mouth),b.ah,r1(b.tx),r1(b.tz),r1(b.hL.x),r1(b.hL.y),r1(b.hL.z),r1(b.hR.x),r1(b.hR.y),r1(b.hR.z)]}
 if(net.hq.length){m.h=net.hq;net.hq=[]}net.evq=net.evq.filter(e=>now-e[3]<0.7);if(net.evq.length)m.ev=net.evq.map(e=>[e[0],e[1],e[2]]);return m}
 function onSnap(m){if(G.state==='menu'||G.state==='title')return;setRoster(m.r);const g=m.g;G.wave=g[0];G.kills=g[1];G.score=g[2];G.time=g[3];G.pk=g[4];G.pd=g[5];G.tm=g[6];G.np=net.roster.length;
-if(m.gs!==G.state&&(m.gs==='clear'||m.gs==='over')&&G.state==='play'){G.state=m.gs;G.resT=0;musOn=0;snd('ui');if(m.gs==='clear')saveHi()}
+if(m.gs!==G.state&&(m.gs==='clear'||m.gs==='over')&&G.state==='play'){G.state=m.gs;G.resT=0;musOn=0;snd('ui');if(m.gs==='clear')saveHi();skReward(m.gs==='clear')}
 const old={};for(const it of items)old[it.id]=it;items.length=0;for(const a of m.it)if(!net.picked[a[0]])items.push(old[a[0]]||{id:a[0],k:a[1],x:a[2],z:a[3],t:0});
 if(m.e){const map={},keep={};for(const e of enemies)map[e.id]=e;
  for(const a of m.e){let e=map[a[0]];if(!e){e={id:a[0],type:TC[a[1]],x:a[2],y:a[3],z:a[4],yaw:a[5],t:rnd(0,9),flash:0,dead:false,seed:rnd(0,100),kx:0,kz:0,r:0.6,sc:a[9],v:a[10],st:a[6],stT:a[7],mine:-9};enemies.push(e);if(a[6]==='spawn')spawnFx(e)}

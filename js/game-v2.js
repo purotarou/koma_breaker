@@ -3,17 +3,17 @@
 function resetWorld(){enemies.length=0;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
 function beginGame(){setStage(G.stage);resetWorld();pl.slot=net.on?net.slot:0;const pvp=G.mode==='pvp',sp=pvp?PSPAWN[pl.slot]:SPAWN[pl.slot];resetPlayer(sp[0],sp[1],pvp?Math.atan2(sp[0],sp[1]+2):0);
 for(const o of others){const s=pvp?PSPAWN[o.slot]:SPAWN[o.slot];o.x=o.nx=s[0];o.z=o.nz=s[1];o.dead=false;o.hp=100;o.y=o.ny=0}
-Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0});
+Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0,rew:null});
 net.evseq=0;net.evDone=0;net.dacc={};net.pvAcc={};net.q={f:[],pk:[],kb:[],ps:[]};sndVol=1;musOn=1;snd('ui');eidN=0;
 if(pvp){G.banner={ch:'対戦',name:'10撃破で勝利！'};G.bannerT=0;pl.inv=2}else if(!net.on)say(['ここが…','漫画の中!?'],0);else{G.banner={ch:'協力',name:'力を合わせて倒せ！'};G.bannerT=0}}
 function startGame(){G.mode='solo';beginGame()}
 function spawnGroup(g){for(const k in g){const n=Math.round(g[k]*(1+0.5*(G.np-1)));for(let i=0;i<n;i++)spawnNear(k)}}
 function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.boss){spawnBoss();ev('say','全テヲ',STG[G.stage].line,1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
 function updateWaves(dt){G.time+=dt;if(G.clearT>=0){G.clearT-=dt;if(G.clearT<0)startWave(G.wave+1);return}if(G.wave<0)return;const w=WAVESET[G.stage][G.wave];G.waveT+=dt;
-if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>2.3){G.state='clear';G.resT=0;snd('ui');saveHi()}}return}
+if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>2.3){G.state='clear';G.resT=0;snd('ui');saveHi();skReward(1)}}return}
 if(G.grp<w.g.length){if(enemies.length<=1||G.waveT>G.grp*12){spawnGroup(w.g[G.grp]);G.grp++}}
 else if(enemies.length===0){G.clearT=2.8;ev('heal');ev('ban','撃破！','体力回復 ＋30');if(G.wave===2)ev('say','次で','最後だ…!',0);else ev('say','よし、','次！',0)}}
-function gameOver(){G.state='over';G.resT=0;musOn=0;if(!net.on){slowT=2;slowK=0.3}}
+function gameOver(){G.state='over';G.resT=0;musOn=0;skReward(0);if(!net.on){slowT=2;slowK=0.3}}
 function rank(){const v=100-G.dmg*0.2-Math.max(0,G.time-200)*0.08+Math.min(6,G.score/5000);return v>=98?'S+':v>=90?'S':v>=76?'A':v>=60?'B':'C'}
 function getHi(s){try{return+(localStorage.getItem('koma_hi'+s)||0)}catch(e){return 0}}
 function saveHi(){if(G.mode==='pvp')return;try{if(G.score>getHi(G.stage))localStorage.setItem('koma_hi'+G.stage,G.score)}catch(e){}}
@@ -62,7 +62,10 @@ else{ctx.fillStyle='#ecebe6';ctx.fillRect(x,y,w,h);ctx.strokeStyle=INK;ctx.lineW
  ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(cx,y+h-17,110,9,0,0,TAU);ctx.stroke()}
 ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(X,Y,W2,H2)}
 function drawMenu(dt){ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);const mn=G.menu;
-if(mn==='main'){head('モードを選ぼう');B(330,236,620,116,'オフラインで遊ぶ',()=>{G.menu='stage'},{col:'#ffd91a',size:50});B(330,392,620,116,'オンラインで遊ぶ',()=>{G.menu='online';net.err=''},{col:'#59d8ff',size:50});txt('ひとりでじっくり　全５ステージ',640,372,22,'#fff',INK,6);txt('最大４人　協力プレイ／対人対戦',640,528,22,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26})}
+if(mn==='main'){head('モードを選ぼう');B(330,236,620,116,'オフラインで遊ぶ',()=>{G.menu='stage'},{col:'#ffd91a',size:50});B(330,392,620,116,'オンラインで遊ぶ',()=>{G.menu='online';net.err=''},{col:'#59d8ff',size:50});txt('ひとりでじっくり　全５ステージ',640,372,22,'#fff',INK,6);txt('最大４人　協力プレイ／対人対戦',640,528,22,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
+ B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null},{col:'#ff9ad0',size:30});txt('ポイント '+SKS.pt,1090,600,20,'#fff',INK,6);
+ if(skAny()){const s=1+0.08*Math.sin(now*9);ctx.save();ctx.translate(1218,620);ctx.rotate(0.12);ctx.scale(s,s);burstPath(2,3,40,22,10,1.3,5);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,40,22,10,1.3,5);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('NEW',0,1,18,'#e5402b');ctx.restore()}}
+else if(mn==='skill')drawSkill();
 else if(mn==='stage'){head('ステージ選択');for(let n=0;n<STG.length;n++){const x=43+n*242,y=206,s=STG[n];btns.push({x,y,w:226,h:390,cb:()=>{G.stage=n;startWipe(startGame)}});panel(x,y,226,390);stageArt(n,x+12,y+12,202,150);
   para(x+12,y+172,124,34,10);ctx.fillStyle=s.col;ctx.fill();txt(s.sub,x+74,y+189,20,'#fff');txt(s.name,x+113,y+236,s.name.length>4?32:36,INK);txt(s.desc[0],x+113,y+280,17,INK);txt(s.desc[1],x+113,y+304,17,INK);txt('ハイスコア '+getHi(n),x+113,y+352,17,INK)}
  B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
@@ -81,7 +84,7 @@ else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');pane
 function drawTags(){for(const o of others){const p=project(o.x,o.y+(o.dead?1.2:2.35),o.z);if(!p||p.w>80)continue;const s=clamp(16/p.w,0.55,1.1);ctx.save();ctx.translate(p.x,p.y);ctx.scale(s,s);para(-36,-16,64,30,8);ctx.fillStyle=PCSS[o.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('P'+(o.slot+1),0,0,22,'#fff',INK,5);
 if(G.mode!=='pvp'){ctx.fillStyle=INK;ctx.fillRect(-34,18,68,10);ctx.fillStyle=o.hp>40?'#35d06a':'#ff3b30';ctx.fillRect(-32,20,64*sat(o.hp/100),6);if(o.dead&&Math.sin(now*8)>-0.3)txt('ダウン！',0,-40,26,'#ff3b30',INK,6,'center','#fff',10)}ctx.restore()}}
 function drawHUD2(){B(30,108,46,40,'II',()=>{G.paused=!G.paused},{sk:0,size:22});
-if(pl.pow>0){ctx.save();ctx.translate(160,128);const s=1+0.06*Math.sin(now*12);ctx.scale(s,s);burstPath(0,0,66,24,10,1.3,2);ctx.fillStyle='#ff8a2b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('攻撃×2',0,1,22,'#fff',INK,5);ctx.restore();ctx.fillStyle=INK;ctx.fillRect(236,120,104,14);ctx.fillStyle='#ffd91a';ctx.fillRect(238,122,100*sat(pl.pow/12),10)}
+if(pl.pow>0){ctx.save();ctx.translate(160,128);const s=1+0.06*Math.sin(now*12);ctx.scale(s,s);burstPath(0,0,66,24,10,1.3,2);ctx.fillStyle='#ff8a2b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('攻撃×2',0,1,22,'#fff',INK,5);ctx.restore();ctx.fillStyle=INK;ctx.fillRect(236,120,104,14);ctx.fillStyle='#ffd91a';ctx.fillRect(238,122,100*sat(pl.pow/SK.pow),10)}
 if(G.mode==='pvp'){const t=Math.max(0,G.tm)|0;txt(((t/60)|0)+':'+String(t%60).padStart(2,'0'),W/2,44,40,t<20?'#ff3b30':'#fff',INK,8);const rs=net.roster.slice().sort((a,b)=>a.slot-b.slot);rs.forEach((r,i)=>{const x=W/2-rs.length*62+i*124+12;para(x,70,104,36,10);ctx.fillStyle=PCSS[r.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=r.id===net.id?6:3;ctx.stroke();txt('P'+(r.slot+1)+'  '+G.pk[r.slot],x+56,89,22,'#fff',INK,5)})}
 if(pl.dead&&net.on){ctx.fillStyle='rgba(22,18,31,.45)';ctx.fillRect(0,250,W,150);if(G.mode==='pvp'){txt('やられた！',W/2,300,64,'#ff3b30',INK,12,'center','#fff',20);txt('復活まで '+Math.max(0,Math.ceil(pl.respT)),W/2,364,30,'#fff',INK,6)}
 else{txt('ダウン！',W/2,296,64,'#ff3b30',INK,12,'center','#fff',20);txt('仲間が近くに来ると復活（自動復活まで '+Math.max(0,Math.ceil(pl.respT))+'）',W/2,356,26,'#fff',INK,6);ctx.fillStyle=INK;ctx.fillRect(W/2-152,378,304,16);ctx.fillStyle='#35e0ff';ctx.fillRect(W/2-150,380,300*sat(pl.revT/2.5),12)}}
