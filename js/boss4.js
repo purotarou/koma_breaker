@@ -7,11 +7,11 @@
 // Damage depends on where the shooter stands: front 3% (ガキン！), side 30%, back 100%. Bell hits also wear the bell down
 //   (double while he is out of breath). The bell's durability at 0 or HP at half -> transformation (cutscene, both sides invincible).
 // Phase 1 (bell on the back): run -> stop, stomp x2 (ice), bell sound waves x3 (jump them). "stomp x2 -> waves x3 -> out of breath"
-//   happens half of the time. Out of breath (tired): he turns his back to the nearest player and pants for a while.
+//   happens half of the time. Out of breath (tired): he stands still and pants for a while.
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
 // Phase 2 with bell: waves x4 (always followed by tired), stomp x3, charge, run -> striker slams (right, left).
-// Phase 2 without bell: no sound waves, faster; every charge ends in tired. A charge into a wall/the fallen bell -> long tired.
+// Phase 2 without bell: no sound waves, faster; every charge ends in tired. A charge into the fallen bell -> long tired (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
 const MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_BIG=1.15,MK_TF=3.0;
@@ -57,7 +57,7 @@ function onIce(x,z){for(const i of ices)if(Math.hypot(x-i.x,z-i.z)<i.r*Math.min(
 
 // ---------------- damage ----------------
 // a shot / beam hit the bell (local player). Clients send it to the host as damage to -id. (The HP damage is dealt separately.)
-function monkBellHit(b,dmg,hx,hy,hz,quiet){if(!b.bell||b.st==='drop'||b.st==='die'||b.st==='trans'||b.st==='boff')return;b.bflash=0.07;hitMark=0.1;hitCrit=false;
+function monkBellHit(b,dmg,hx,hy,hz,quiet){dmg*=SK.atk;if(!b.bell||b.st==='drop'||b.st==='die'||b.st==='trans'||b.st==='boff')return;b.bflash=0.07;hitMark=0.1;hitCrit=false;
 if(!quiet){fxSparks(hx,hy,hz,6,7,C.gold);fxStar(hx,hy,hz,1.2,C.yellow,0.08);snd('clank');addGauge(1);if(lim('bellT',0.3))sfxAt(pick(['カァン！','ガィン！','キィン！']),hx,hy+1,hz,{size:46,st:'fire',life:0.3})}
 if(isCli()){net.dacc[-b.id]=(net.dacc[-b.id]||0)+dmg;return}monkBell(b,dmg)}
 function monkClank(b,hx,hy,hz){fxSparks(hx,hy,hz,4,6,C.white);snd('clank');if(lim('clankT',0.5))sfxAt('ガキン！',hx,hy+1,hz,{size:40,st:'ink',life:0.3})}
@@ -106,9 +106,9 @@ else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?1
 else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=Math.sin(b.yaw);b.dz=Math.cos(b.yaw)}}
 else if(b.st==='charge'){const ox=b.x,oz=b.z,sp=fast?23:21;b.x+=b.dx*sp*dt;b.z+=b.dz*sp*dt;collide(b,MK_R);contact(20);
  if(lim('mkdust',0.06))fxSmoke(b.x,0.3,b.z,1,1.2,C.snow,2);
- const moved=Math.hypot(b.x-ox,b.z-oz);if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));tired(5)}else if(b.stT>1.05){if(fast)tired(1.8);else toStop(0.6)}}
-else if(b.st==='tired'){let N=null,nd=1e9;for(const p of allP()){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<nd){nd=d;N=p}}
- if(N)b.yaw+=angDiff(mkFace(b,N.x,N.z)+PI,b.yaw)*Math.min(1,dt*(b.stT<0.45?9:1.4));if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
+ const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>{if(fast)tired(1.8);else toStop(0.6)},c=b.bell2;
+ if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(5);else end()}else if(b.stT>1.05)end()}
+else if(b.st==='tired'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
 else if(b.st==='stop'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}
 
 // ---------------- shared animation / cosmetics (host and clients) ----------------
