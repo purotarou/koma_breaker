@@ -6,6 +6,9 @@ const BTN0=JSON.parse(JSON.stringify(BTN));let setOpen=false;
 function applySet(){const sc=SET.size,L=SET.lay;for(const k in BTN){const b0=BTN0[k],b=BTN[k],c=L&&L[k];if(c){b.x=SET.lh?W-c.x:c.x;b.y=c.y;b.r=b0.r*sc*(c.s||1)}else{const x=W-(W-b0.x)*sc;b.y=H-(H-b0.y)*sc;b.r=b0.r*sc;b.x=SET.lh?W-x:x}}touch.hx=SET.lh?W-150:150;touch.hy=560;if(touch.sid===null){touch.ox=touch.hx;touch.oy=touch.hy}if(musG)musG.gain.value=0.3*SET.bgm;try{localStorage.setItem('koma_set',JSON.stringify(SET))}catch(e){}}
 applySet();
 function openSet(){setOpen=true;layEdit=false}
+// dev cheat: tap the 「設定」 title 10 times -> super strong, invincible
+let devTap=0,devT=0;
+function devTapTitle(){if(now-devT>2)devTap=0;devT=now;devTap++;if(devTap<10)return;devTap=0;DEV=DEV?0:1;skApply();if(typeof pl!=='undefined'&&!pl.dead&&G.state!=='menu')pl.hp=SK.hp;snd('item');addText(DEV?'超強化 ON':'超強化 OFF',W/2,H*0.4,{size:90,st:'boom',life:1.2});setOpen=false}
 // ---- button layout editor ----
 let layEdit=false,laySel='fire',layDrag=null,layB0=0;
 const LAYN={fire:'撃つ',special:'必殺',jump:'ジャンプ',reload:'装填',dash:'回避'};
@@ -30,7 +33,7 @@ B(tx+516,ty+68,122,46,'左右反転',()=>{SET.lh=SET.lh?0:1;applySet()},{size:20
 function toggleFS(){const d=document,el=d.documentElement;try{if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}}catch(e){}}
 function gearBtn(x,y){btns.push({x,y,w:62,h:62,cb:openSet});ctx.fillStyle=INK;ctx.fillRect(x+5,y+6,62,62);ctx.fillStyle='#fff';ctx.fillRect(x,y,62,62);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.strokeRect(x,y,62,62);
 ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.beginPath();for(let i=0;i<32;i++){const a=(i+0.5)/32*TAU,r=(i>>1)%2?15:22;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,7,0,TAU);ctx.fill();ctx.restore()}
-function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');
+function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');btns.push({x:190,y:70,w:300,h:60,cb:devTapTitle});
 B(950,90,150,54,'とじる',()=>{setOpen=false},{col:'#ffd91a',size:28});
 const rows=[['視点感度','sens',0.3,2.5,v=>'×'+v.toFixed(1)],['効果音','se',0,1,v=>String(Math.round(v*10))],['BGM','bgm',0,1,v=>String(Math.round(v*10))]];
 rows.forEach((r,i)=>{const y=160+i*78,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set=nv=>{SET[k]=clamp(Math.round(nv*10)/10,r[2],r[3]);applySet();if(k==='se')snd('hit')};txt(r[0],200,y+28,30,INK,null,0,'left');

@@ -30,10 +30,11 @@ const skHas=id=>!!SKS.own[id],skClr=()=>SKS.clr.filter(v=>v).length;
 // own | prev (earlier panel of the branch missing) | tier (not enough stages cleared) | pt (not enough points) | ok
 function skState(n){if(skHas(n.id))return'own';const p=SKN.find(q=>q.b===n.b&&q.t===n.t-1);if(p&&!skHas(p.id))return'prev';if(skClr()<SKT[n.t])return'tier';return SKS.pt<n.c?'pt':'ok'}
 const skAny=()=>SKN.some(n=>skState(n)==='ok');
+var DEV=0;// 開発者用の裏技（設定画面の「設定」を10回タップ）
 let SK={},skPop=null,skMsg=null;
 // effective values for the current game (neutral in versus / demo); called from resetPlayer
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=id=>on&&skHas(id);
-SK={atk:(h('atk1')?1.1:1)*(h('atk2')?1.15:1),rel:h('rel')?0.65:1,mag:h('mag')?24:16,hp:h('hp')?120:100,heal:h('heal')?1.5:1,def:h('def')?0.85:1,rev:h('rev'),dash:h('dash')?0.6:1,dj:h('dj'),gauge:h('gauge')?1.3:1,spinv:h('spinv'),spd:h('spd')?1.12:1,pow:h('pow')?18:12,crit:h('crit')?1.25:1,beam:h('beam')?1.2:0.8}}
+SK={atk:(h('atk1')?1.1:1)*(h('atk2')?1.15:1),rel:h('rel')?0.65:1,mag:h('mag')?24:16,hp:h('hp')?120:100,heal:h('heal')?1.5:1,def:h('def')?0.85:1,rev:h('rev'),dash:h('dash')?0.6:1,dj:h('dj'),gauge:h('gauge')?1.3:1,spinv:h('spinv'),spd:h('spd')?1.12:1,pow:h('pow')?18:12,crit:h('crit')?1.25:1,beam:h('beam')?1.2:0.8};if(DEV&&G.mode!=='pvp')Object.assign(SK,{atk:20,rel:0.15,mag:40,hp:9999,heal:3,def:0,rev:1,dash:0.2,dj:1,gauge:3,spinv:1,spd:1.3,pow:30,crit:2,beam:2})}
 skApply();
 function addGauge(v){pl.gauge=Math.min(100,pl.gauge+v*SK.gauge)}
 function skBuy(n){const s=skState(n);if(s!=='ok'){skMsg={s:s==='own'?'習得済みです':s==='prev'?'左のスキルを先に習得しよう':s==='tier'?'ステージを'+SKT[n.t]+'つクリアすると解放':'ポイントが足りません（あと'+(n.c-SKS.pt)+'）',t:now};return}

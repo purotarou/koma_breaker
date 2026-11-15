@@ -120,7 +120,7 @@ if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;
 else if(pl.sp===2){pl.spT+=dt;trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt);if(pl.spT>SK.beam)pl.sp=0}
 if(inp.fire&&pl.cool<=0&&pl.reload<=0&&!pl.sp&&!cine){if(pl.ammo>0)shoot();else startReload()}
 pl.gunDip=lerp(pl.gunDip,pl.reload>0?1:0,1-Math.exp(-14*dt))}
-function hurtPlayer(d,x,z,by){if(pl.inv>0||pl.dead||G.cine>0||G.state==='clear'||G.state==='menu')return;if(pl.sp&&SK.spinv)return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
+function hurtPlayer(d,x,z,by){if(DEV&&G.mode!=='pvp')return;if(pl.inv>0||pl.dead||G.cine>0||G.state==='clear'||G.state==='menu')return;if(pl.sp&&SK.spinv)return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
 d*=SK.def;pl.hp-=d;G.dmg+=d;pl.inv=by==null?0.45:0.1;hurtA=1;shake(0.5);snd('hurt');stopT(0.04);lines(0.6,'#c20020');pl.tilt=(Math.random()<.5?-1:1)*0.09;pl.lastBy=by==null?-1:by;
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
 if(pl.hp<=0&&SK.rev&&!pl.revU){pl.revU=1;pl.hp=Math.round(SK.hp*0.5);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
