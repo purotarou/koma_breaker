@@ -5,7 +5,7 @@
 // screen tones and the procedural patterns behave exactly like the code-built primitives.
 //  * Each glTF mesh primitive (deduplicated by its POSITION/NORMAL/indices accessors) becomes one addPrim() batch;
 //    every node using it is one instance (node world matrix), so draw calls stay ~one per unique geometry.
-//  * Colour = material baseColorFactor (raw game value). Material extras: kb_mat (pattern 0-6), kb_gloss, kb_flags, kb_rim.
+//  * Colour = material baseColorFactor (raw game value). Material extras: kb_mat (pattern 0-9), kb_gloss, kb_flags (incl. animation bits 8/16/32/64, see ANIM in gfx.js), kb_rim.
 //  * Each instance gets its own outline ID (nid()), like each box()/put() call did.
 //  * Nodes with extras.kb_col: 'cyl' -> colC {x,z,r=scale.x,h=scale.y}; 'box' -> colB from translation +- scale (h = top).
 const GLB_CT={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array};

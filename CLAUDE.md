@@ -18,7 +18,8 @@
   - 元データ: `blender/stage_shrine.blend` / `blender/stage_castle.blend` → `tools/blender_export_stage.py` で `assets/stage_shrine.glb` / `assets/stage_castle.glb` に書き出す（Blender MCP から `exec`）。
   - ゲーム側は `js/glb.js` が起動時に両方の GLB を読み、既存のインスタンス描画（輪郭線・トーン）にそのまま流す。読めなかったステージだけ旧コード版（`buildStage1Code()` は stage.js、`buildStage2Code()` は players.js）で起動。`?stage1=code` / `?stage2=code` で旧版を強制表示できる（見比べ用）。
   - コード版から Blender への移行は `node tools/dump_stage.js <1|2> out.json` → `tools/blender_build_stage.py`（空のファイルで実行）。
-  - Blender 側の約束: 座標は Blender Z-up（書き出しで Y-up に変換）。色はマテリアルの Base Color（ゲームの値をそのまま）。マテリアルのカスタムプロパティ `kb_mat`（模様 0〜6）, `kb_gloss`, `kb_flags`（1=陰影なし, 2=輪郭なし, 4=影を落とさない）, `kb_rim`。当たり判定は Empty にカスタムプロパティ `kb_col`（`cyl`=円の Empty、スケール r,r,高さ / `box`=立方体の Empty、半サイズ、地面に接地）。
+  - Blender 側の約束: 座標は Blender Z-up（書き出しで Y-up に変換）。色はマテリアルの Base Color（ゲームの値をそのまま）。マテリアルのカスタムプロパティ `kb_mat`（模様: 1=石畳, 2/3=板目, 4=草, 5=瓦, 6=藁・縄・提灯の骨, 7=水面の波紋(動く), 8=葉のうろこ線, 9=木の皮）, `kb_gloss`, `kb_flags`（足し算で組み合わせ。1=陰影なし, 2=輪郭なし, 4=影を落とさない, 8=風で揺れる(高いほど大きく), 16=旗のはためき(布の中心から +Z 方向へ揺れが大きくなる), 32=雲の流れ(ステージ中心を回る), 64=炎のゆらめき）, `kb_rim`。動きは頂点シェーダー（`js/gfx.js` の `ANIM`）で計算するので CPU 負荷・描画回数は増えない。当たり判定は Empty にカスタムプロパティ `kb_col`（`cyl`=円の Empty、スケール r,r,高さ / `box`=立方体の Empty、半サイズ、地面に接地）。
+  - コード版に足した小物や模様・フラグの変更を Blender に反映するとき: `node tools/dump_stage.js <1|2> out.json` → `tools/blender_sync_from_code.py`（開いている .blend に対して実行。既存オブジェクトは名前・コレクションを保ったまま材質を更新し、新しい部品だけを追加する）。
   - 同じメッシュを使うオブジェクト（リンク複製）は1回の描画にまとまる。新しい形を増やすほど描画回数が増えるので注意。
   - 見た目の一致確認: `node tools/check_stage_parity.js [1|2]`（Blender 版がコード版と同一であることの検査。Blender で意図的に作り変えた後は差が出て当然）。
 - Blender は Blender MCP 経由で操作する。

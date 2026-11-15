@@ -99,9 +99,9 @@ function drawWipe(){const t=wipe.t,c=easeOut(t<0.5?t*2:(1-t)*2);ctx.fillStyle=IN
 // ================= MAIN =================
 function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawParts();if(!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0))drawGun();
 gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthRange(0,1);
-gl.bindFramebuffer(gl.FRAMEBUFFER,shFbo);gl.viewport(0,0,SHN,SHN);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(pS.p);gl.uniformMatrix4fv(pS.u.uLVP,false,LVP);flushLayer(0);flushLayer(1);
+gl.bindFramebuffer(gl.FRAMEBUFFER,shFbo);gl.viewport(0,0,SHN,SHN);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(pS.p);gl.uniformMatrix4fv(pS.u.uLVP,false,LVP);gl.uniform1f(pS.u.uT,now);flushLayer(0);flushLayer(1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,gFbo);gl.viewport(0,0,W,H);gl.clearBufferfv(gl.COLOR,0,[0,0,0,1]);gl.clearBufferfv(gl.COLOR,1,[0.5,0.5,0,0]);gl.clearBufferfv(gl.DEPTH,0,[1]);
-gl.useProgram(pG.p);gl.uniformMatrix4fv(pG.u.uVP,false,VP);gl.uniformMatrix4fv(pG.u.uLVP,false,LVP);gl.uniformMatrix4fv(pG.u.uV,false,VIEW);gl.uniform3f(pG.u.uLD,LD[0],LD[1],LD[2]);gl.uniform3f(pG.u.uCam,cam.x,cam.y,cam.z);
+gl.useProgram(pG.p);gl.uniformMatrix4fv(pG.u.uVP,false,VP);gl.uniform1f(pG.u.uT,now);gl.uniformMatrix4fv(pG.u.uLVP,false,LVP);gl.uniformMatrix4fv(pG.u.uV,false,VIEW);gl.uniform3f(pG.u.uLD,LD[0],LD[1],LD[2]);gl.uniform3f(pG.u.uCam,cam.x,cam.y,cam.z);
 gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shTex);gl.uniform1i(pG.u.uSh,0);flushLayer(0);flushLayer(1);gl.depthRange(0,0.08);flushLayer(2);gl.depthRange(0,1);
 gl.disable(gl.DEPTH_TEST);gl.bindVertexArray(quadVao);gl.bindFramebuffer(gl.FRAMEBUFFER,pFbo);gl.useProgram(pP.p);const u=pP.u;
 gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,gCol);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,gNrm);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,gDep);

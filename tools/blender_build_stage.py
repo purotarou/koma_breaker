@@ -7,7 +7,7 @@ Run inside Blender (in an empty file):
 Conventions (read by js/glb.js):
   * Game space is Y-up; Blender is Z-up.  game(x,y,z) -> blender(x,-z,y).  The glTF exporter (+Y up) converts back.
   * Material colour = Principled Base Color (raw game value, not colour-managed).
-  * Material custom props: kb_mat (procedural pattern 0-6), kb_gloss, kb_flags (1 unlit, 2 no-edge, 4 no-cast), kb_rim.
+  * Material custom props: kb_mat (procedural pattern 0-9), kb_gloss, kb_flags (1 unlit, 2 no-edge, 4 no-cast, 8 sway, 16 cloth, 32 drift, 64 flame), kb_rim.
   * Colliders are Empties with custom prop kb_col: 'cyl' (CIRCLE empty, scale = r,r,h) or 'box' (CUBE empty, half extents, sits on the ground).
 """
 import bpy, json, bmesh

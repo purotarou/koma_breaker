@@ -18,7 +18,8 @@ let src = read('stage.js'), fn;
 if (stage === 1) {
   src = tag(src, [['// south gate', 'gate'], ['// hall behind gate', 'hall'], ['// sacred tree', 'sacred_tree'], ['// chozuya', 'chozuya'], ['// sake barrels', 'sake_barrels'],
     ['// forest', 'forest'], ['// hills / mountains / clouds', 'background'], ['box(0,-0.62,0,1700', 'ground'], ['wall(-23,-27,23,-27)', 'walls'], ['torii(-17);', 'torii'],
-    ['toro(-7.5,-9)', 'lanterns'], ['fox(-6.6', 'fox'], ['leafy(-18.5,-22', 'sakura'], ['[C.flag1,C.flag2,C.flag3,C.flag1]', 'nobori']]);
+    ['toro(-7.5,-9)', 'lanterns'], ['fox(-6.6', 'fox'], ['leafy(-18.5,-22', 'sakura'], ['[C.flag1,C.flag2,C.flag3,C.flag1]', 'nobori'],
+    ['// shimenawa', 'shimenawa'], ['// ema rack', 'ema_rack'], ['// fallen petals', 'fallen_petals'], ['// wall grass', 'wall_grass'], ['// gate lanterns', 'gate_lanterns']]);
   fn = 'buildStage1Code';
 } else {
   // players.js can't run standalone; take only the extra colours and the stage-2 generator from it.
@@ -26,7 +27,8 @@ if (stage === 1) {
   let body = p.slice(f0, p.indexOf('\n// ---- players ----', f0));
   body = tag(body, [['box(0,-0.62,0,1700', 'ground'], ['wall(-23,-27,23,-27)', 'walls'], ['for(const[x,z]of[[-24,-28]', 'towers'], ['for(const s of[-1,1]){box(s*4.6', 'gates'],
     ['fire(-7.5,-9);', 'braziers'], ['cannon(-15,-6,0.5);', 'cannons'], ['for(const[bx,by]of[[-1.3', 'straw_bales'], ['leafy(-18.5,-22', 'pines'], ['[C.flag3,C.flag2,C.flag1,C.flag3]', 'nobori'],
-    ['for(let i=0;i<56;', 'forest'], ['for(let i=0;i<44;', 'town'], ['box(72,6,-125', 'castle'], ['put(SPH,-70,200', 'background']]);
+    ['for(let i=0;i<56;', 'forest'], ['for(let i=0;i<44;', 'town'], ['box(72,6,-125', 'castle'], ['put(SPH,-70,200', 'background'],
+    ['// gate lanterns', 'gate_lanterns'], ['// jinmaku', 'jinmaku'], ['// spear racks', 'spear_racks'], ['// cannonballs', 'cannonballs']]);
   src += '\n' + p.slice(c0, p.indexOf(';', c0) + 1) + '\n' + body;
   fn = 'buildStage2Code';
 }

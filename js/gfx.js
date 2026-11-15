@@ -3,19 +3,34 @@
 function shd(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));throw new Error('shader')}return s}
 function mkProg(vs,fs,names){const p=gl.createProgram();gl.attachShader(p,shd(gl.VERTEX_SHADER,vs));gl.attachShader(p,shd(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(p));throw new Error('link')}const u={};for(const n of names)u[n]=gl.getUniformLocation(p,n);return{p,u}}
 const INST=`layout(location=0) in vec3 aP;layout(location=1) in vec3 aN;layout(location=2) in vec4 i0;layout(location=3) in vec4 i1;layout(location=4) in vec4 i2;layout(location=5) in vec4 i3;layout(location=6) in vec4 iC;layout(location=7) in vec4 iX;`;
+// Stage animation, chosen per instance by flag bits (kb_flags in Blender): 8 sway (foliage, bends more the higher it is),
+// 16 cloth (nobori: ripples along the instance's local Z, moving along local X), 32 drift (clouds: slow orbit around the stage),
+// 64 flame (flickers / licks around the instance origin). Shared by the G-buffer and shadow passes so shadows move too.
+const ANIM=`uniform float uT;
+vec3 kbAnim(vec3 w,vec3 o,mat3 m3,float fl,inout vec3 n){float b=floor(fl/8.0);if(b<0.5)return w;
+if(mod(b,2.0)>0.5){float h=clamp((w.y-1.0)/10.0,0.0,1.5),ph=dot(o.xz,vec2(0.05,0.04))+dot(w.xz,vec2(0.08,0.05));
+ w.x+=(sin(uT*1.3+ph)*0.32+sin(uT*3.1+ph*2.3)*0.07)*h;w.z+=(sin(uT*1.05+ph*1.7)*0.22+sin(uT*2.7+ph*1.9)*0.05)*h;
+ w+=0.035*h*sin(uT*5.0+dot(w,vec3(2.1,1.7,2.3)));}
+if(mod(floor(b*0.5),2.0)>0.5){vec3 ax=normalize(m3[0]),az=normalize(m3[2]);float d=max(dot(w-o,az)+0.42,0.0);
+ w+=ax*(sin(uT*5.5-d*6.0+w.y*1.3+dot(o.xz,vec2(1.7,2.3)))*0.14+sin(uT*9.0-d*9.0+w.y*2.0)*0.04)*d;}
+if(mod(floor(b*0.25),2.0)>0.5){float a=uT*0.004,c=cos(a),s=sin(a);w.xz=mat2(c,s,-s,c)*w.xz;n.xz=mat2(c,s,-s,c)*n.xz;}
+if(mod(floor(b*0.125),2.0)>0.5){vec3 r=w-o;float k=1.0+0.2*sin(uT*17.0+o.x*3.0)+0.1*sin(uT*29.0+o.z*5.0),tip=max(r.y,0.0);
+ r.y*=k;r.xz*=1.0+0.08*sin(uT*23.0+o.x*7.0);r.x+=tip*0.3*sin(uT*9.0+o.z*2.0);r.z+=tip*0.25*sin(uT*11.0+o.x*2.0);w=o+r;}
+return w;}`;
 const VS_G=`#version 300 es
 precision highp float;
 ${INST}
+${ANIM}
 uniform mat4 uVP,uLVP;
 out vec3 vN,vW,vO,vL;out vec4 vC,vX;
 void main(){mat4 m=mat4(i0,i1,i2,i3);vec4 w=m*vec4(aP,1.0);mat3 m3=mat3(m);
 vec3 s2=vec3(dot(m3[0],m3[0]),dot(m3[1],m3[1]),dot(m3[2],m3[2]));
-vN=normalize(m3*(aN/s2));vW=w.xyz;vO=aP*sqrt(s2);
+vN=normalize(m3*(aN/s2));w.xyz=kbAnim(w.xyz,i3.xyz,m3,iX.z,vN);vW=w.xyz;vO=aP*sqrt(s2);
 vec4 l=uLVP*vec4(w.xyz+vN*0.07,1.0);vL=l.xyz*0.5+0.5;vC=iC;vX=iX;gl_Position=uVP*w;}`;
 const FS_G=`#version 300 es
 precision highp float;precision mediump sampler2DShadow;
 in vec3 vN,vW,vO,vL;in vec4 vC,vX;
-uniform sampler2DShadow uSh;uniform vec3 uLD,uCam;uniform mat4 uV;
+uniform sampler2DShadow uSh;uniform vec3 uLD,uCam;uniform mat4 uV;uniform float uT;
 layout(location=0) out vec4 o0;layout(location=1) out vec4 o1;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float ln(float d,float w){float a=fwidth(d)*1.2+1e-5;return 1.0-smoothstep(w-a,w+a,d);}
@@ -36,7 +51,15 @@ if(mat>0.5){
    float m=ln(abs(q.y),0.018)*step(abs(q.x),0.10+0.12*hash(c+4.4));m=max(m,ln(abs(q.y-0.08),0.014)*step(abs(q.x+0.04),0.07));alb=mix(alb,alb*0.62,m*pf);}}
  else if(mat<5.5){vec2 p=vec2(vO.x+vO.z,vO.y)/vec2(1.1,0.45);float row=floor(p.y);p.x+=mod(row,2.0)*0.5;vec2 f=fract(p);vec2 dd=min(f,1.0-f)*vec2(1.1,0.45);
   alb=mix(alb,alb*0.55,max(ln(dd.x,0.02),ln(dd.y,0.02))*pf);}
- else{float d=abs(fract(vO.y/0.17)-0.5)*0.17;alb=mix(alb,alb*0.62,ln(d,0.012)*pf);}
+ else if(mat<6.5){float d=abs(fract(vO.y/0.17)-0.5)*0.17;alb=mix(alb,alb*0.62,ln(d,0.012)*pf);}
+ else if(mat<7.5){vec2 p=vO.xz;float d=abs(fract((p.x*0.8+p.y*0.5)*2.2+sin(p.y*3.0+uT*1.5)*0.25-uT*0.35)-0.5)/2.2;
+  alb=mix(alb,vec3(1.0),ln(d,0.035)*step(0.1,sin(p.x*5.0-p.y*3.0+uT*0.9))*0.85);}
+ else if(mat<8.5){vec3 an=abs(N);vec2 p=an.y>max(an.x,an.z)*1.3?vO.xz:(an.x>an.z?vO.zy:vO.xy);p*=0.72;vec2 c=floor(p);
+  if(hash(c+vec2(3.1,7.7))>0.3){vec2 q=fract(p)-0.5-(vec2(hash(c+1.3),hash(c+5.9))-0.5)*0.35;float r=0.2+0.1*hash(c+2.2);
+   float m=ln(abs(length(q)-r),0.03)*step(q.y,-0.04);alb=mix(alb,alb*0.5,m*pf*(L<0.62?1.0:0.75));}}
+ else if(mat<9.5){float r=length(vO.xz),n=max(3.0,floor(6.2832*r/0.32)),s=(atan(vO.z,vO.x)/6.2832+0.5)*n,col=floor(s);
+  float h=hash(vec2(col,floor(vO.y/1.1+hash(vec2(col,1.0)))));float d=abs(fract(s+0.15*sin(vO.y*2.3+col*1.7))-0.5)*0.32;
+  alb=mix(alb,alb*0.6,ln(d,0.016)*step(0.3,h)*pf);}
 }
 float a=L*0.85;
 vec3 Vd=normalize(uCam-vW);
@@ -49,8 +72,9 @@ o1=vec4(vn.xy*0.5+0.5,vX.x/255.0,(unlit+2.0*noE)/3.0);}`;
 const VS_S=`#version 300 es
 precision highp float;
 ${INST}
+${ANIM}
 uniform mat4 uLVP;
-void main(){mat4 m=mat4(i0,i1,i2,i3);float nc=mod(floor(iX.z*0.25),2.0);gl_Position=nc>0.5?vec4(2.0,2.0,2.0,1.0):uLVP*(m*vec4(aP,1.0));}`;
+void main(){mat4 m=mat4(i0,i1,i2,i3);float nc=mod(floor(iX.z*0.25),2.0);vec3 n=vec3(0.0);vec3 w=kbAnim((m*vec4(aP,1.0)).xyz,i3.xyz,mat3(m),iX.z,n);gl_Position=nc>0.5?vec4(2.0,2.0,2.0,1.0):uLVP*vec4(w,1.0);}`;
 const FS_S=`#version 300 es
 precision mediump float;void main(){}`;
 const VS_Q=`#version 300 es
@@ -135,8 +159,8 @@ dir=clamp(dir*rc,vec2(-8.0),vec2(8.0))*uPx;
 vec3 A=0.5*(texture(uT,vUv+dir*(1.0/3.0-0.5)).rgb+texture(uT,vUv+dir*(2.0/3.0-0.5)).rgb);
 vec3 B=A*0.5+0.25*(texture(uT,vUv+dir*-0.5).rgb+texture(uT,vUv+dir*0.5).rgb);
 float lb=dot(B,lu);oC=vec4((lb<mn||lb>mx)?A:B,1.0);}`;
-const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV']);
-const pS=mkProg(VS_S,FS_S,['uLVP']);
+const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT']);
+const pS=mkProg(VS_S,FS_S,['uLVP','uT']);
 const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight']);
 const pF=mkProg(VS_Q,FS_F,['uT','uPx']);
 // ---- render targets ----
@@ -178,7 +202,7 @@ gl.bindBuffer(gl.ARRAY_BUFFER,b.buf);for(let k=0;k<6;k++){gl.enableVertexAttribA
 gl.bindVertexArray(null);prims.push(p);return prims.length-1}
 const BOX=addPrim(mkBox()),SPH=addPrim(mkSph(10,16)),CYL=addPrim(mkCyl(16)),CONE=addPrim(mkCone(16,false,0,0.5)),PYR=addPrim(mkCone(4,true,PI/4,0.7071)),PRISM=addPrim(mkPrism()),
 STAR=addPrim(mkStar(10,0.24,0.5,0,1)),BURST=addPrim(mkStar(14,0.2,0.5,0.45,7)),RING=addPrim(mkRing(28,0.4)),QUAD=addPrim(mkQuad()),SPIKE=addPrim(mkSph(6,10,(i,j)=>(i===0||i===6)?0.5:((i+j)%2===0?0.5:0.27)));
-const F_UNLIT=1,F_NOEDGE=2,F_NOCAST=4;
+const F_UNLIT=1,F_NOEDGE=2,F_NOCAST=4,F_SWAY=8,F_CLOTH=16,F_DRIFT=32,F_FLAME=64;
 let curLayer=1,idS=0,idD=0,gTint=0,gId=0;
 function nid(){return curLayer===0?(1+(idS=(idS+1)%110)):(112+(idD=(idD+1)%140))}
 function emit(pi,c,mat,gloss,fl,rim){const b=prims[pi].b[curLayer];if(b.n>=b.cap){const nd=new Float32Array(b.cap*2*FL);nd.set(b.d);b.d=nd;b.cap*=2}

@@ -8,3 +8,5 @@
 | `assets/stage_shrine.glb` | 上記を書き出したゲーム用モデル | `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `blender/stage_castle.blend` | 城ステージ（ステージ2）の元データ | 本プロジェクトで自作。旧コード版 `buildStage2Code()`（js/players.js）から同じ手順で移したもの | 自作（第三者素材なし） |
 | `assets/stage_castle.glb` | 上記を書き出したゲーム用モデル | `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+
+両ステージの小物（しめ縄・絵馬掛け・散った花びら・草・提灯・陣幕・槍掛け・砲弾など）、手描き風の模様（葉・木の皮・水面）、揺れ・はためき・炎・雲の動きもすべて本プロジェクトで自作。外部からダウンロードした素材は使っていない。

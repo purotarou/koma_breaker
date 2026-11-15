@@ -23,7 +23,7 @@ for(const[x,z]of[[-24,-28],[24,-28],[-24,24],[24,24]]){box(x,3,z,5.4,6,5.4,C.sto
 for(const s of[-1,1]){box(s*4.6,4,-17,1.3,8,1.3,C.woodD,2);box(s*4.6,0.5,-17,1.7,1,1.7,C.black);colC.push({x:s*4.6,z:-17,r:0.95,h:8});put(CONE,s*7.3,10.6,-17,0,0,-s*0.5,0.6,1.5,0.6,C.gold,0,.8);cyl(s*3.9,2.6,23,0.8,5.2,0.8,C.woodD);box(s*1.95,2.3,23.1,3.7,4.6,0.25,C.wood,2)}
 box(0,7.5,-17,13,1,1.4,C.woodD,2);box(0,8.25,-17,13.8,0.5,2,C.plaster);put(PRISM,0,9.45,-17,0,PI/2,0,3.6,1.9,15.6,C.black,3);box(0,6.3,-17,2.4,1.1,0.3,C.gold);box(0,6.3,-17,2,0.75,0.36,C.black);
 box(0,5.2,23,9.6,0.6,0.9,C.woodD);put(PRISM,0,6.2,23,0,PI/2,0,3.6,1.5,11.5,C.black,3);
-const fire=(x,z)=>{for(let i=0;i<3;i++){const a=i*2.094;put(CYL,x+Math.cos(a)*0.42,0.9,z+Math.sin(a)*0.42,0,-a,0.42,0.1,2,0.1,C.black)}cyl(x,1.85,z,0.95,0.32,0.95,C.black);put(CONE,x,2.65,z,0,0,0,0.85,1.5,0.85,C.orange,0,0,NF);put(CONE,x,2.45,z,0,1,0,0.5,1,0.5,C.yellow,0,0,NF);colC.push({x,z,r:0.75,h:2.6})};
+const fire=(x,z)=>{for(let i=0;i<3;i++){const a=i*2.094;put(CYL,x+Math.cos(a)*0.42,0.9,z+Math.sin(a)*0.42,0,-a,0.42,0.1,2,0.1,C.black)}cyl(x,1.85,z,0.95,0.32,0.95,C.black);put(CONE,x,2.65,z,0,0,0,0.85,1.5,0.85,C.orange,0,0,NF|F_FLAME);put(CONE,x,2.45,z,0,1,0,0.5,1,0.5,C.yellow,0,0,NF|F_FLAME);colC.push({x,z,r:0.75,h:2.6})};
 fire(-7.5,-9);fire(7.5,-9);fire(-7.5,6);fire(7.5,6);
 const cannon=(x,z,a)=>{mPush();mT(x,0,z);mRY(a);box(0,0.5,0,1.3,0.5,2.3,C.woodD,2);for(const s of[-1,1])put(CYL,s*0.75,0.55,0.3,0,0,PI/2,1.1,0.2,1.1,C.wood);put(CYL,0,1.05,0.5,1.35,0,0,0.6,2.8,0.6,C.black,0,.8);put(CYL,0,1.35,1.75,1.35,0,0,0.72,0.2,0.72,C.gold);mPop();colB.push({x0:x-1.2,x1:x+1.2,z0:z-1.2,z1:z+1.2,h:1.5})};
 cannon(-15,-6,0.5);cannon(15,10,-2.2);
@@ -38,7 +38,23 @@ for(const s of[-1,1])put(CONE,72+s*7,59.4,-125,0,0,-s*0.4,2,5,2,C.gold,0,.8);
 put(SPH,-70,200,-700,0,0,0,240,240,20,C.moon,0,0,NF);
 for(let i=0;i<10;i++){const a=i/10*TAU+R()*0.3,d=190+R()*110;sph(Math.cos(a)*d,-6,Math.sin(a)*d,150+R()*90,46+R()*36,130+R()*60,C.nHill)}
 put(CONE,260,24,-420,0,0,0,330,74,330,C.nMount);put(CONE,430,20,-120,0,0,0,300,66,300,C.nMount);put(CONE,-430,22,120,0,0,0,320,70,320,C.nMount);
-for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=260+R()*180,h=90+R()*80,cx=Math.cos(a)*d,cz=Math.sin(a)*d,n=3+((R()*3)|0);for(let i=0;i<n;i++){const w=50+R()*40;sph(cx+(i-n/2)*32,h+R()*8,cz+R()*20,w,w*0.3,w*0.7,C.nCloud,0,0,F_NOCAST)}}}
+for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=260+R()*180,h=90+R()*80,cx=Math.cos(a)*d,cz=Math.sin(a)*d,n=3+((R()*3)|0);for(let i=0;i<n;i++){const w=50+R()*40;sph(cx+(i-n/2)*32,h+R()*8,cz+R()*20,w,w*0.3,w*0.7,C.nCloud,0,0,F_NOCAST|F_DRIFT)}}
+// ---- extra props (own RNG so the layout above is unchanged) ----
+const R2=mulberry(37);
+// gate lanterns
+for(const x of[-2.6,2.6])chochin(x,5.95,-16.1,C.lant,F_UNLIT);for(const x of[-2.2,2.2])chochin(x,3.85,22.2,C.lant,F_UNLIT);
+// jinmaku
+for(const s of[-1,1])for(const[z0,n]of[[-17,5],[3.4,4]])for(let i=0;i<n;i++){const z=z0+i*2.8+1.4,x=s*22.12;
+ box(x,1.85,z,0.04,1.5,2.7,C.white);box(x-s*0.01,2.45,z,0.04,0.3,2.7,C.black);box(x-s*0.01,1.25,z,0.04,0.3,2.7,C.black);
+ put(CYL,x-s*0.03,1.85,z,0,0,PI/2,0.62,0.04,0.62,C.crim);put(CYL,x-s*0.04,1.85,z,0,0,PI/2,0.3,0.04,0.3,C.gold);
+ cyl(x,1.4,z0+i*2.8,0.1,2.8,0.1,C.woodD)}
+// spear racks
+for(const s of[-1,1]){const x=s*21.1;for(const z of[-1.2,1.2])box(x,1.1,z,0.15,2.2,0.15,C.woodD,2);box(x,1.9,0,0.12,0.1,2.6,C.woodD);box(x,0.5,0,0.12,0.1,2.6,C.woodD);
+ for(let i=0;i<5;i++){const z=-0.9+i*0.45,rz=s*(0.06+R2()*0.05);put(CYL,x,1.55,z,0,0,rz,0.06,3.1,0.06,C.black);put(CONE,x-Math.sin(rz)*1.72,3.32,z,0,0,rz,0.12,0.42,0.12,C.steel,0,.8)}
+ colB.push({x0:s>0?20.6:-21.6,x1:s>0?21.6:-20.6,z0:-1.5,z1:1.5,h:3.4})}
+// cannonballs
+for(const[cx,cz]of[[-12.9,-7.9],[13.4,12.2]]){for(const[dx,dz]of[[-0.33,-0.33],[0.33,-0.33],[-0.33,0.33],[0.33,0.33]])sph(cx+dx,0.32,cz+dz,0.64,0.64,0.64,C.black,0,.6);sph(cx,0.83,cz,0.64,0.64,0.64,C.black,0,.6);colC.push({x:cx,z:cz,r:0.75,h:1.2})}
+}
 // ---- players ----
 const isCli=()=>net.on&&!net.host;
 function allP(){const a=[];if(!pl.dead)a.push(pl);for(const o of others)if(!o.dead)a.push(o);return a}
