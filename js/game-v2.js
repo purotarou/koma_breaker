@@ -1,6 +1,6 @@
 'use strict';
 // ================= GAME FLOW (v2) =================
-function resetWorld(){enemies.length=0;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.cine=0;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
+function resetWorld(){enemies.length=0;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
 function beginGame(){setStage(G.stage);resetWorld();pl.slot=net.on?net.slot:0;const pvp=G.mode==='pvp',sp=pvp?PSPAWN[pl.slot]:SPAWN[pl.slot];resetPlayer(sp[0],sp[1],pvp?Math.atan2(sp[0],sp[1]+2):0);
 for(const o of others){const s=pvp?PSPAWN[o.slot]:SPAWN[o.slot];o.x=o.nx=s[0];o.z=o.nz=s[1];o.dead=false;o.hp=100;o.y=o.ny=0}
 Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0});
@@ -10,7 +10,7 @@ function startGame(){G.mode='solo';beginGame()}
 function spawnGroup(g){for(const k in g){const n=Math.round(g[k]*(1+0.5*(G.np-1)));for(let i=0;i<n;i++)spawnNear(k)}}
 function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.boss){spawnBoss();ev('say','全テヲ',G.stage?'紅ク染メル!!':'黒ク塗ル!!',1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
 function updateWaves(dt){G.time+=dt;if(G.clearT>=0){G.clearT-=dt;if(G.clearT<0)startWave(G.wave+1);return}if(G.wave<0)return;const w=WAVESET[G.stage][G.wave];G.waveT+=dt;
-if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>3.2){G.state='clear';G.resT=0;snd('ui');saveHi()}}return}
+if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>2.3){G.state='clear';G.resT=0;snd('ui');saveHi()}}return}
 if(G.grp<w.g.length){if(enemies.length<=1||G.waveT>G.grp*12){spawnGroup(w.g[G.grp]);G.grp++}}
 else if(enemies.length===0){G.clearT=2.8;ev('heal');ev('ban','撃破！','体力回復 ＋30');if(G.wave===2)ev('say','次で','最後だ…!',0);else ev('say','よし、','次！',0)}}
 function gameOver(){G.state='over';G.resT=0;musOn=0;if(!net.on){slowT=2;slowK=0.3}}
@@ -25,19 +25,19 @@ const BTN={fire:{x:1140,y:570,r:88,l:'撃'},special:{x:1092,y:404,r:54,l:'必殺
 
 function hitBtn(p){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){snd('ui');b.cb(p);return true}}return false}
 function tap(p){audioInit();if(wipe.on)return;if(p&&hitBtn(p))return;if(G.state==='title')startWipe(()=>{resetWorld();G.demoOn=false;G.state='menu';G.menu='main';G.mode='solo';sndVol=1})}
-function tStart(e){e.preventDefault();touchMode=hasTouch=true;for(const t of e.changedTouches){const p=evPos(t),id=t.identifier;if(G.state!=='play'||G.paused){tap(p);continue}audioInit();if(hitBtn(p))continue;
+function tStart(e){e.preventDefault();touchMode=hasTouch=true;for(const t of e.changedTouches){const p=evPos(t),id=t.identifier;if(layEdit){audioInit();layDown(p,id);continue}if(G.state!=='play'||G.paused){tap(p);continue}audioInit();if(hitBtn(p))continue;
 let hit=null,bd=1e9;for(const k in BTN){const b=BTN[k],d=Math.hypot(p.x-b.x,p.y-b.y);if(d<b.r*1.2&&d<bd){bd=d;hit=k}}
 if(hit){touch.hold[id]=hit;if(hit==='fire'){touch.fid=id;touch.flx=p.x;touch.fly=p.y}else inp[hit]=true}
 else if((SET.lh?p.x>W*0.58:p.x<W*0.42)&&touch.sid===null){touch.sid=id;touch.ox=SET.lh?clamp(p.x,W-400,W-90):clamp(p.x,90,400);touch.oy=clamp(p.y,300,630);touch.dx=touch.dy=0}
 else if(touch.lid===null){touch.lid=id;touch.lx=p.x;touch.ly=p.y}}}
-function tMove(e){e.preventDefault();for(const t of e.changedTouches){const p=evPos(t),id=t.identifier;if(id===touch.sid){let dx=p.x-touch.ox,dy=p.y-touch.oy;const l=Math.hypot(dx,dy);if(l>70){dx*=70/l;dy*=70/l}touch.dx=dx/70;touch.dy=dy/70}
+function tMove(e){e.preventDefault();for(const t of e.changedTouches){const p=evPos(t),id=t.identifier;if(layEdit){layMove(p,id);continue}if(id===touch.sid){let dx=p.x-touch.ox,dy=p.y-touch.oy;const l=Math.hypot(dx,dy);if(l>70){dx*=70/l;dy*=70/l}touch.dx=dx/70;touch.dy=dy/70}
 else if(id===touch.lid){inp.lx+=(p.x-touch.lx)*0.0052*SET.sens;inp.ly+=(p.y-touch.ly)*0.0042*SET.sens*SET.inv;touch.lx=p.x;touch.ly=p.y}
 else if(id===touch.fid){inp.lx+=(p.x-touch.flx)*0.0052*SET.sens;inp.ly+=(p.y-touch.fly)*0.0042*SET.sens*SET.inv;touch.flx=p.x;touch.fly=p.y}}}
-function tEnd(e){e.preventDefault();for(const t of e.changedTouches){const id=t.identifier;if(id===touch.sid){touch.sid=null;touch.dx=touch.dy=0}if(id===touch.lid)touch.lid=null;if(id===touch.fid)touch.fid=null;delete touch.hold[id]}if(e.touches.length===0){touch.sid=touch.lid=touch.fid=null;touch.dx=touch.dy=0;touch.hold={}}}
+function tEnd(e){e.preventDefault();for(const t of e.changedTouches){const id=t.identifier;if(layEdit)layUp(id);if(id===touch.sid){touch.sid=null;touch.dx=touch.dy=0;touch.ox=touch.hx;touch.oy=touch.hy}if(id===touch.lid)touch.lid=null;if(id===touch.fid)touch.fid=null;delete touch.hold[id]}if(e.touches.length===0){if(touch.sid!==null){touch.ox=touch.hx;touch.oy=touch.hy}touch.sid=touch.lid=touch.fid=null;touch.dx=touch.dy=0;touch.hold={}}}
 for(const el of[stageEl]){el.addEventListener('touchstart',tStart,{passive:false});el.addEventListener('touchmove',tMove,{passive:false});el.addEventListener('touchend',tEnd,{passive:false});el.addEventListener('touchcancel',tEnd,{passive:false})}
 document.addEventListener('gesturestart',e=>e.preventDefault());
-uic.addEventListener('mousedown',e=>{if(touchMode)return;const p=evPos(e);if(G.state!=='play'||G.paused){tap(p);return}audioInit();if(hitBtn(p))return;if(document.pointerLockElement!==uic){try{uic.requestPointerLock()}catch(er){}}if(e.button===0)mouseFire=true;else if(e.button===2)inp.special=true});
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Escape'&&setOpen){setOpen=false;return}if(G.state==='title'){if(e.code==='Enter'||e.code==='Space')tap(null)}else if(G.state==='play'){if(e.code==='Space')inp.jump=true;if(e.code==='ShiftLeft'||e.code==='ShiftRight')inp.dash=true;if(e.code==='KeyE'||e.code==='KeyQ')inp.special=true;if(e.code==='KeyR')inp.reload=true;if(e.code==='KeyP'||e.code==='Escape')G.paused=!G.paused}
+uic.addEventListener('mousedown',e=>{if(touchMode)return;const p=evPos(e);if(layEdit){layDown(p,'m');return}if(G.state!=='play'||G.paused){tap(p);return}audioInit();if(hitBtn(p))return;if(document.pointerLockElement!==uic){try{uic.requestPointerLock()}catch(er){}}if(e.button===0)mouseFire=true;else if(e.button===2)inp.special=true});
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Escape'&&setOpen){if(layEdit){layEdit=false;layDrag=null;applySet()}else setOpen=false;return}if(G.state==='title'){if(e.code==='Enter'||e.code==='Space')tap(null)}else if(G.state==='play'){if(e.code==='Space')inp.jump=true;if(e.code==='ShiftLeft'||e.code==='ShiftRight')inp.dash=true;if(e.code==='KeyE'||e.code==='KeyQ')inp.special=true;if(e.code==='KeyR')inp.reload=true;if(e.code==='KeyP'||e.code==='Escape')G.paused=!G.paused}
 else if(G.state==='menu'&&G.menu==='join'){if(/^Digit\d$/.test(e.code)&&net.input.length<5)net.input+=e.code[5];if(e.code==='Backspace')net.input=net.input.slice(0,-1)}if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault()});
 function readInput(){let mx=touch.dx,mz=-touch.dy;if(keys.KeyW||keys.ArrowUp)mz+=1;if(keys.KeyS||keys.ArrowDown)mz-=1;if(keys.KeyD||keys.ArrowRight)mx+=1;if(keys.KeyA||keys.ArrowLeft)mx-=1;inp.mx=clamp(mx,-1,1);inp.mz=clamp(mz,-1,1);inp.fire=mouseFire||touch.fid!==null}
 // ================= UI (v2) =================
@@ -86,8 +86,9 @@ function drawUI(dt){ctx.clearRect(0,0,W,H);btns=[];const play=G.state==='play',d
 if(lineA>0.03){ctx.globalAlpha=Math.min(1,lineA*1.3);focusLines(lineCx,lineCy,300+(1-lineA)*200,64,lineCol,((now*24)|0));ctx.globalAlpha=1}
 if(boss&&boss.st==='rise'){ctx.globalAlpha=0.8;focusLines(W/2,H*0.4,380,56,INK,((now*20)|0)+50);ctx.globalAlpha=1}
 if(pl.dashT>0){ctx.globalAlpha=0.7;focusLines(W/2,H/2,330,50,INK,((now*30)|0)+90);ctx.globalAlpha=1}
-if(play)drawTags();drawTexts();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
-if(play){drawHUD();drawHUD2();drawTouch();if(!hasTouch&&G.time<8&&G.mode!=='pvp')txt('WASD：移動　マウス：視点／射撃　SPACE：ジャンプ　SHIFT：回避　E：必殺　R：装填',W/2,610,20,'#fff',INK,6)}
+const kc=play&&G.kcT>=0;if(play&&!kc)drawTags();drawTexts();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
+if(kc){const k=easeOut(sat(G.kcT/0.25))*58;ctx.fillStyle=INK;ctx.fillRect(0,0,W,k);ctx.fillRect(0,H-k,W,k)}
+if(play&&!kc){drawHUD();drawHUD2();drawTouch();if(!hasTouch&&G.time<8&&G.mode!=='pvp')txt('WASD：移動　マウス：視点／射撃　SPACE：ジャンプ　SHIFT：回避　E：必殺　R：装填',W/2,610,20,'#fff',INK,6)}
 for(let i=balloons.length-1;i>=0;i--){const b=balloons[i];b.t+=dt;if(b.t>b.life)balloons.splice(i,1);else if(play)drawBalloon(b)}
 if(demo&&G.endT>1.2){const u=easeBack(sat((G.endT-1.2)/0.3));ctx.save();ctx.translate(W/2,H*0.42);ctx.rotate(-0.06);ctx.scale(u,u);txt('撃破！！',0,0,150,'#ffd91a',INK,20,'center','#fff',36);ctx.restore()}
 if(G.state==='title')drawTitle(dt);else if(G.state==='menu')drawMenu(dt);else if(G.state==='clear'||G.state==='over')drawResult();
@@ -97,7 +98,11 @@ if(play&&G.paused){ctx.fillStyle='rgba(22,18,31,.6)';ctx.fillRect(0,0,W,H);txt('
 if(setOpen)drawSettings();if(wipe.on)drawWipe();ctx.strokeStyle='#fff';ctx.lineWidth=14;ctx.strokeRect(0,0,W,H);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(9.5,9.5,W-19,H-19)}
 // ================= MAIN (v2) =================
 let GDT=0;
+// boss defeat camera: cut away from the player, start a little above the boss and drift in while circling
+function killCam(dt){const t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=0,ty=17,tz=-21.5,a=lerp(-0.62,-0.18,u)+t*0.015,d=lerp(38,22,u),h=lerp(17,4,u),s=trauma*trauma;
+cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty-cam.y,dz=tz-cam.z;cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.03;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.03;cam.roll=lerp(-0.06,0.02,u)+rnd(-1,1)*s*0.03;cam.fov=lerp(64,54,u)*PI/180}
 function setCamera(dt){if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
+else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
 cam.fov=lerp(cam.fov,(80+(pl.dashT>0?14:0)+(pl.sp===2?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10))}camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
@@ -111,6 +116,7 @@ else if(!paused){const cli=isCli();
   if(!cli){if(G.mode==='pvp'){G.tm-=dt;if(G.tm<=0||Math.max.apply(null,G.pk)>=10){G.state='clear';G.resT=0;musOn=0;snd('ui')}}else updateWaves(g);updateItems(g)}
   if(net.on&&net.host&&G.mode==='coop'&&pl.dead&&others.every(o=>o.dead)){G.allT+=dt;if(G.allT>1.5)gameOver()}else G.allT=0}
  else{inp.fire=false;inp.mx=inp.mz=0}
+ if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0){G.kcT+=dt;inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
  if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5);pl.yaw+=angDiff(Math.atan2(pl.x,pl.z+21),pl.yaw)*k;pl.pitch+=(Math.atan2(19,Math.hypot(pl.x,pl.z+26))-pl.pitch)*k}
  updatePlayer(g);if(cli)clientInterp(g);else{updateEnemies(g);updateShots(g)}
  updateOthers(dt);updateShocks(g);pickItems(g);updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}

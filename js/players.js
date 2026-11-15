@@ -104,7 +104,7 @@ if(mine){G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.
 if(e.type==='imp'){if(e.v)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);if(!pl.sp||lim('spx',0.5))sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
 else if(e.type==='lan')explode(e.x,y,e.z,1.1);else{explode(e.x,1.8,e.z,2.3,{text:'ズドォォン！'});fxBlobs(e.x,1.5,e.z,20,10,C.ink,0.25);stopT(0.12);invA=1}
 for(let i=0;i<(e.type==='bru'?8:3);i++)fxOrb(e.x,y,e.z)}
-function kill(e,by){if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;if(!net.on){slowT=2.2;slowK=0.45;stopT(0.2)}musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
+function kill(e,by){if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
 if(e.dead)return;e.dead=true;G.kills++;if(by>=0)G.pk[by]++;G.score+=({imp:100,lan:150,bru:500})[e.type]*(10+Math.min(G.combo,10))/10|0;killFx(e);
 if(boss===null&&Math.random()<(e.type==='bru'?1:0.12))spawnItem((Math.random()*3)|0,e.x,e.z);
 if(e.v){areaHurt(e.x,e.z,2.8,14);for(const o of enemies)if(!o.dead&&o.type!=='boss'&&Math.hypot(o.x-e.x,o.z-e.z)<3.8){o.hp-=70;o.flash=0.1;if(o.hp<=0)kill(o,by)}}}
@@ -123,7 +123,11 @@ function spawnBoss(){const b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st
 b.mhp=b.hp;enemies.push(b);boss=b;bossIntro();return b}
 function bossCos(b,dt){b.t+=dt;b.stT+=dt;b.flash-=dt;b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);
 if(b.st==='rise'){trauma=Math.max(trauma,0.3);if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12))fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3)}
-else if(b.st==='die'){trauma=Math.max(trauma,0.5);if(lim('bdie',0.14)){const a=rnd(0,TAU);explode(Math.cos(a)*rnd(0,10),rnd(4,28)+b.yo,-19.5+rnd(-1,2),rnd(1,2.2),{quiet:Math.random()<0.55,ink:1})}}}
+else if(b.st==='die')bossDieFx(b)}
+// boss defeat: a few spaced pops while the boss trembles, then one big burst (bossEnd) at BDIE_END
+const BDIE_POPS=[[0.3,-5,24,3.2],[0.7,5,15,3],[1.05,-3,25,3.4],[1.35,3,20,3.6]],BDIE_END=1.85;
+function bossDieFx(b){b.pops=b.pops||0;for(let i=0;i<BDIE_POPS.length;i++){const q=BDIE_POPS[i];if(b.stT>=q[0]&&!(b.pops&(1<<i))){b.pops|=1<<i;const x=q[1]+rnd(-1.5,1.5),y=q[2]+b.yo+rnd(-2,2),z=-15.5;explode(x,y,z,q[3],{ink:1,quiet:1});sfxAt(i%2?'ボンッ':'バンッ',x,y+3,z,{size:90,st:'boom',life:0.45});snd('boom',0.8);flash(0.35);shake(0.5);b.flash=0.08}}
+ if(b.stT>1.4)b.flash=Math.sin(b.stT*48)>0?0.03:0;trauma=Math.max(trauma,b.stT>1.4?0.45:0.12)}
 // ---- shared FX events (host runs + broadcasts, clients replay) ----
 const FXE={
 bomb(x,z){explode(x,0.6,z,1.6,{ink:1,text:'ドォン！'});decals.push({x,z,r:3,life:6})},
@@ -135,7 +139,7 @@ ban(ch,name){G.banner={ch,name};G.bannerT=0;snd('ui')},
 say(a,b,who){say(b?[a,b]:[a],who)},
 txt(s,x,y,z,size,st){sfxAt(s,x,y,z,{size,st,life:0.7})},
 heal(){if(!pl.dead)pl.hp=Math.min(100,pl.hp+30)},
-bossEnd(){for(let i=0;i<7;i++)explode(rnd(-11,11),rnd(3,26),-19.5+rnd(-2,2),rnd(2.5,4.5),{quiet:1,ink:1});explode(0,15,-19.5,9,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.3);for(let i=0;i<24;i++)fxOrb(rnd(-5,5),rnd(2,9),-18)}};
+bossEnd(){for(let i=0;i<5;i++)explode(rnd(-9,9),rnd(8,30),-19+rnd(-2,2),rnd(2.5,4),{quiet:1,ink:1});explode(0,22,-18.5,8,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.25);for(let i=0;i<24;i++)fxOrb(rnd(-6,6),rnd(10,26),-18)}};
 function ev(n,...a){FXE[n](...a);if(net.on&&net.host)net.evq.push([++net.evseq,n,a,now])}
 function updateShocks(dt){for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=s.v*dt;if(s.r>0&&!s.hit&&!pl.dead&&Math.abs(Math.hypot(pl.x-s.x,pl.z-s.z)-s.r*0.97)<0.8&&pl.y<0.55){s.hit=true;hurtPlayer(s.d,s.x,s.z)}if(s.r>s.max)shocks.splice(i,1)}}
 // ---- items ----

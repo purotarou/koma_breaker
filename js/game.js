@@ -33,7 +33,7 @@ if(dz_&&pl.dashCd<=0){inp.dash=true;if(Math.abs(inp.mx)<0.3)inp.mx=ai.st}
 if(pl.gauge>=100&&tgt&&Math.abs(dyaw)<0.12&&(tgt.type==='bru'||tgt.type==='boss'||enemies.length>=3))inp.special=true;if(pl.ammo<=0)inp.reload=true;for(const s of shocks){const dd=Math.hypot(pl.x-s.x,pl.z-s.z)-s.r;if(dd>0&&dd<2.8)inp.jump=true}}
 // ================= INPUT =================
 function evPos(t){const r=uic.getBoundingClientRect();return{x:(t.clientX-r.left)/r.width*W,y:(t.clientY-r.top)/r.height*H}}
-addEventListener('mouseup',()=>{mouseFire=false});uic.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m')});uic.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousemove',e=>{if(touchMode||G.state!=='play')return;if(document.pointerLockElement===uic||mouseFire){inp.lx+=(e.movementX||0)*0.0024*SET.sens;inp.ly+=(e.movementY||0)*0.0024*SET.sens*SET.inv}});
 addEventListener('keyup',e=>{keys[e.code]=false});
 // ================= UI =================
@@ -97,7 +97,7 @@ function drawCutBoss(){const t=3.2-cutBoss,u=sat(t/0.25)*sat(cutBoss/0.3);ctx.fi
 if(t>0.5){const k=easeBack(sat((t-0.5)/0.25));ctx.save();ctx.translate(60,H-74);ctx.rotate(-0.045);ctx.scale(k,k);txt(STG[G.stage].boss.slice(0,4),0,-10,54,'#fff',null,0,'left');txt(STG[G.stage].boss.slice(4),250,-4,92,'#ff2e2e','#fff',10,'left');ctx.restore()}}
 function drawWipe(){const t=wipe.t,c=easeOut(t<0.5?t*2:(1-t)*2);ctx.fillStyle=INK;const n=7,bw=W/n+60;for(let i=0;i<n;i++){const x=i*(W/n)-30,w=bw*c*1.02;ctx.beginPath();const o=t<0.5?0:bw-w;ctx.moveTo(x+o+70,-10);ctx.lineTo(x+o+w+70,-10);ctx.lineTo(x+o+w-70,H+10);ctx.lineTo(x+o-70,H+10);ctx.fill()}}
 // ================= MAIN =================
-function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawParts();if(!(G.state==='title'&&!G.demoOn))drawGun();
+function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawParts();if(!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0))drawGun();
 gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthRange(0,1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,shFbo);gl.viewport(0,0,SHN,SHN);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(pS.p);gl.uniformMatrix4fv(pS.u.uLVP,false,LVP);flushLayer(0);flushLayer(1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,gFbo);gl.viewport(0,0,W,H);gl.clearBufferfv(gl.COLOR,0,[0,0,0,1]);gl.clearBufferfv(gl.COLOR,1,[0.5,0.5,0,0]);gl.clearBufferfv(gl.DEPTH,0,[1]);

@@ -44,9 +44,8 @@ function updBoss(b,dt){b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.
 if(b.st==='rise'){b.yo=Math.min(0,-38+b.stT/2.6*38);trauma=Math.max(trauma,0.3);for(const s of[-1,1]){const h=s<0?b.hL:b.hR,r=restH(s,b.yo);h.x=r.x;h.y=r.y;h.z=r.z}
  if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12)){fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3);fxSmoke(rnd(-8,8),0.5,-18,1,1.6,C.smokeD,2)}
  if(b.stT>3.0){b.st='idle';b.stT=0;b.cdT=0.8}return}
-if(b.st==='die'){b.mouth=1;trauma=Math.max(trauma,0.5);if(lim('bdie',0.14)){const a=rnd(0,TAU);explode(Math.cos(a)*rnd(0,10),rnd(4,28)+b.yo,-19.5+rnd(-1,2),rnd(1,2.2),{quiet:Math.random()<0.55,ink:1})}
- if(b.stT>0.9)b.yo-=dt*2.5;for(const s of[-1,1]){const h=s<0?b.hL:b.hR;h.y=Math.max(1,h.y-dt*4)}
- if(b.stT>1.7){ev('bossEnd');b.dead=true;G.endT=0;G.score+=5000;G.kills++}return}
+if(b.st==='die'){b.mouth=1;bossDieFx(b);for(const s of[-1,1]){const h=s<0?b.hL:b.hR;h.y=Math.max(1,h.y-dt*3)}
+ if(b.stT>BDIE_END){ev('bossEnd');b.dead=true;G.endT=0;G.score+=5000;G.kills++}return}
 if(b.phase===1&&b.hp<b.mhp*0.5){b.phase=2;b.st='stag';b.stT=0;b.ah=-1;ev('roar',1);ev('say','オノレ','ェェェ!!',1)}
 for(let i=0;i<2;i++){if(b.ah===i)continue;const r=restH(i?1:-1,0),h=hands[i],k=Math.min(1,dt*4);h.x+=(r.x-h.x)*k;h.y+=(r.y-h.y)*k;h.z+=(r.z-h.z)*k}
 const p2=b.phase>1;

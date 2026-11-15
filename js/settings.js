@@ -2,13 +2,35 @@
 // ================= SETTINGS / RESULT (v3) =================
 const SET={sens:1,se:0.8,bgm:0.8,size:1,lh:0,inv:1};try{Object.assign(SET,JSON.parse(localStorage.getItem('koma_set')||'{}'))}catch(e){}
 const BTN0=JSON.parse(JSON.stringify(BTN));let setOpen=false;
-function applySet(){const sc=SET.size;for(const k in BTN){const b0=BTN0[k],b=BTN[k],x=W-(W-b0.x)*sc;b.y=H-(H-b0.y)*sc;b.r=b0.r*sc;b.x=SET.lh?W-x:x}touch.ox=SET.lh?W-150:150;touch.oy=560;if(musG)musG.gain.value=0.3*SET.bgm;try{localStorage.setItem('koma_set',JSON.stringify(SET))}catch(e){}}
+// SET.lay: custom button layout {key:{x,y,s}} in right-handed screen coords (mirrored when SET.lh); null = default layout
+function applySet(){const sc=SET.size,L=SET.lay;for(const k in BTN){const b0=BTN0[k],b=BTN[k],c=L&&L[k];if(c){b.x=SET.lh?W-c.x:c.x;b.y=c.y;b.r=b0.r*sc*(c.s||1)}else{const x=W-(W-b0.x)*sc;b.y=H-(H-b0.y)*sc;b.r=b0.r*sc;b.x=SET.lh?W-x:x}}touch.hx=SET.lh?W-150:150;touch.hy=560;if(touch.sid===null){touch.ox=touch.hx;touch.oy=touch.hy}if(musG)musG.gain.value=0.3*SET.bgm;try{localStorage.setItem('koma_set',JSON.stringify(SET))}catch(e){}}
 applySet();
-function openSet(){setOpen=true}
+function openSet(){setOpen=true;layEdit=false}
+// ---- button layout editor ----
+let layEdit=false,laySel='fire',layDrag=null,layB0=0;
+const LAYN={fire:'撃つ',special:'必殺',jump:'ジャンプ',reload:'装填',dash:'回避'};
+function layEnsure(){if(!SET.lay){SET.lay={};for(const k in BTN){const b=BTN[k];SET.lay[k]={x:SET.lh?W-b.x:b.x,y:b.y,s:1}}}return SET.lay}
+function layDown(p,id){for(let i=btns.length-1;i>=layB0;i--){const b=btns[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){snd('ui');b.cb(p);return}}let hit=null,bd=1e9;for(const k in BTN){const b=BTN[k],d=Math.hypot(p.x-b.x,p.y-b.y);if(d<Math.max(b.r*1.15,40)&&d<bd){bd=d;hit=k}}
+ if(hit){laySel=hit;layDrag={id,k:hit,ox:BTN[hit].x-p.x,oy:BTN[hit].y-p.y};snd('ui')}}
+function layMove(p,id){if(!layDrag||layDrag.id!==id)return;const b=BTN[layDrag.k],L=layEnsure()[layDrag.k];b.x=clamp(p.x+layDrag.ox,b.r*0.6+16,W-b.r*0.6-16);b.y=clamp(p.y+layDrag.oy,b.r*0.6+16,H-b.r*0.6-16);L.x=SET.lh?W-b.x:b.x;L.y=b.y}
+function layUp(id){if(layDrag&&layDrag.id===id){layDrag=null;applySet()}}
+function laySize(d){const L=layEnsure()[laySel];L.s=clamp(Math.round(((L.s||1)+d)*10)/10,0.6,1.6);applySet()}
+function drawLayEdit(){btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});layB0=btns.length;ctx.fillStyle='rgba(22,18,31,.72)';ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=0.35;ctx.fillStyle='#fff';ctx.fillRect(W*0.42-2,0,4,H);ctx.restore();
+txt('ボタンをドラッグして動かせます',W/2,H-40,24,'#fff',INK,6);
+for(const k in BTN){const b=BTN[k],sel=k===laySel;if(sel){ctx.beginPath();ctx.arc(b.x,b.y,b.r+12+2*Math.sin(now*8),0,TAU);ctx.strokeStyle='#ffd91a';ctx.lineWidth=8;ctx.stroke()}
+ ctx.beginPath();ctx.arc(b.x+4,b.y+6,b.r,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,TAU);ctx.fillStyle=k==='fire'?'#ff4a3d':k==='special'?'#35e0ff':k==='dash'?'#7fd6ff':'#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
+ txt(b.l,b.x,b.y+2,Math.min(b.r*0.62,44)/(b.l.length>1?1.25:1),k==='fire'?'#fff':INK,k==='fire'?INK:null,6)}
+const st=touch.hx||150;ctx.beginPath();ctx.arc(st,touch.hy||560,78,0,TAU);ctx.setLineDash([10,8]);ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();ctx.setLineDash([]);txt('移動スティック',st,(touch.hy||560)-100,20,'#fff',INK,5);
+// toolbar
+const tx=W/2-330,ty=26;panel(tx,ty,660,128);txt('ボタン配置の編集',tx+20,ty+30,26,INK,null,0,'left');
+txt('選択中：'+LAYN[laySel],tx+20,ty+92,26,'#e5402b',null,0,'left');const sz=SET.lay&&SET.lay[laySel]?SET.lay[laySel].s||1:1;
+B(tx+230,ty+64,56,52,'－',()=>laySize(-0.1),{sk:0,size:32});txt('大きさ ×'+sz.toFixed(1),tx+364,ty+92,22,INK);B(tx+440,ty+64,56,52,'＋',()=>laySize(0.1),{sk:0,size:32});
+B(tx+300,ty+8,150,46,'初期配置',()=>{SET.lay=null;applySet()},{size:22});B(tx+468,ty+8,170,46,'完了',()=>{layEdit=false;layDrag=null;applySet()},{col:'#ffd91a',size:26});
+B(tx+516,ty+68,122,46,'左右反転',()=>{SET.lh=SET.lh?0:1;applySet()},{size:20})}
 function toggleFS(){const d=document,el=d.documentElement;try{if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}}catch(e){}}
 function gearBtn(x,y){btns.push({x,y,w:62,h:62,cb:openSet});ctx.fillStyle=INK;ctx.fillRect(x+5,y+6,62,62);ctx.fillStyle='#fff';ctx.fillRect(x,y,62,62);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.strokeRect(x,y,62,62);
 ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.beginPath();for(let i=0;i<32;i++){const a=(i+0.5)/32*TAU,r=(i>>1)%2?15:22;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,7,0,TAU);ctx.fill();ctx.restore()}
-function drawSettings(){btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');
+function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');
 B(950,90,150,54,'とじる',()=>{setOpen=false},{col:'#ffd91a',size:28});
 const rows=[['視点感度','sens',0.3,2.5,v=>'×'+v.toFixed(1)],['効果音','se',0,1,v=>String(Math.round(v*10))],['BGM','bgm',0,1,v=>String(Math.round(v*10))]];
 rows.forEach((r,i)=>{const y=160+i*78,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set=nv=>{SET[k]=clamp(Math.round(nv*10)/10,r[2],r[3]);applySet();if(k==='se')snd('hit')};txt(r[0],200,y+28,30,INK,null,0,'left');
@@ -17,12 +39,12 @@ rows.forEach((r,i)=>{const y=160+i*78,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set
  B(876,y+2,66,54,'＋',()=>set(SET[k]+0.1),{sk:0,size:36});txt(r[4](v),1040,y+30,32,INK)});
 const tog=(y,label,opts,cur,cb)=>{txt(label,200,y+28,30,INK,null,0,'left');opts.forEach((o,i)=>B(440+i*170,y+2,156,54,o,()=>cb(i),{sk:8,size:24,col:cur===i?'#ffd91a':'#fff'}))};
 tog(400,'ボタンの大きさ',['小','中','大'],[0.85,1,1.15].indexOf(SET.size),i=>{SET.size=[0.85,1,1.15][i];applySet()});
-tog(478,'ボタン配置',['右手で撃つ','左手で撃つ'],SET.lh,i=>{SET.lh=i;applySet()});
+tog(478,'ボタン配置',['右手で撃つ','左手で撃つ'],SET.lh,i=>{SET.lh=i;applySet()});B(780,480,166,54,'自由に配置',()=>{layEdit=true;layDrag=null},{sk:8,size:24,col:'#59d8ff'});
 tog(556,'視点の上下',['通常','反転'],SET.inv>0?0:1,i=>{SET.inv=i?-1:1;applySet()});
 B(960,566,150,50,'全画面',()=>toggleFS(),{size:24});
 const px=960,py=430,pw=150,ph=84;ctx.fillStyle='#cfe6ff';ctx.fillRect(px,py,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(px,py,pw,ph);
 for(const k in BTN){const b=BTN[k];ctx.beginPath();ctx.arc(px+b.x/W*pw,py+b.y/H*ph,Math.max(3,b.r/W*pw),0,TAU);ctx.fillStyle=k==='fire'?'#ff4a3d':'#fff';ctx.fill();ctx.lineWidth=1.5;ctx.stroke()}
-ctx.beginPath();ctx.arc(px+touch.ox/W*pw,py+560/H*ph,10,0,TAU);ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();ctx.stroke();txt('配置プレビュー',px+pw/2,py-14,16,INK)}
+btns.push({x:px,y:py,w:pw,h:ph,cb:()=>{layEdit=true;layDrag=null}});if(SET.lay)txt('カスタム',px+pw/2,py+ph+14,16,'#e5402b');ctx.beginPath();ctx.arc(px+(touch.hx||150)/W*pw,py+(touch.hy||560)/H*ph,10,0,TAU);ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();ctx.stroke();txt('配置プレビュー',px+pw/2,py-14,16,INK)}
 const RKC={'S+':'#ff2e2e','S':'#ff2e2e','A':'#ff8a2b','B':'#2f6fd8','C':'#6a6a7a'},RKM={'S+':'伝説の一コマ！','S':'見事な腕前！','A':'やるじゃん！','B':'まだまだ伸びる！','C':'修行が足りん…'};
 const fmtT=s=>((s/60)|0)+':'+String((s%60)|0).padStart(2,'0');
 function drawResult(){const t=G.resT,cl=G.state==='clear';if(t<0.3){G.rs=0;return}if(G.mode==='pvp'){drawResultPvp();return}
@@ -41,7 +63,7 @@ if(t>P0){const k=easeOut(sat((t-P0)/0.3)),pw=600,rows=[['撃破数',G.kills],['�
  ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(-pw/2,-ph/2,pw,ph);ctx.lineWidth=2;ctx.strokeRect(-pw/2+9,-ph/2+9,pw-18,ph-18);
  para(-pw/2-16,-ph/2-34,360,54,18);ctx.fillStyle=cl?'#e5402b':INK;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(STG[G.stage].sub+'　'+STG[G.stage].name,-pw/2+172,-ph/2-6,26,'#fff');
  rows.forEach((r,i)=>{const st=P0+0.3+i*0.18,a=sat((t-st)/0.12);if(a<=0)return;if(!(G.rs&(1<<i))){G.rs|=1<<i;snd('hit')}const y=-ph/2+52+i*58,cu=easeOut(sat((t-st)/0.6));ctx.globalAlpha=a;
-  txt(r[0],-pw/2+40+(1-a)*-30,y,30,INK,null,0,'left');ctx.fillStyle=INK;for(let x=-pw/2+210;x<pw/2-200;x+=14)ctx.fillRect(x,y+10,5,5);
+  txt(r[0],-pw/2+40+(1-a)*-30,y,30,INK,null,0,'left');const lw=(pw-72)*easeOut(sat((t-st)/0.35));ctx.fillStyle=i===2?'#e5402b':INK;ctx.fillRect(-pw/2+34,y+26,lw,i===2?6:4);
   const v=r[2]==='t'?fmtT(r[1]*cu):r[2]==='s'?r[1]:String(Math.floor(r[1]*cu));ctx.save();ctx.translate(pw/2-38,y+2);ctx.transform(1,0,-0.18,1,0,0);txt(v,0,0,i===2?46:40,i===2?'#e5402b':INK,i===2?'#fff':null,i===2?10:0,'right');ctx.restore();ctx.globalAlpha=1});
  if(cl&&G.score>(G.prevHi||0)&&t>P0+1.2){const s=1+0.08*Math.sin(now*10);ctx.save();ctx.translate(pw/2-70,ph/2+8);ctx.rotate(-0.08);ctx.scale(s,s);burstPath(3,4,98,32,12,1.3,4);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,98,32,12,1.3,4);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('自己ベスト！',0,1,22,'#e5402b');ctx.restore()}
  ctx.restore()}
