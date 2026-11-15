@@ -126,12 +126,12 @@ box(0,-0.62,0,1700,1,1700,C.snow);box(0,0.02,2.45,5,0.1,65.1,C.stoneL,1);put(CYL
 burn(48);for(const sx of[-1,1]){bank(sx*2.95,-29.4,sx*2.95,-12.6,1.0,0.5,F_NOCAST);bank(sx*2.95,4.6,sx*2.95,34.4,1.0,0.5,F_NOCAST)}
 for(let i=0;i<14;i++){const a=i/14*TAU,r=7.6;box(Math.cos(a)*r,0.05,-4+Math.sin(a)*r,0.9,0.1,0.5,C.stoneD)}
 //#walls
-wallSnow(-WX,-53,WX,-53);wallSnow(-WX,WS,-5,WS);wallSnow(5,WS,WX,WS);wallSnow(-WX,-53,-WX,WS);wallSnow(WX,-53,WX,WS);
+wallSnow(-WX,-53,-3.0,-53);wallSnow(3.0,-53,WX,-53);wallSnow(-WX,WS,-5,WS);wallSnow(5,WS,WX,WS);wallSnow(-WX,-53,-WX,WS);wallSnow(WX,-53,WX,WS);
 for(const[x,z]of[[-WX,-53],[WX,-53],[-WX,WS],[WX,WS]]){box(x,1.9,z,1.1,3.8,1.1,C.twood,2);snowRoofPyr(x,4.1,z,1.7,0.7)}
 //#snow_drifts
 burn(48);const DX=WX-0.9,DS=WS-0.9;
 bank(DX,-36.6,DX,-3,2.4,1.6);bank(DX,18,DX,33.6,2.4,1.6);bank(-DX,-36.6,-DX,15,2.4,1.6);bank(-DX,25.4,-DX,33.6,2.4,1.6);
-bank(-31.4,-52.1,31.4,-52.1,2.4,1.6);bank(-31.4,DS,-7.4,DS,2.4,1.6);bank(7.4,DS,31.4,DS,2.4,1.6);
+bank(-31.4,-52.1,-19,-52.1,2.4,1.6);bank(19,-52.1,31.4,-52.1,2.4,1.6);bank(-31.4,DS,-7.4,DS,2.4,1.6);bank(7.4,DS,31.4,DS,2.4,1.6);
 //#sanmon
 {const z=WS;for(const x of[-5,-2.4,2.4,5])cyl(x,2.7,z,0.7,5.4,0.7,C.twood);for(const s of[-1,1])box(s*1.2,2.4,z+0.1,2.3,4.8,0.25,C.wood,2);box(0,5.08,z+0.1,4.8,0.56,0.25,C.twood);
  for(const s of[-1,1]){const cx=s*3.7;box(cx,1.0,z,2.62,2.0,0.5,C.twood,2);box(cx,3.7,z,2.62,3.4,0.42,C.ochre);box(cx,3.5,z-0.24,1.7,1.9,0.06,C.ink);for(let i=0;i<5;i++)box(cx-0.68+i*0.34,3.5,z-0.3,0.08,1.9,0.08,C.twood);box(cx,3.5,z-0.3,1.8,0.1,0.1,C.twood)}
@@ -140,13 +140,49 @@ bank(-31.4,-52.1,31.4,-52.1,2.4,1.6);bank(-31.4,DS,-7.4,DS,2.4,1.6);bank(7.4,DS,
  put(PRISM,0,10.6,z,0,PI/2,0,6.4,2.2,12.4,C.troof4,3);put(PRISM,0,10.95,z,0,PI/2,0,4.6,1.5,12.6,C.snow);box(0,11.8,z,10.8,0.36,0.5,C.troof4);
  icicles(-6.4,6.4,5.75,z-2.75,9);icicles(-5.8,5.8,9.5,z-3.15,8)}
 //#main_hall
-box(0,0.6,-41,36,1.2,18,C.stoneD,5);box(0,4.0,-41,26,5.6,12,C.twood,2);box(0,3.6,-34.95,13,3.4,0.1,C.paper);for(let i=0;i<8;i++)cyl(-12.25+i*3.5,4.0,-34.7,0.5,5.6,0.5,C.twood);
-for(let i=0;i<3;i++)box(0,0.2+i*0.4,-31.6+i*0.5,8,0.4,1.0,C.stone);
-colB.push({x0:-18,x1:18,z0:-50,z1:-32,h:1.2},{x0:-4,x1:4,z0:-32,z1:-30.1,h:1.0},{x0:-13,x1:13,z0:-47,z1:-35,h:13},{x0:-31,x1:-21,z0:-46,z1:-38,h:8},{x0:21,x1:31,z0:-46,z1:-38,h:8});
-for(const x of[-9,9]){toro(x,-29.6);put(PYR,x,3.14,-29.6,0,0,0,1.25,0.32,1.25,C.snow);sph(x,0.05,-29.6,1.75,0.5,1.75,C.snow,0,0,F_NOCAST)}
-put(PRISM,0,9.6,-41,0,PI/2,0,18.6,5.6,33,C.troof4,3);put(PRISM,0,10.8,-41,0,PI/2,0,13.4,4.0,33.4,C.snow);box(0,12.9,-41,28,0.45,0.6,C.troof4);for(const s of[-1,1])put(CONE,s*14,13.4,-41,0,0,0,0.9,1.4,0.9,C.troof4);
-icicles(-15,15,6.75,-31.9,16);
-for(const s of[-1,1]){box(s*26,3.2,-42,10,4.4,8,C.paper);box(s*26,1.0,-42,10.04,2.0,8.04,C.twood,2);put(PRISM,s*26,6.4,-42,0,PI/2,0,9.4,2.4,11,C.troof4,3);put(PRISM,s*26,6.9,-42,0,PI/2,0,6.8,1.6,11.2,C.snow)}
+// 入母屋 roof: hipped lower roof (base y = eave height) with a gable on top, snow on both
+const irimoya=(x,y,z,W,D,h,gw,gd,gh)=>{put(PYR,x,y+h/2,z,0,0,0,W,h,D,C.troof4,3);put(PYR,x,y+h*0.71,z,0,0,0,W*0.7,h*0.62,D*0.7,C.snow);const gy=y+h/2;
+ put(PRISM,x,gy+gh/2,z,0,PI/2,0,gd,gh,gw,C.troof4,3);put(PRISM,x,gy+gh*0.6,z,0,PI/2,0,gd*0.72,gh*0.7,gw+0.2,C.snow);
+ for(const s of[-1,1]){put(PRISM,x+s*(gw/2+0.03),gy+gh*0.42,z,0,PI/2,0,gd*0.76,gh*0.7,0.1,C.paper);box(x+s*(gw/2+0.1),gy+0.15,z,0.1,0.25,gd*0.8,C.twood);box(x+s*(gw/2+0.6),gy+gh+0.25,z,0.7,1.3,1.1,C.troof4)}
+ box(x,gy+gh+0.1,z,gw+0.6,0.55,0.8,C.troof4)};
+// a hall body: plaster walls, wainscot, pillars, beams and bracket blocks under the eaves (front at +z)
+const hallBody=(x,y0,z,W,D,H,doors)=>{const zf=z+D/2,n=Math.round(W/4);box(x,y0+H/2,z,W-0.2,H,D-0.2,C.paper);box(x,y0+1.0,z,W,2.0,D,C.twood,2);
+ for(let i=0;i<=n;i++){const px=x-W/2+i*W/n;cyl(px,y0+H/2,zf,0.62,H,0.62,C.twood);cyl(px,y0+H/2,z-D/2,0.62,H,0.62,C.twood);box(px,y0+H+0.15,zf+0.3,1.1,0.45,1.1,C.twood);box(px,y0+H+0.55,zf+0.55,1.7,0.4,1.5,C.twood)}
+ for(const s of[-1,1])for(let j=1;j<Math.round(D/4.5);j++){const pz=z-D/2+j*D/Math.round(D/4.5);cyl(x+s*W/2,y0+H/2,pz,0.62,H,0.62,C.twood);box(x+s*(W/2+0.3),y0+H+0.15,pz,1.1,0.45,1.1,C.twood)}
+ box(x,y0+H-0.15,zf+0.05,W+0.4,0.35,0.3,C.twood);box(x,y0+H-1.7,zf+0.05,W+0.2,0.3,0.25,C.twood);
+ if(doors)for(let i=0;i<n;i++){const cx=x-W/2+(i+0.5)*W/n,dw=W/n-0.7,dh=H-2.0-1.0;box(cx,y0+1.0+dh/2,zf+0.06,dw,dh,0.12,C.wood);
+  for(let k=1;k<5;k++)box(cx-dw/2+k*dw/5,y0+1.0+dh/2,zf+0.14,0.07,dh,0.06,C.twood);for(let k=1;k<4;k++)box(cx,y0+1.0+k*dh/4,zf+0.14,dw,0.07,0.06,C.twood)}};
+{burn(16);const Z=-43,ZF=-36;
+ // stone platform, apron and the steps (highest step against the platform, going down toward the yard)
+ box(0,0.6,-42,36,1.2,20,C.stoneD,1);box(0,1.24,-42,36.3,0.08,20.3,C.stone);
+ for(let k=0;k<4;k++){const top=1.2-0.3*k,d=0.6*(k+1);box(0,top/2,-32+d/2,9,top,d,C.stone,1);box(0,top-0.02,-32+d-0.12,9.02,0.05,0.24,C.snow,0,0,F_NOCAST)}
+ for(const s of[-1,1]){put(BOX,s*4.75,0.85,-30.85,0.47,0,0,0.5,0.45,2.9,C.stoneD,1);box(s*4.75,0.68,-32.2,0.5,1.36,0.5,C.stoneD,1);sph(s*4.75,1.42,-32.2,0.5,0.14,0.5,C.snow)}
+ for(const s of[-1,1])bank(s*11.2,-31.5,s*17.4,-31.5,1.0,0.6,F_NOCAST);
+ // main hall
+ hallBody(0,1.2,Z,26,14,6.6,true);
+ box(0,1.37,-35.0,28.4,0.16,2.0,C.twood,2);for(let i=0;i<=14;i++){const px=-14+i*2;if(Math.abs(px)<4.6)continue;cyl(px,1.85,-34.1,0.16,0.9,0.16,C.twood)}for(const s of[-1,1])box(s*9.3,2.3,-34.1,9.4,0.12,0.14,C.twood);
+ box(0,6.95,-35.84,3.4,1.1,0.12,C.ink);box(0,6.95,-35.76,2.9,0.75,0.04,C.gold);
+ box(0,1.95,-35.0,3.0,0.9,1.0,C.twood,2);for(let i=0;i<5;i++)box(-1.2+i*0.6,2.42,-35.0,0.12,0.06,1.02,C.ink);
+ irimoya(0,7.0,Z,32,20,7,18,11,4.6);
+ // 向拝: the porch roof over the steps, on two pillars, with gong, rope and lanterns
+ for(const s of[-1,1]){cyl(s*4.6,3.0,-29.0,0.5,6.0,0.5,C.twood);box(s*4.6,0.15,-29.0,0.9,0.3,0.9,C.stone);box(s*4.6,5.9,-29.0,1.0,0.4,1.0,C.twood)}box(0,5.55,-29.0,10,0.4,0.4,C.twood);box(0,6.0,-29.0,10.4,0.35,0.6,C.twood);
+ put(BOX,0,6.7,-31.4,0.22,0,0,11.4,0.35,6.2,C.troof4,3);put(BOX,0,6.93,-31.6,0.22,0,0,10.0,0.22,5.4,C.snow);box(0,6.05,-28.3,11.6,0.3,0.35,C.troof4);
+ put(CYL,0,4.9,-29.2,PI/2,0,0,1.0,0.35,1.0,C.bronze4,0,.6);cyl(0,3.2,-29.0,0.1,3.3,0.1,C.red,0,0,F_SWAY);cyl(0,1.6,-29.0,0.16,0.35,0.16,C.white,0,0,F_SWAY);
+ for(const s of[-1,1])chochin(s*2.7,4.3,-29.0,C.paper);
+ icicles(-16.4,-6,6.95,-33.05,9);icicles(6,16.4,6.95,-33.05,9);icicles(-5.6,5.6,5.85,-28.15,6);
+ colB.push({x0:-18,x1:18,z0:-52,z1:-32,h:1.3},{x0:-4.6,x1:4.6,z0:-32,z1:-29.6,h:1.2},{x0:-13,x1:13,z0:-50,z1:-35,h:15},{x0:-31,x1:-21,z0:-46,z1:-38,h:8},{x0:21,x1:31,z0:-46,z1:-38,h:8});
+ for(const s of[-1,1])colC.push({x:s*4.6,z:-29.0,r:0.4,h:6.2});
+ for(const x of[-9,9]){toro(x,-29.6);put(PYR,x,3.14,-29.6,0,0,0,1.25,0.32,1.25,C.snow);sph(x,0.05,-29.6,1.75,0.5,1.75,C.snow,0,0,F_NOCAST)}
+ // the temple goes on behind: a climbing covered corridor, a first terrace with a lecture hall, a second terrace with a two-storey inner hall
+ put(BOX,0,2.75,-56,0.23,0,0,4.4,0.3,12.4,C.twood,2);put(PRISM,0,7.1,-56,0.23,0,0,6.2,1.5,12.8,C.troof4,3);put(PRISM,0,7.32,-56,0.23,0,0,4.4,1.0,12.9,C.snow);
+ for(let i=0;i<5;i++){const pz=-50.5-i*2.75,fy=1.2+(i*2.75)*0.234;for(const s of[-1,1])cyl(s*2.2,fy+2.45,pz,0.32,4.9,0.32,C.twood);box(0,fy+0.9,pz,4.4,0.1,0.1,C.twood)}
+ box(0,2.0,-74,46,4.0,26,C.stoneD,1);box(0,4.04,-74,46.3,0.08,26.3,C.snow);for(let i=0;i<5;i++)box(0,0.4+i*0.8,-60.6-i*0.3,6,0.8,0.6,C.stone,1);
+ hallBody(0,4,-74,26,14,5.6,true);irimoya(0,8.9,-74,31,19,4.8,16,10,3.3);
+ for(const s of[-1,1]){box(s*18,4.3,-74,4,0.4,20,C.twood,2);for(let j=0;j<6;j++)cyl(s*19.6,6.2,-65-j*3.6,0.3,4.0,0.3,C.twood);put(PRISM,s*18,8.6,-74,0,0,0,5.6,1.4,21,C.troof4,3);put(PRISM,s*18,8.82,-74,0,0,0,4.0,0.9,21.2,C.snow)}
+ box(0,4.5,-110,52,9,30,C.stoneD,1);box(0,9.04,-110,52.3,0.08,30.3,C.snow);for(let i=0;i<7;i++)box(0,4.6+i*0.7,-93.8-i*0.4,7,0.7,0.8,C.stone,1);
+ hallBody(0,9,-110,30,18,6.2,true);irimoya(0,14.2,-110,36,24,5.6,19,12,3.8);hallBody(0,19.4,-110,14,9,3.6,false);irimoya(0,22.4,-110,20,14,3.4,11,7,2.6);
+ {const Q=mulberry(5151);for(const[x,z,sc]of[[-27,-60,0.9],[27,-66,1.0],[-28.5,-80,1.1],[28.5,-86,1.0],[-31.5,-104,1.3],[31.5,-110,1.2],[-19,-131,1.4],[19,-130,1.3],[0,-136,1.5]])cedarSnow(x,z,sc,Q)}}
+for(const s of[-1,1]){box(s*26,0.3,-42,11.2,0.6,9.2,C.stoneD,1);hallBody(s*26,0.6,-42,10,8,4.4,true);irimoya(s*26,4.9,-42,13.4,11.4,3.6,7.4,5.8,2.4);icicles(s*26-6.2,s*26+6.2,4.85,-36.35,6)}
 //#belfry
 {const x=-23,z=-14;box(x,0.7,z,6.8,1.4,6.8,C.stoneD,5);sph(x,1.45,z,6.2,0.3,6.2,C.snow);
  for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])put(BOX,x+dx*2.3,4.6,z+dz*2.3,-dz*0.04,0,dx*0.04,0.48,6.4,0.48,C.twood,2);
@@ -206,7 +242,7 @@ for(const[x,z,s]of[[-23.5,30.5,0.7],[-28.5,-1,0.6],[-27.5,16,0.6],[29,22,0.6]]){
 for(const[x,z,ry,w]of[[-50,-8,PI/2,18],[50,6,-PI/2,16]]){mPush();mT(x,0,z);mRY(ry);box(0,0.5,0,w+2,1,9,C.stoneD,5);box(0,3.0,0,w,4.2,8,C.paper);box(0,1.6,0,w+0.04,2.2,8.04,C.twood,2);box(0,3.6,4.02,w*0.6,1.0,0.08,C.glow,0,0,F_UNLIT);
  put(PRISM,0,6.6,0,0,PI/2,0,10.4,2.8,w+1.4,C.troof4,3);put(PRISM,0,7.2,0,0,PI/2,0,7.4,1.9,w+1.6,C.snow);mPop()}
 //#forest
-for(let i=0;i<46;i++){const a=i/46*TAU+R()*0.08,d=42+R()*24,x=Math.cos(a)*d,z=Math.sin(a)*d+2;if(Math.abs(x)<40&&z>-34&&z<42)continue;if(Math.abs(x)<36&&z<-28&&z>-56)continue;if(Math.abs(Math.abs(x)-50)<14&&Math.abs(z)<18)continue;cedarSnow(x,z,0.8+R()*0.6,R)}
+for(let i=0;i<46;i++){const a=i/46*TAU+R()*0.08,d=42+R()*24,x=Math.cos(a)*d,z=Math.sin(a)*d+2;if(Math.abs(x)<40&&z>-34&&z<42)continue;if(Math.abs(x)<36&&z<-28&&z>-56)continue;if(Math.abs(Math.abs(x)-50)<14&&Math.abs(z)<18)continue;const sc=0.8+R()*0.6;if(Math.abs(x)<40&&z<-50&&z>-142||Math.abs(Math.abs(x)-50)<14&&Math.abs(z)<26){R();continue}cedarSnow(x,z,sc,R)}
 //#background
 for(const[x,z,w,h]of[[-260,-330,300,190],[120,-420,340,230],[380,-160,280,170],[-400,60,300,160],[200,300,320,150]]){put(CONE,x,h/2-8,z,0,0,0,w,h,w,C.mountR);put(CONE,x,h-8-h*0.21,z,0,0,0,w*0.43,h*0.42,w*0.43,C.mountW)}
 for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=200+R()*160,h=40+R()*50,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<3;i++){const w=60+R()*50;sph(cx+(i-1)*44,h+R()*8,cz+R()*20,w,w*0.22,w*0.6,C.white,0,0,F_NOCAST|F_DRIFT)}}

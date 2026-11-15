@@ -124,7 +124,7 @@ const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}
 const demo=G.state==='title'&&G.demoOn;
 if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){if(G.state==='title'){G.idle+=dt;if(G.idle>5)startWipe(demoStart)}updateParts(g)}
-else if(!paused){const cli=isCli();
+else if(!paused){const cli=isCli(),over=G.state==='over';
  if(demo){aiControl(Math.max(g,0.001));demoUpdate(g);updateItems(g)}
  else if(G.state==='play'){if(G.paused){inp.fire=false;inp.mx=inp.mz=0}else readInput();
   if(!cli){if(G.mode==='pvp'){G.tm-=dt;if(G.tm<=0||Math.max.apply(null,G.pk)>=10){G.state='clear';G.resT=0;musOn=0;snd('ui')}}else updateWaves(g);updateItems(g)}
@@ -132,8 +132,8 @@ else if(!paused){const cli=isCli();
  else{inp.fire=false;inp.mx=inp.mz=0}
  if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0){G.kcT+=dt;inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
  if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5);pl.yaw+=angDiff(Math.atan2(pl.x,pl.z+21),pl.yaw)*k;pl.pitch+=(Math.atan2(19,Math.hypot(pl.x,pl.z+26))-pl.pitch)*k}
- updatePlayer(g);if(cli)clientInterp(g);else{updateEnemies(g);updateShots(g)}
- updateOthers(dt);updateShocks(g);pickItems(g);updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}
+ updatePlayer(g);if(cli)clientInterp(g);else if(!over){updateEnemies(g);updateShots(g)}
+ updateOthers(dt);if(!over){updateShocks(g);pickItems(g)}updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}
 netTick(dt);if(G.mode==='pvp'&&G.state==='play')G.kills=G.pk[pl.slot]||0;
 if(!boss)G.mood=Math.max(0,G.mood-dt*0.4);
 trauma=Math.max(0,trauma-dt*1.8);flashA=Math.max(0,flashA-dt*5);invA=Math.max(0,invA-dt*9);hurtA=Math.max(pl.hp<30&&G.state==='play'&&!pl.dead?0.3+0.12*Math.sin(now*7):0,hurtA-dt*2.2);lineA=Math.max(0,lineA-dt*3.5);
