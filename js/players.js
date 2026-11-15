@@ -22,7 +22,7 @@ const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:5}]},{
 [{ch:'第一話',name:'吹雪の参道',g:[{imp:5},{imp:4,lan:2}],say:['さ、寒い…!']},{ch:'第二話',name:'凍える鎧鬼',g:[{bru:1,imp:3},{bru:1,lan:3}]},{ch:'第三話',name:'鐘の消えた鐘楼',g:[{lan:4,imp:3},{bru:2,lan:2},{imp:5,lan:2}],say:['鐘が','ない…?']},{ch:'最終話',name:'鐘の僧',boss:1}],
 [{ch:'第一話',name:'墨に溶ける色',g:[{imp:5,bom:2},{imp:4,lan:3}]},{ch:'第二話',name:'過去の影',g:[{bru:1,bom:3},{lan:4,bom:3}],say:['見覚えが','あるぞ…']},{ch:'第三話',name:'最後の門番',g:[{bru:2,imp:3},{lan:4,bom:4},{bru:2,lan:3}]},{ch:'最終話',name:'白抜魔王シロヌキ',boss:1}]];
 const SPAWN=[[0,16,0],[-4,18,0],[4,18,0],[0,20,0]],PSPAWN=[[-17,17],[17,-20],[17,17],[-17,-20],[0,17],[0,-13]];
-function setStage(n){if(curStage===n)return;curStage=n;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();[buildStage1,buildStage2,buildStage3,buildStage4,buildStage5][n]();mReset();curLayer=1;setSun(STG[n].sun);setArena(STG[n].arena)}
+function setStage(n){if(curStage===n)return;curStage=n;templeDoor.t=templeDoor.target=0;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();[buildStage1,buildStage2,buildStage3,buildStage4,buildStage5][n]();mReset();curLayer=1;setSun(STG[n].sun);setArena(STG[n].arena)}
 // Stage 2 (castle) is authored in Blender: blender/stage_castle.blend -> assets/stage_castle.glb (loaded by js/glb.js).
 // buildStage2Code() is the original code-built version (fallback, and ?stage2=code for comparisons).
 function buildStage2(){if(STAGE_GLB[1])emitGlbStage(STAGE_GLB[1]);else buildStage2Code()}

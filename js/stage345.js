@@ -110,6 +110,11 @@ put(CONE,190,40,-330,0,0,0,170,110,170,C.mountP);for(let i=0;i<4;i++){box(190,93
 for(let k=0;k<9;k++){const a=k/9*TAU+R()*0.4,d=260+R()*180,h=70+R()*70,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<3;i++){const w=70+R()*60;sph(cx+(i-1)*48+R()*14,h+R()*6,cz+R()*16,w,w*0.12,w*0.34,i%2?C.cloudP:C.cloudV,0,0,NF|F_DRIFT)}}
 }
 
+// Main hall doors of stage 4 (観音開き), drawn every frame. templeDoor.target = 1 opens them (for a boss walking out of the hall), 0 closes.
+const templeDoor={t:0,target:0};
+function drawTempleDoor(dt){if(curStage!==3)return;const d=templeDoor;d.t+=Math.sign(d.target-d.t)*Math.min(Math.abs(d.target-d.t),dt*0.8);const e=d.t*d.t*(3-2*d.t),ang=e*1.75,w=1.6,h=4.25,y=1.56,z=-35.78;
+ for(const s of[-1,1]){mPush();mT(s*1.6,0,z);mRY(s*ang);const c=-s*w/2;gId=nid();box(c,y+h/2,0.08,w,h,0.14,C.wood,2);for(const yy of[0.12,h*0.36,h*0.68,h-0.12])box(c,y+yy,0.17,w,0.16,0.05,C.twood);box(-s*0.1,y+h/2,0.17,0.16,h,0.05,C.twood);box(-s*(w-0.08),y+h/2,0.17,0.16,h,0.05,C.twood);
+  for(const yy of[0.12,h*0.36,h*0.68,h-0.12])for(let k=0;k<4;k++)sph(c-w/2+0.25+k*(w-0.5)/3,y+yy,0.2,0.09,0.09,0.05,C.bronze4,0,.6);put(CYL,-s*(w-0.32),y+h*0.5,0.23,PI/2,0,0,0.3,0.05,0.3,C.bronze4,0,.6);gId=0;mPop()}}
 // ---------------- Stage 4: 雪の古寺 — a wide snowy temple yard (play area x ±31.6, z -25.6..33.6); the belfry stands empty (the monk carries the seal bell) ----------------
 function buildStage4Code(){const R=mulberry(41),NF=F_UNLIT|F_NOCAST,WX=33.4,WS=35.4;
 const wallSnow=(x0,z0,x1,z1)=>along(x0,z0,x1,z1,len=>{box(0,0.35,0,len,0.7,1.0,C.stoneD,5);box(0,1.6,0,len,1.8,0.6,C.ochre);for(const y of[1.15,1.6,2.05])box(0,y,0,len+0.02,0.07,0.62,C.white);
@@ -146,11 +151,11 @@ const irimoya=(x,y,z,W,D,h,gw,gd,gh)=>{put(PYR,x,y+h/2,z,0,0,0,W,h,D,C.troof4,3)
  for(const s of[-1,1]){put(PRISM,x+s*(gw/2+0.03),gy+gh*0.42,z,0,PI/2,0,gd*0.76,gh*0.7,0.1,C.paper);box(x+s*(gw/2+0.1),gy+0.15,z,0.1,0.25,gd*0.8,C.twood);box(x+s*(gw/2+0.6),gy+gh+0.25,z,0.7,1.3,1.1,C.troof4)}
  box(x,gy+gh+0.1,z,gw+0.6,0.55,0.8,C.troof4)};
 // a hall body: plaster walls, wainscot, pillars, beams and bracket blocks under the eaves (front at +z)
-const hallBody=(x,y0,z,W,D,H,doors)=>{const zf=z+D/2,n=Math.round(W/4);box(x,y0+H/2,z,W-0.2,H,D-0.2,C.paper);box(x,y0+1.0,z,W,2.0,D,C.twood,2);
+const hallBody=(x,y0,z,W,D,H,doors,gate)=>{const zf=z+D/2,n=Math.round(W/4);box(x,y0+H/2,z,W-0.2,H,D-0.2,C.paper);box(x,y0+1.0,z,W,2.0,D,C.twood,2);
  for(let i=0;i<=n;i++){const px=x-W/2+i*W/n;cyl(px,y0+H/2,zf,0.62,H,0.62,C.twood);cyl(px,y0+H/2,z-D/2,0.62,H,0.62,C.twood);box(px,y0+H+0.15,zf+0.3,1.1,0.45,1.1,C.twood);box(px,y0+H+0.55,zf+0.55,1.7,0.4,1.5,C.twood)}
  for(const s of[-1,1])for(let j=1;j<Math.round(D/4.5);j++){const pz=z-D/2+j*D/Math.round(D/4.5);cyl(x+s*W/2,y0+H/2,pz,0.62,H,0.62,C.twood);box(x+s*(W/2+0.3),y0+H+0.15,pz,1.1,0.45,1.1,C.twood)}
  box(x,y0+H-0.15,zf+0.05,W+0.4,0.35,0.3,C.twood);box(x,y0+H-1.7,zf+0.05,W+0.2,0.3,0.25,C.twood);
- if(doors)for(let i=0;i<n;i++){const cx=x-W/2+(i+0.5)*W/n,dw=W/n-0.7,dh=H-2.0-1.0;box(cx,y0+1.0+dh/2,zf+0.06,dw,dh,0.12,C.wood);
+ if(doors)for(let i=0;i<n;i++){if(gate&&i===(n-1)/2)continue;const cx=x-W/2+(i+0.5)*W/n,dw=W/n-0.7,dh=H-2.0-1.0;box(cx,y0+1.0+dh/2,zf+0.06,dw,dh,0.12,C.wood);
   for(let k=1;k<5;k++)box(cx-dw/2+k*dw/5,y0+1.0+dh/2,zf+0.14,0.07,dh,0.06,C.twood);for(let k=1;k<4;k++)box(cx,y0+1.0+k*dh/4,zf+0.14,dw,0.07,0.06,C.twood)}};
 {burn(16);const Z=-43,ZF=-36;
  // stone platform, apron and the steps (highest step against the platform, going down toward the yard)
@@ -159,16 +164,15 @@ const hallBody=(x,y0,z,W,D,H,doors)=>{const zf=z+D/2,n=Math.round(W/4);box(x,y0+
  for(const s of[-1,1]){put(BOX,s*4.75,0.85,-30.85,0.47,0,0,0.5,0.45,2.9,C.stoneD,1);box(s*4.75,0.68,-32.2,0.5,1.36,0.5,C.stoneD,1);sph(s*4.75,1.42,-32.2,0.5,0.14,0.5,C.snow)}
  for(const s of[-1,1])bank(s*11.2,-31.5,s*17.4,-31.5,1.0,0.6,F_NOCAST);
  // main hall
- hallBody(0,1.2,Z,26,14,6.6,true);
+ hallBody(0,1.2,Z,26,14,6.6,true,true);
+ // the main doors (the leaves themselves are drawn every frame by drawTempleDoor so they can open): dark inside, threshold, lintel and posts
+ box(0,3.6,-35.93,3.3,4.3,0.06,C.inkD,0,0,F_UNLIT);box(0,1.5,-35.8,3.7,0.12,0.4,C.twood);box(0,5.85,-35.8,3.9,0.3,0.36,C.twood);for(const s of[-1,1])box(s*1.72,3.65,-35.8,0.22,4.3,0.32,C.twood);
  box(0,1.37,-35.0,28.4,0.16,2.0,C.twood,2);for(let i=0;i<=14;i++){const px=-14+i*2;if(Math.abs(px)<4.6)continue;cyl(px,1.85,-34.1,0.16,0.9,0.16,C.twood)}for(const s of[-1,1])box(s*9.3,2.3,-34.1,9.4,0.12,0.14,C.twood);
  box(0,6.95,-35.84,3.4,1.1,0.12,C.ink);box(0,6.95,-35.76,2.9,0.75,0.04,C.gold);
- box(0,1.95,-35.0,3.0,0.9,1.0,C.twood,2);for(let i=0;i<5;i++)box(-1.2+i*0.6,2.42,-35.0,0.12,0.06,1.02,C.ink);
  irimoya(0,7.0,Z,32,20,7,18,11,4.6);
  // 向拝: the porch roof over the steps, on two pillars, with gong, rope and lanterns
  for(const s of[-1,1]){cyl(s*4.6,3.0,-29.0,0.5,6.0,0.5,C.twood);box(s*4.6,0.15,-29.0,0.9,0.3,0.9,C.stone);box(s*4.6,5.9,-29.0,1.0,0.4,1.0,C.twood)}box(0,5.55,-29.0,10,0.4,0.4,C.twood);box(0,6.0,-29.0,10.4,0.35,0.6,C.twood);
  put(BOX,0,6.7,-31.4,0.22,0,0,11.4,0.35,6.2,C.troof4,3);put(BOX,0,6.93,-31.6,0.22,0,0,10.0,0.22,5.4,C.snow);box(0,6.05,-28.3,11.6,0.3,0.35,C.troof4);
- put(CYL,0,4.9,-29.2,PI/2,0,0,1.0,0.35,1.0,C.bronze4,0,.6);cyl(0,3.2,-29.0,0.1,3.3,0.1,C.red,0,0,F_SWAY);cyl(0,1.6,-29.0,0.16,0.35,0.16,C.white,0,0,F_SWAY);
- for(const s of[-1,1])chochin(s*2.7,4.3,-29.0,C.paper);
  icicles(-16.4,-6,6.95,-33.05,9);icicles(6,16.4,6.95,-33.05,9);icicles(-5.6,5.6,5.85,-28.15,6);
  colB.push({x0:-18,x1:18,z0:-52,z1:-32,h:1.3},{x0:-4.6,x1:4.6,z0:-32,z1:-29.6,h:1.2},{x0:-13,x1:13,z0:-50,z1:-35,h:15},{x0:-31,x1:-21,z0:-46,z1:-38,h:8},{x0:21,x1:31,z0:-46,z1:-38,h:8});
  for(const s of[-1,1])colC.push({x:s*4.6,z:-29.0,r:0.4,h:6.2});
