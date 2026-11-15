@@ -28,12 +28,13 @@
 
 ## 技術メモ
 - `index.html`（骨組みのみ）+ `css/style.css` + `js/*.js` に分割済み。WebGL2、独自シェーダーで輪郭線・トーン描画。
-- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → players → stage345 → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
+- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
 - ファイルをまたぐトップレベルの処理は、呼び出す関数が先のファイルで定義済みであることが必要（別ファイルの後ろの関数はトップレベルでは呼べない。関数の中からなら可）。
 - ローカル確認は `file://` ではなく簡易サーバー（`python3 -m http.server`）を使う。
 - GLB読み込みを入れる際は、既存の輪郭線/トーン描画（法線とIDバッファを使う方式）と整合させる。
 - オンラインは公開MQTT(WebSocket)を中継に使う。ホストがゲーム進行を計算し、ゲストへスナップショットを配信する方式。
 - 設定（感度・音量・ボタン配置）は localStorage に保存。
+- スキルツリーは `js/skills.js`（`SKN` が一覧、`skApply()` が効果の数値表 `SK` を作る）。進行は localStorage の `koma_skill`。スキルは自分の数値（与ダメ・体力・ジャンプ等）だけを変えるので通信は増やさない。対戦とデモでは無効。
 
 ## 作業ルール
 - 開発ブランチ: `main`。
