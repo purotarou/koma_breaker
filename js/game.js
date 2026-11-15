@@ -113,4 +113,6 @@ gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(pF.p);gl.activeTexture(gl.
 let last=performance.now();
 function frame(t){requestAnimationFrame(frame);const dt=Math.min(0.05,Math.max(0.001,(t-last)/1000));last=t;update(dt);render3d();drawUI(dt)}
 window.__koma={net,others,items,shots,inp,netHost,netJoin,hostStart,beginGame,setStage,G,pl,startGame,startWave,demoStart,enemies,update,get boss(){return boss}};
-requestAnimationFrame(frame);
+ctx.fillStyle='#f6f1e4';ctx.fillRect(0,0,W,H);ctx.fillStyle='#241f40';ctx.font='bold 40px sans-serif';ctx.textAlign='center';ctx.fillText('読み込み中…',W/2,H/2);
+// start once the Blender-made shrine stage has loaded (falls back to the code-built stage on failure)
+stageReady.then(()=>{if(SHRINE&&curStage===0){curStage=-1;setStage(0)}requestAnimationFrame(frame)});

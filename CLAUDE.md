@@ -14,12 +14,17 @@
 
 ## 3Dモデルの制作フロー（予定）
 - キャラ・武器: Meshy AI で生成 → Blender に取り込み、ポリゴン削減・向き/スケール調整・リグ/アニメ追加 → GLB で書き出して `assets/` に配置。
-- 地形・ステージ: コードで生成（現状どおり）。必要なら Blender で調整。
+- 地形・ステージ: **神社ステージ（ステージ1）は Blender 化済み**。月下の天守（ステージ2）はまだコード生成（`buildStage2`）。
+  - 元データ: `blender/stage_shrine.blend` → `tools/blender_export_stage.py` で `assets/stage_shrine.glb` に書き出す（Blender MCP から `exec`）。
+  - ゲーム側は `js/glb.js` が GLB を読み、既存のインスタンス描画（輪郭線・トーン）にそのまま流す。読めなければ `buildStage1Code()`（旧コード版）で起動。`?stage1=code` で旧版を強制表示できる（見比べ用）。
+  - Blender 側の約束: 座標は Blender Z-up（書き出しで Y-up に変換）。色はマテリアルの Base Color（ゲームの値をそのまま）。マテリアルのカスタムプロパティ `kb_mat`（模様 0〜6）, `kb_gloss`, `kb_flags`（1=陰影なし, 2=輪郭なし, 4=影を落とさない）, `kb_rim`。当たり判定は Empty にカスタムプロパティ `kb_col`（`cyl`=円の Empty、スケール r,r,高さ / `box`=立方体の Empty、半サイズ、地面に接地）。
+  - 同じメッシュを使うオブジェクト（リンク複製）は1回の描画にまとまる。新しい形を増やすほど描画回数が増えるので注意。
+  - 見た目の一致確認: `node tools/check_stage_parity.js`（Blender 版がコード版と同一であることの検査。Blender で意図的に作り変えた後は差が出て当然）。
 - Blender は Blender MCP 経由で操作する。
 
 ## 技術メモ
 - `index.html`（骨組みのみ）+ `css/style.css` + `js/*.js` に分割済み。WebGL2、独自シェーダーで輪郭線・トーン描画。
-- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → stage → fx → audio → entities → players → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
+- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → players → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
 - ファイルをまたぐトップレベルの処理は、呼び出す関数が先のファイルで定義済みであることが必要（別ファイルの後ろの関数はトップレベルでは呼べない。関数の中からなら可）。
 - ローカル確認は `file://` ではなく簡易サーバー（`python3 -m http.server`）を使う。
 - GLB読み込みを入れる際は、既存の輪郭線/トーン描画（法線とIDバッファを使う方式）と整合させる。
