@@ -1,6 +1,6 @@
 'use strict';
 // ================= GAME FLOW (v2) =================
-function resetWorld(){enemies.length=0;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
+function resetWorld(){enemies.length=0;ices.length=0;templeDoor.t=templeDoor.target=0;G.kcP=null;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
 function beginGame(){setStage(G.stage);resetWorld();pl.slot=net.on?net.slot:0;const pvp=G.mode==='pvp',sp=pvp?PSPAWN[pl.slot]:SPAWN[pl.slot];resetPlayer(sp[0],sp[1],pvp?Math.atan2(sp[0],sp[1]+2):0);
 for(const o of others){const s=pvp?PSPAWN[o.slot]:SPAWN[o.slot];o.x=o.nx=s[0];o.z=o.nz=s[1];o.dead=false;o.hp=100;o.y=o.ny=0}
 Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0,rew:null});
@@ -116,7 +116,7 @@ if(setOpen)drawSettings();if(wipe.on)drawWipe();ctx.strokeStyle='#fff';ctx.lineW
 // ================= MAIN (v2) =================
 let GDT=0;
 // boss defeat camera: cut away from the player, start a little above the boss and drift in while circling
-function killCam(dt){const t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=0,ty=17,tz=-21.5,a=lerp(-0.62,-0.18,u)+t*0.015,d=lerp(38,22,u),h=lerp(17,4,u),s=trauma*trauma;
+function killCam(dt){if(boss&&boss.monk)G.kcP=[boss.x,boss.y,boss.z,boss.yaw];const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
 cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty-cam.y,dz=tz-cam.z;cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.03;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.03;cam.roll=lerp(-0.06,0.02,u)+rnd(-1,1)*s*0.03;cam.fov=lerp(64,54,u)*PI/180}
 function setCamera(dt){if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
 else if(G.kcT>=0)killCam(dt);
@@ -134,7 +134,7 @@ else if(!paused){const cli=isCli(),over=G.state==='over';
   if(net.on&&net.host&&G.mode==='coop'&&pl.dead&&others.every(o=>o.dead)){G.allT+=dt;if(G.allT>1.5)gameOver()}else G.allT=0}
  else{inp.fire=false;inp.mx=inp.mz=0}
  if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0){G.kcT+=dt;inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
- if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5);pl.yaw+=angDiff(Math.atan2(pl.x,pl.z+21),pl.yaw)*k;pl.pitch+=(Math.atan2(19,Math.hypot(pl.x,pl.z+26))-pl.pitch)*k}
+ if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5),mk=boss&&boss.monk,drop=mk&&boss.st==='drop'&&boss.stT<1.9,tx=mk&&!drop?boss.x:0,tz=mk?(drop?-26:boss.z):-21,ty=mk?(drop?7:boss.y+4.5):20.6,dh=Math.hypot(pl.x-tx,pl.z-(mk?tz:-26));pl.yaw+=angDiff(Math.atan2(pl.x-tx,pl.z-tz),pl.yaw)*k;pl.pitch+=(Math.atan2(ty-1.6,dh)-pl.pitch)*k}
  updatePlayer(g);if(cli)clientInterp(g);else if(!over){updateEnemies(g);updateShots(g)}
  updateOthers(dt);if(!over){updateShocks(g);pickItems(g)}updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}
 netTick(dt);if(G.mode==='pvp'&&G.state==='play')G.kills=G.pk[pl.slot]||0;

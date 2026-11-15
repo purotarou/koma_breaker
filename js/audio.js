@@ -24,6 +24,8 @@ case'ui':tone('square',660,990,0.09,0.2*v);tone('square',990,1320,0.1,0.2*v,0.08
 case'jump':tone('square',260,520,0.1,0.15*v);break;
 case'land':noise(0.1,0.3*v,'lowpass',700,150);break;
 case'item':tone('triangle',880,1320,0.1,0.25*v);tone('triangle',1320,1760,0.14,0.25*v,0.09);break;
+case'gong':tone('sine',196,192,2.4,0.55*v);tone('sine',392,386,1.6,0.25*v);tone('triangle',523,515,1.1,0.12*v);tone('sine',98,96,2.6,0.4*v);noise(0.25,0.35*v,'bandpass',2600,900);break;
+case'clank':tone('triangle',1800,1500,0.09,0.18*v);tone('square',900,700,0.05,0.1*v);break;
 case'orb':tone('triangle',1200,1800,0.05,0.08*v);break;}}
 const MEL=[74,0,0,74,0,75,74,0,70,0,69,0,67,0,69,0,70,0,0,70,0,69,67,0,63,0,62,0,0,0,62,63,67,0,0,67,0,69,70,0,74,0,75,0,74,0,70,0,69,0,70,69,67,0,63,0,62,0,0,0,62,0,74,0],BAS=[38,34,31,33];
 const mf=m=>440*Math.pow(2,(m-69)/12);

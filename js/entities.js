@@ -12,9 +12,9 @@ function spheres(e){const fx=Math.sin(e.yaw),fz=Math.cos(e.yaw);
 if(e.type==='imp')return[[e.x,e.y+0.62*e.sc,e.z,0.68*e.sc,1]];
 if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.3,2]];
 if(e.type==='bru')return[[e.x,1.0,e.z,0.95,1],[e.x,2.0,e.z,1.1,1],[e.x+fx*0.2,3.0,e.z+fz*0.2,0.55,2]];
-const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
+if(e.monk)return monkSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
 function updateEnemies(dt){for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.dead){enemies.splice(i,1);if(e===boss)boss=null;continue}
-T=pickT(e.x,e.z);e.t+=dt;e.stT+=dt;e.flash-=dt;if(e.type==='boss'){updBoss(e,dt);continue}
+T=pickT(e.x,e.z);e.t+=dt;e.stT+=dt;e.flash-=dt;if(e.type==='boss'){if(e.monk)updMonk(e,dt);else updBoss(e,dt);continue}
 if(e.st==='spawn'){if(e.stT>0.7){e.st='chase';e.stT=0}continue}
 e.x+=e.kx*dt;e.z+=e.kz*dt;const f=Math.exp(-8*dt);e.kx*=f;e.kz*=f;
 const dx=T.x-e.x,dz=T.z-e.z,d=Math.hypot(dx,dz)||1,wy=Math.atan2(dx,dz);
@@ -36,7 +36,7 @@ else{
   else if(e.stT>1.7){e.st='rec';e.stT=0;e.cd=2.5}}
  else if(e.st==='swing'){if(e.stT>0.6&&!e.hd){e.hd=true;const sx=e.x+Math.sin(e.yaw)*2.4,sz=e.z+Math.cos(e.yaw)*2.4;ev('smash',r1(sx),r1(sz));areaHurt(sx,sz,3.3,18,1)}if(e.stT>1.2){e.st='chase';e.cd=Math.max(e.cd,1)}}
  else if(e.stT>(e.st==='stun'?1.5:0.5))e.st='chase'}
-if(e.type!=='lan'){collide(e,e.r);if(boss){const bx=e.x,bz=e.z+21.5,bd=Math.hypot(bx,bz)||1;if(bd<8){e.x=bx/bd*8;e.z=bz/bd*8-21.5}}}}
+if(e.type!=='lan'){collide(e,e.r);if(boss){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.8:8,bx=e.x-cx,bz=e.z-cz,bd=Math.hypot(bx,bz)||1;if(bd<R&&!(mk&&boss.y>2)){e.x=cx+bx/bd*R;e.z=cz+bz/bd*R}}}}
 for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.type==='lan'||a.type==='boss')continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.type==='lan'||b.type==='boss')continue;const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz)||0.01,rr=a.r+b.r+0.25;if(d<rr){const p=(rr-d)/2/d;a.x-=dx*p;a.z-=dz*p;b.x+=dx*p;b.z+=dz*p}}}}
 // ---- boss ----
 const restH=(s,yo)=>({x:s*5.3,y:9.35+yo,z:-16.6});
@@ -104,7 +104,7 @@ if(p2){put(BOX,0.9,1.2,2.4,0,0,0.6,0.12,1.6,0.3,C.inkD);put(BOX,-0.5,-0.3,2.6,0,
 for(let i=0;i<5;i++)put(CONE,(i-2)*0.9,2.3-Math.abs(i-2)*0.3,-1.2,-0.9,0,-(i-2)*0.25,1.0,2.4,1.0,C.inkD);
 mPop();mPop();gTint=b.flash>0?0.45:0;drawBossArm(b,-1);drawBossArm(b,1);gTint=0;
 if(b.st==='up'){const s=6+Math.sin(t*20)*0.8;put(RING,b.tx,0.12,b.tz,0,0,0,s,1,s,C.red,0,0,F_UNLIT|F_NOCAST);put(RING,b.tx,0.12,b.tz,0,0,0,s*0.5,1,s*0.5,C.red,0,0,F_UNLIT|F_NOCAST)}}
-function drawEnemies(){BI=STG[G.stage].ink;for(const e of enemies){if(e.dead)continue;if(e.type==='imp')drawImp(e);else if(e.type==='lan')drawLan(e);else if(e.type==='bru')drawBru(e);else drawBoss(e)}
+function drawEnemies(){BI=STG[G.stage].ink;for(const e of enemies){if(e.dead)continue;if(e.type==='imp')drawImp(e);else if(e.type==='lan')drawLan(e);else if(e.type==='bru')drawBru(e);else if(e.monk)drawMonk(e);else drawBoss(e)}if(ices.length&&!(boss&&boss.monk))drawIces();
 for(const s of shots){if(s.k===0){sph(s.x,s.y,s.z,s.r*2,s.r*2,s.r*2,C.ink,0,1,0,1);sph(s.x-s.vx*0.03,s.y-s.vy*0.03,s.z-s.vz*0.03,s.r*1.3,s.r*1.3,s.r*1.3,C.purple,0,0,F_UNLIT|F_NOCAST)}
 else{sph(s.x,s.y,s.z,1.1,1.1,1.1,C.ink,0,1,0,1);bill(BURST,s.x,s.y+0.65,s.z,0.7,now*9,C.yellow,F_UNLIT|F_NOCAST);const r=3.4+Math.sin(now*18)*0.4;put(RING,s.tx,0.11,s.tz,0,0,0,r,1,r,C.red,0,0,F_UNLIT|F_NOCAST)}}}
 function drawGun(){curLayer=2;mPush();M.set(CAMW);const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0);

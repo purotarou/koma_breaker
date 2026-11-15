@@ -14,7 +14,7 @@ Object.assign(G,{menu:'main',mode:'solo',stage:0,np:1,paused:false,pk:[0,0,0,0],
 const STG=[{name:'朱の神社',sub:'ステージ１',desc:['桜舞う境内で','墨の妖怪を迎え撃て'],col:'#e5402b',s0:[.14,.45,.95],s1:[.5,.8,1],s2:[.93,.97,1],fog:[.93,.97,1],grade:[1,1,1],night:0,boss:'大墨魔王ベタグロ',cut:['大墨魔王','ベタグロ'],hard:0,bom:0,ink:C.ink,line:'黒ク塗ル!!',pfx:0},
 {name:'月下の天守',sub:'ステージ２',desc:['爆弾鬼が走る夜の城','強敵・紅蓮魔王'],col:'#7a3fd0',s0:[.04,.05,.22],s1:[.12,.16,.46],s2:[.42,.36,.66],fog:[.26,.26,.5],grade:[.74,.8,1],night:1,boss:'紅蓮魔王アカベタ',cut:['紅蓮魔王','アカベタ'],hard:1,bom:1,ink:C.crim,line:'紅ク染メル!!',pfx:1},
 {name:'黄昏の町',sub:'ステージ３',desc:['墨が降る夕暮れの町','橋の上で灯りを守れ'],col:'#ff8a2b',s0:[.26,.15,.44],s1:[.96,.5,.32],s2:[1,.84,.55],fog:[1,.8,.6],grade:[1.04,.94,.86],night:0,boss:'大入道',cut:['','大入道'],hard:1,bom:0,ink:C.ink,line:'叩キ壊ス!!',pfx:2,sun:[-0.8,0.48,-0.32],shade:[.64,.42,.6],fogR:[50,430,0.75]},
-{name:'雪の古寺',sub:'ステージ４',desc:['吹雪の山寺で','封印の秘密に迫れ'],col:'#3f9fe0',s0:[.52,.64,.82],s1:[.78,.85,.94],s2:[.95,.97,1],fog:[.9,.93,.98],grade:[.94,.98,1.06],night:0,boss:'鐘の僧',cut:['','鐘の僧'],hard:1,bom:0,ink:C.ink,line:'封ジル!!',pfx:3,arena:[31.6,-37,33.6],sun:[0.42,0.72,0.55],shade:[.6,.68,.9],fogR:[22,240,0.85]},
+{name:'雪の古寺',sub:'ステージ４',desc:['吹雪の山寺で','封印の秘密に迫れ'],col:'#3f9fe0',s0:[.52,.64,.82],s1:[.78,.85,.94],s2:[.95,.97,1],fog:[.9,.93,.98],grade:[.94,.98,1.06],night:0,boss:'鐘の僧',cut:['','鐘の僧'],monk:1,hard:1,bom:0,ink:C.ink,line:'封ジル!!',pfx:3,arena:[31.6,-37,33.6],sun:[0.42,0.72,0.55],shade:[.6,.68,.9],fogR:[22,240,0.85]},
 {name:'墨の池',sub:'ステージ５',desc:['色が溶けて消える','封印の最奥'],col:'#16121f',s0:[.78,.78,.8],s1:[.9,.9,.9],s2:[.97,.96,.93],fog:[.94,.93,.9],grade:[1,1,1],night:0,boss:'白抜魔王シロヌキ',cut:['白抜魔王','シロヌキ'],hard:1,bom:1,ink:C.ink,line:'白ク抜ク!!',pfx:4,shade:[.56,.56,.6],fogR:[30,300,0.85]}];
 const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:5}]},{ch:'第二話',name:'化け提灯の群れ',g:[{lan:3,imp:2},{lan:3,imp:3}],say:['上か！']},{ch:'第三話',name:'鎧鬼、突撃！',g:[{bru:1,imp:3},{lan:3,imp:3},{bru:1,lan:2}],say:['デカい','のが来た!']},{ch:'最終話',name:'大墨魔王ベタグロ',boss:1}],
 [{ch:'第一話',name:'爆弾鬼、乱入！',g:[{imp:3,bom:3},{imp:4,bom:3}],say:['赤いのは','爆発する!']},{ch:'第二話',name:'提灯地獄',g:[{lan:5},{lan:4,bom:3}]},{ch:'第三話',name:'双鬼の門番',g:[{bru:2,imp:3},{lan:4,bom:4},{bru:1,lan:3}],say:['二体も','いるのか!']},{ch:'最終話',name:'紅蓮魔王アカベタ',boss:1}],
@@ -73,7 +73,7 @@ function pickR(){const a=allP();return a.length?a[(Math.random()*a.length)|0]:pl
 function bossT(b){let p=null;if(b.ti!=null)p=allP().find(q=>q.slot===b.ti);if(!p){p=pickR();b.ti=p.slot}return p}
 function hurtT(p,d,x,z){if(p===pl)hurtPlayer(d,x,z);else net.hq.push([p.slot,d,r1(x),r1(z)])}
 function areaHurt(x,z,r,d,jump){for(const p of allP())if(Math.hypot(p.x-x,p.z-z)<r&&!(jump&&p.y>0.7))hurtT(p,d,x,z)}
-function eCenter(e){if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
+function eCenter(e){if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
 function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)return;const f=H/2/Math.tan(cam.fov/2),er=Math.min(280,c[3]*f/p.w),size=o.size||44,w=size*0.9*str.length;sideFlip=-sideFlip;let x=p.x+sideFlip*(er+w/2+20);if(x<w/2+50||x>W-w/2-50)x=p.x-sideFlip*(er+w/2+20);addText(str,x,p.y-er*0.5-rnd(0,24),o)}
 function resetPlayer(x,z,yaw){skApply();Object.assign(pl,{x,z,yaw,pitch:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,reload:0,cool:0,gauge:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0})}
 resetPlayer(0,16,0);
@@ -82,19 +82,20 @@ let d=aimDir();const ox=cam.x,oy=cam.y,oz=cam.z,as=touchMode||G.demoOn;let best=
 const chk=(x,y,z,bias)=>{const px=x-ox,py=y-oy,pz=z-oz,l=Math.hypot(px,py,pz)||1,a=Math.acos(clamp((px*d[0]+py*d[1]+pz*d[2])/l,-1,1))-bias;if(a<best){best=a;bp=[px/l,py/l,pz/l]}};
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[4]>1.5?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(pvp)for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
 if(bp){const k=as?0.85:0.5;d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}
-let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],140),he=null,hm=1,hs=null,ho=null;const wallT=tw;
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}if(tm<tw){tw=tm;he=e;hm=mm}}
+let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],140),he=null,hm=1,hs=null,ho=null,htg=0;const wallT=tw;
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0,tg=0;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(e.monk){if(t<tm){tm=t;mm=s[4];tg=s[5]}}else{if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}}if(tm<tw){tw=tm;he=e;hm=mm;htg=tg}}
+if(boss&&boss.monk&&boss.bell2&&boss.bell2.y<0.3){const c=boss.bell2,t=raySph(ox,oy,oz,d,c.x,1.6,c.z,MK_BELL_R+0.2);if(t>0&&t<tw){tw=t;he=null;htg='cover'}}
 for(const s of shots){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.35);if(t>0&&t<tw){tw=t;he=null;hs=s}}
 if(pvp)for(const o of others){if(o.dead)continue;const t1=raySph(ox,oy,oz,d,o.x,o.y+0.85,o.z,0.6),t2=raySph(ox,oy,oz,d,o.x,o.y+1.62,o.z,0.34),t=t1>0&&t2>0?Math.min(t1,t2):Math.max(t1,t2);if(t>0&&t<tw){tw=t;he=null;hs=null;ho=o;hm=t2>0?2:1}}
 const hx=ox+d[0]*tw,hy=oy+d[1]*tw,hz=oz+d[2]*tw;fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,pw>1?C.orange:C.white,pw>1?0.11:0.07);if(net.on)net.q.f.push([r1(hx),r1(hy),r1(hz)]);
 addText(pick(['ドン！','ダン！','バン！']),W*0.73+rnd(-40,60),H*0.62+rnd(-40,30),{size:pw>1?52:40,st:pw>1?'boom':'fire',life:0.2,grow:0.12});
-if(he)damage(he,20*hm*pw,hm>1.5,hx,hy,hz);else if(ho)pvHit(ho,(hm>1.5?32:16)*pw,hm>1.5,hx,hy,hz);else if(hs){popShot(hs);if(isCli())net.q.ps.push(hs.id)}
+if(he&&htg==='bell')monkBellHit(he,20*pw,hx,hy,hz);else if(he&&he.monk&&hm<=0)monkClank(he,hx,hy,hz);else if(he)damage(he,20*hm*pw,hm>1.5,hx,hy,hz);else if(htg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(ho)pvHit(ho,(hm>1.5?32:16)*pw,hm>1.5,hx,hy,hz);else if(hs){popShot(hs);if(isCli())net.q.ps.push(hs.id)}
 else if(tw<140&&tw===wallT){fxStar(hx,hy,hz,0.7,C.white,0.08);fxSparks(hx,hy,hz,4,5,C.yellow)}}
 function pvHit(o,dmg,crit,hx,hy,hz){o.flash=0.08;hitMark=0.12;hitCrit=crit;fxStar(hx,hy,hz,crit?1.5:1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,3,5,PCOL[o.slot],0.1);snd(crit?'crit':'hit');pl.gauge=Math.min(100,pl.gauge+4);
 if(lim('hitT',0.22))sideText(crit?'キィン！':pick(['バキッ！','ガッ！','ドカッ！']),o,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+dmg}
 function beamDamage(dt){const d=aimDir(),ox=cam.x,oy=cam.y-0.2,oz=cam.z,pw=pl.pow>0?1.6:1;
 const near=(x,y,z,r)=>{const px=x-ox,py=y-oy,pz=z-oz,t=px*d[0]+py*d[1]+pz*d[2];return t>0&&Math.sqrt(Math.max(0,px*px+py*py+pz*pz-t*t))<r};
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(near(s[0],s[1],s[2],s[3]+2)){damage(e,1400*dt*pw*(e.type==='boss'?0.8:1),false,s[0],s[1],s[2],true);break}}
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(near(s[0],s[1],s[2],s[3]+2)){if(e.monk&&e.phase<2&&!mkFront(e,pl.x,pl.z))monkBellHit(e,1400*dt*pw*0.5,s[0],s[1],s[2],true);else damage(e,1400*dt*pw*(e.monk&&e.phase<2?0.45:e.type==='boss'?0.8:1),false,s[0],s[1],s[2],true);break}}
 for(const s of shots)if(near(s.x,s.y,s.z,2.5)){popShot(s);if(isCli())net.q.ps.push(s.id)}
 if(G.mode==='pvp')for(const o of others)if(!o.dead&&near(o.x,o.y+1,o.z,1.9)){o.flash=0.08;hitMark=0.1;net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+170*dt*pw}}
 function respawn(){let b=PSPAWN[0],bs=-1;for(const s of PSPAWN){let m=99;for(const o of others)if(!o.dead)m=Math.min(m,Math.hypot(o.x-s[0],o.z-s[1]));m+=Math.random()*4;if(m>bs){bs=m;b=s}}resetPlayer(b[0],b[1],Math.atan2(b[0],b[1]+2));pl.inv=2.5;snd('ui')}
@@ -104,13 +105,13 @@ if(pl.dead){pl.deadT+=RDT;inp.lx=inp.ly=0;inp.jump=inp.dash=inp.special=inp.relo
   if(pl.revT>2.5||(pl.respT<=0&&any)){pl.dead=false;pl.hp=50;pl.inv=2.5;pl.revT=0;snd('item');addText('カイフク！',W/2,H*0.4,{size:90,st:'cyan',life:0.8})}}}return}
 const cine=G.cine>0;if(!cine){pl.yaw-=inp.lx*(pl.sp?0.4:1);pl.pitch=clamp(pl.pitch-inp.ly*(pl.sp?0.4:1),-1.25,1.25)}inp.lx=inp.ly=0;
 const sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw);let wx=-sy*inp.mz+cy*inp.mx,wz=-cy*inp.mz-sy*inp.mx;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl}
-const spd=pl.sp?2.5:6.6*SK.spd,k=1-Math.exp(-(pl.y>0?5:12)*dt);pl.vx+=(wx*spd-pl.vx)*k;pl.vz+=(wz*spd-pl.vz)*k;
+const icy=pl.y<=0&&ices.length&&onIce(pl.x,pl.z),spd=pl.sp?2.5:6.6*SK.spd,k=1-Math.exp(-(pl.y>0?5:icy?1.3:12)*dt);pl.vx+=(wx*spd-pl.vx)*k;pl.vz+=(wz*spd-pl.vz)*k;
 if(inp.dash&&pl.dashCd<=0&&!cine){let dx=wx,dz=wz;if(wl<0.2){dx=sy;dz=cy}const l=Math.hypot(dx,dz)||1;pl.ddx=dx/l;pl.ddz=dz/l;pl.dashT=0.18;pl.dashCd=0.7*SK.dash;pl.inv=Math.max(pl.inv,0.34);lines(0.85,'#fff');snd('dash');addText(pick(['シュバッ','ザッ！','シュッ']),W/2+rnd(-220,220),H*0.74,{size:62,st:'cyan',life:0.4})}
-inp.dash=false;if(pl.dashT>0){pl.dashT-=dt;pl.x+=pl.ddx*24*dt;pl.z+=pl.ddz*24*dt}
+inp.dash=false;if(pl.dashT>0){pl.dashT-=dt;pl.x+=pl.ddx*24*dt;pl.z+=pl.ddz*24*dt;if(icy){pl.vx=pl.ddx*15;pl.vz=pl.ddz*15;if(lim('slip',0.8))addText('ツルッ！',W/2+rnd(-160,160),H*0.7,{size:58,st:'cyan',life:0.45})}}
 if(inp.jump&&!cine){if(pl.y<=0.001){pl.vy=8.4;pl.aj=0;snd('jump');addText('タンッ',W*0.3+rnd(-60,60),H*0.78,{size:54,st:'cyan',life:0.35})}
  else if(SK.dj&&!pl.aj){pl.aj=1;pl.vy=7.8;snd('jump');fxRing(pl.x,pl.y,pl.z,1.8,C.white,0.2);fxStar(pl.x,pl.y+0.2,pl.z,1.2,C.white,0.1);addText('タタンッ',W*0.3+rnd(-60,60),H*0.74,{size:60,st:'cyan',life:0.4})}}inp.jump=false;
 if(pl.y>0||pl.vy>0){pl.vy-=22*dt;pl.y+=pl.vy*dt;if(pl.y<=0){pl.y=0;pl.aj=0;if(pl.vy<-4){pl.land=1;fxSmoke(pl.x,0.2,pl.z,4,0.5,C.smoke,2.5);fxRing(pl.x,0.1,pl.z,2.6,C.white,0.2);snd('land');shake(0.12)}pl.vy=0}}
-pl.x+=pl.vx*dt;pl.z+=pl.vz*dt;collide(pl,0.5);if(boss){const dx=pl.x,dz=pl.z+21.5,d=Math.hypot(dx,dz);if(d<7.5){pl.x=dx/d*7.5;pl.z=dz/d*7.5-21.5}}
+pl.x+=pl.vx*dt;pl.z+=pl.vz*dt;collide(pl,0.5);if(boss){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.5:7.5,dx=pl.x-cx,dz=pl.z-cz,d=Math.hypot(dx,dz)||1;if(d<R&&!(mk&&(boss.y>2||boss.st==='drop'))){pl.x=cx+dx/d*R;pl.z=cz+dz/d*R}}
 pl.moving=lerp(pl.moving,pl.y>0?0:Math.min(1,Math.hypot(pl.vx,pl.vz)/5),k);pl.bob+=dt*9*pl.moving;
 pl.dashCd-=dt;pl.inv-=dt;pl.cool-=dt;pl.flashT-=dt;pl.kick*=Math.exp(-10*dt);pl.rec*=Math.exp(-14*dt);pl.tilt*=Math.exp(-6*dt);
 if(pl.reload>0){pl.reload-=dt;if(pl.reload<=0)pl.ammo=SK.mag}if(inp.reload&&!pl.sp)startReload();inp.reload=false;
@@ -124,7 +125,7 @@ d*=SK.def;pl.hp-=d;G.dmg+=d;pl.inv=by==null?0.45:0.1;hurtA=1;shake(0.5);snd('hur
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
 if(pl.hp<=0&&SK.rev&&!pl.revU){pl.revU=1;pl.hp=Math.round(SK.hp*0.5);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
 else if(pl.hp<=0){pl.hp=0;pl.dead=true;pl.deadT=0;pl.revT=0;pl.sp=0;if(!net.on)gameOver();else if(G.mode==='pvp'){pl.respT=3;if(net.host)pvTally(pl.lastBy,net.slot);else net.q.kb.push(pl.lastBy)}else pl.respT=15}}
-function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;dmg*=SK.atk*(crit?SK.crit:1);if(e.type==='boss'&&(e.st==='rise'||e.st==='die'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
+function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;dmg*=SK.atk*(crit?SK.crit:1);if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
 if(!quiet){fxStar(hx,hy,hz,crit?1.6:1.1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,4,5,C.ink,0.13);addGauge(crit?3:2);snd(crit?'crit':'hit');stopT(0.012);
 if(lim('hitT',0.24))sideText(crit?pick(['キィン！','ズキュン！']):pick(['バキッ！','ガッ！','ドカッ！','ズガッ！']),e,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});
 if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*7;e.kz=(e.z-pl.z)/d*7}}
@@ -150,7 +151,7 @@ function updateShots(dt){for(let i=shots.length-1;i>=0;i--){const s=shots[i];if(
 if(s.k===0){let hit=null;for(const p of allP())if(Math.hypot(s.x-p.x,s.y-p.y-1.1,s.z-p.z)<s.r+0.55)hit=p;if(hit){hurtT(hit,s.dmg,s.x,s.z);popShot(s)}else if(s.y<0.1||s.life<=0||Math.abs(s.x)>22||s.z>22||s.z<-26)popShot(s)}
 else if(s.y<0.35){s.dead=true;ev('bomb',r1(s.x),r1(s.z));areaHurt(s.x,s.z,3.4,s.dmg)}}}
 function bossIntro(){G.cine=3.2;cutBoss=3.2;musOn=2;snd('roar')}
-function spawnBoss(){const b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st:'rise',stT:0,flash:0,dead:false,seed:1,mine:-9,hp:(G.demoOn?3000:STG[G.stage].hard?4400:3600)*(1+0.8*(G.np-1)),yo:-38,hx:0,phase:1,atk:0,r:6,hL:restH(-1,-38),hR:restH(1,-38),mouth:0,cdT:1,ah:-1,tx:0,tz:0,vn:0,sm:false,s0:null,ti:null};
+function spawnBoss(){if(STG[G.stage].monk)return spawnMonk();const b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st:'rise',stT:0,flash:0,dead:false,seed:1,mine:-9,hp:(G.demoOn?3000:STG[G.stage].hard?4400:3600)*(1+0.8*(G.np-1)),yo:-38,hx:0,phase:1,atk:0,r:6,hL:restH(-1,-38),hR:restH(1,-38),mouth:0,cdT:1,ah:-1,tx:0,tz:0,vn:0,sm:false,s0:null,ti:null};
 b.mhp=b.hp;enemies.push(b);boss=b;bossIntro();return b}
 function bossCos(b,dt){b.t+=dt;b.stT+=dt;b.flash-=dt;b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);
 if(b.st==='rise'){trauma=Math.max(trauma,0.3);if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12))fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3)}
@@ -172,7 +173,7 @@ txt(s,x,y,z,size,st){sfxAt(s,x,y,z,{size,st,life:0.7})},
 heal(){if(!pl.dead)pl.hp=Math.min(SK.hp,pl.hp+30*SK.heal)},
 bossEnd(){for(let i=0;i<5;i++)explode(rnd(-9,9),rnd(8,30),-19+rnd(-2,2),rnd(2.5,4),{quiet:1,ink:1});explode(0,22,-18.5,8,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.25);for(let i=0;i<24;i++)fxOrb(rnd(-6,6),rnd(10,26),-18)}};
 function ev(n,...a){FXE[n](...a);if(net.on&&net.host)net.evq.push([++net.evseq,n,a,now])}
-function updateShocks(dt){for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=s.v*dt;if(s.r>0&&!s.hit&&!pl.dead&&Math.abs(Math.hypot(pl.x-s.x,pl.z-s.z)-s.r*0.97)<0.8&&pl.y<0.55){s.hit=true;hurtPlayer(s.d,s.x,s.z)}if(s.r>s.max)shocks.splice(i,1)}}
+function updateShocks(dt){for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=s.v*dt;if(s.r>0&&!s.hit&&!pl.dead&&Math.abs(Math.hypot(pl.x-s.x,pl.z-s.z)-s.r*0.97)<0.8&&pl.y<0.55&&!(s.mk&&monkCover(s.x,s.z,pl.x,pl.z))){s.hit=true;hurtPlayer(s.d,s.x,s.z)}if(s.r>s.max)shocks.splice(i,1)}}
 // ---- items ----
 function spawnItem(k,x,z){items.push({id:++eidN,k,x,z,t:0});fxStar(x,1,z,2,C.white,0.12)}
 function updateItems(dt){G.itemT-=dt;if(G.itemT>0)return;G.itemT=rnd(9,14)/(G.mode==='pvp'?1.5:1);if(items.length>=3+(G.np>2?1:0))return;let x=0,z=0;for(let i=0;i<14;i++){x=rnd(-BX+3.6,BX-3.6);z=rnd(boss?-8:BZ0+5.6,BZ1-3.6);let ok=true;for(const c of colC)if(Math.hypot(c.x-x,c.z-z)<c.r+1.5)ok=false;for(const b of colB)if(x>b.x0-1.5&&x<b.x1+1.5&&z>b.z0-1.5&&z<b.z1+1.5)ok=false;if(ok)break}

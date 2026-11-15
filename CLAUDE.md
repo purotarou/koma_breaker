@@ -15,11 +15,12 @@
 
 ## 3Dモデルの制作フロー（予定）
 - キャラ・武器: Meshy AI で生成 → Blender に取り込み、ポリゴン削減・向き/スケール調整・リグ/アニメ追加 → GLB で書き出して `assets/` に配置。
-- 地形・ステージ: **全5ステージ Blender 化済み**（1 朱の神社 / 2 月下の天守 / 3 黄昏の町 / 4 雪の古寺 / 5 墨の池）。3〜5面のボスはまだ無く、最終話は既存の魔王を代役にしている（名前・台詞だけ STORY.md のもの）。
+- 地形・ステージ: **全5ステージ Blender 化済み**（1 朱の神社 / 2 月下の天守 / 3 黄昏の町 / 4 雪の古寺 / 5 墨の池）。3面と5面のボスはまだ無く、最終話は既存の魔王を代役にしている（名前・台詞だけ STORY.md のもの）。4面は専用ボス「鐘の僧」（下記）。
   - 元データ: `blender/stage_{shrine,castle,town,temple,inkpond}.blend` → `tools/blender_export_stage.py` で `assets/stage_*.glb`（同名）に書き出す（Blender MCP から `exec`。ファイルを開いた呼び出しとは別の呼び出しで書き出すこと。同じ呼び出しだと書き出しが context エラーになる）。
   - ゲーム側は `js/glb.js` が起動時に5つの GLB を読み、既存のインスタンス描画（輪郭線・トーン）にそのまま流す。読めなかったステージだけコード版（`buildStage1Code()` は stage.js、`buildStage2Code()` は players.js、`buildStage3Code()`〜`buildStage5Code()` は stage345.js）で起動。`?stage1=code` 〜 `?stage5=code` でコード版を強制表示できる（見比べ用）。
-  - ステージごとの空・霧・影の色・太陽の向き・粒子・難しさは `STG`（players.js）にまとめてある（`hard` `bom` `ink` `line` `cut` `pfx` `sun` `shade` `fogR`）。遊べる範囲は標準で x ±21.6、z -25.6〜21.6 で、`STG[n].arena`（[半幅, 北端z, 南端z]）でステージごとに変えられる（雪の古寺は x ±31.6、z -37〜33.6 で、本堂の石段の前まで歩ける）。ボスはどのステージでも z -21.5 から出て、体は z -35 あたりまで占めるので、ボスがいる間は北端が z -25.6 に戻る（`collide()`）。当たり判定は高さを見ない（ジャンプしても越えられない）が、弾は `kb_col` の高さより上を通る（雪の古寺の池は高さ 0.12 の判定で、人は入れず弾は通る）。雪の古寺の本堂の中央の扉は GLB ではなくコードで毎フレーム描く（`drawTempleDoor`、stage345.js）。`templeDoor.target=1` で開き、0 で閉じる（ボスが本堂から出てくる演出用。ステージを切り替えると閉じた状態に戻る）。
-  - コード版から Blender への移行は `node tools/dump_stage.js <1-5> out.json` → `tools/blender_build_stage.py`（空のファイルで実行）。stage345.js では `//#名前` のコメントがコレクション名になる。
+  - ステージごとの空・霧・影の色・太陽の向き・粒子・難しさは `STG`（players.js）にまとめてある（`hard` `bom` `ink` `line` `cut` `pfx` `sun` `shade` `fogR`）。遊べる範囲は標準で x ±21.6、z -25.6〜21.6 で、`STG[n].arena`（[半幅, 北端z, 南端z]）でステージごとに変えられる（雪の古寺は x ±31.6、z -37〜33.6 で、本堂の石段の前まで歩ける）。魔王型のボスは z -21.5 から出て、体は z -35 あたりまで占めるので、ボスがいる間は北端が z -25.6 に戻る（`collide()`）。4面の鐘の僧は動き回るので、北端は戻さない。当たり判定は高さを見ない（ジャンプしても越えられない）が、弾は `kb_col` の高さより上を通る（雪の古寺の池は高さ 0.12 の判定で、人は入れず弾は通る）。雪の古寺の本堂の中央の扉は GLB ではなくコードで毎フレーム描く（`drawTempleDoor`、stage345.js）。`templeDoor.target=1` で開き、0 で閉じる（ボスが本堂から出てくる演出用。ステージを切り替えると閉じた状態に戻る）。
+  - 4面ボス「鐘の僧」: 元データ `blender/boss_monk.blend` → `tools/blender_export_stage.py`（OUT を `assets/boss_monk.glb` にして実行）。部品ごとに別ノード（Monk_Body / Monk_Head / Monk_Head2（第二形態の顔）/ Monk_Arm_L・R / Monk_Leg_L・R / Bell / Striker / Striker_L（第二形態の左手））で、`js/boss4.js` が毎フレーム部品ごとに動かして描く。動き・攻撃・鐘・第二形態・ネット同期（`m.k`）もすべて boss4.js。`STG[n].monk` が立っているステージで `spawnBoss()` が鐘の僧を出す。
+- コード版から Blender への移行は `node tools/dump_stage.js <1-5> out.json` → `tools/blender_build_stage.py`（空のファイルで実行）。stage345.js では `//#名前` のコメントがコレクション名になる。
   - Blender 側の約束: 座標は Blender Z-up（書き出しで Y-up に変換）。色はマテリアルの Base Color（ゲームの値をそのまま）。マテリアルのカスタムプロパティ `kb_mat`（模様: 1=石畳, 2/3=板目, 4=草, 5=瓦, 6=藁・縄・提灯の骨, 7=水面の波紋(動く), 8=葉のうろこ線, 9=木の皮）, `kb_gloss`, `kb_flags`（足し算で組み合わせ。1=陰影なし, 2=輪郭なし, 4=影を落とさない, 8=風で揺れる(高いほど大きく), 16=旗のはためき(布の中心から +Z 方向へ揺れが大きくなる), 32=雲の流れ(ステージ中心を回る), 64=炎のゆらめき）, `kb_rim`。動きは頂点シェーダー（`js/gfx.js` の `ANIM`）で計算するので CPU 負荷・描画回数は増えない。当たり判定は Empty にカスタムプロパティ `kb_col`（`cyl`=円の Empty、スケール r,r,高さ / `box`=立方体の Empty、半サイズ、地面に接地）。
   - コード版に足した小物や模様・フラグの変更を Blender に反映するとき: `node tools/dump_stage.js <1|2> out.json` → `tools/blender_sync_from_code.py`（開いている .blend に対して実行。既存オブジェクトは名前・コレクションを保ったまま材質を更新し、新しい部品だけを追加する）。
   - 同じメッシュを使うオブジェクト（リンク複製）は1回の描画にまとまる。新しい形を増やすほど描画回数が増えるので注意。
@@ -28,7 +29,7 @@
 
 ## 技術メモ
 - `index.html`（骨組みのみ）+ `css/style.css` + `js/*.js` に分割済み。WebGL2、独自シェーダーで輪郭線・トーン描画。
-- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
+- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
 - ファイルをまたぐトップレベルの処理は、呼び出す関数が先のファイルで定義済みであることが必要（別ファイルの後ろの関数はトップレベルでは呼べない。関数の中からなら可）。
 - ローカル確認は `file://` ではなく簡易サーバー（`python3 -m http.server`）を使う。
 - GLB読み込みを入れる際は、既存の輪郭線/トーン描画（法線とIDバッファを使う方式）と整合させる。

@@ -61,7 +61,8 @@ gauge(100,30,300,30,pl.hp/SK.hp,pl.hp>50?'#35d06a':pl.hp>25?'#ffc21a':'#ff3b30',
 if(full){ctx.save();ctx.translate(372,84);ctx.rotate(-0.1);const s=1+0.12*Math.sin(now*10);ctx.scale(s,s);burstPath(0,0,56,26,10,1.3,3);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('OK!!',0,1,24,INK);ctx.restore()}
 txt('撃破',W-150,40,22,'#fff',INK,6,'right');txt(String(G.kills),W-40,40,44,'#ffd91a',INK,8,'right');txt(String(G.score).padStart(6,'0'),W-40,82,26,'#fff',INK,6,'right');
 if(G.combo>=2){const s=1+Math.max(0,G.comboPop)*1.2;ctx.save();ctx.translate(W-110,128);ctx.rotate(-0.1);ctx.scale(s,s);txt(G.combo+'連撃!',0,0,38,'#ff3b30',INK,8,'center','#fff',14);ctx.restore()}
-if(boss&&boss.st!=='rise'){const v=sat(boss.hp/boss.mhp);gauge(480,28,520,24,v,boss.phase>1?'#ff3b30':'#a04cff','魔王');txt(STG[G.stage].boss,740,70,22,'#fff',INK,6)}
+if(boss&&boss.st!=='rise'&&!(boss.monk&&boss.st==='drop')){const v=sat(boss.hp/boss.mhp);gauge(480,28,520,24,v,boss.phase>1?'#ff3b30':'#a04cff',boss.monk?'ボス':'魔王');txt(STG[G.stage].boss,740,70,22,'#fff',INK,6);
+ if(boss.monk&&boss.phase<2){gauge(560,92,300,16,sat(boss.bhp/boss.bmax),boss.bflash>0?'#fff':'#ffc21a','鐘');txt('背中の鐘を撃て！',W/2,132,20,'#fff',INK,5)}}
 // ammo
 const na=SK.mag,st=Math.min(18,288/na),iw=st*0.67,bx=W/2-na*st/2;for(let i=0;i<na;i++){const x=bx+i*st,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+iw/2,y-14);ctx.lineTo(x+iw,y-2);ctx.lineTo(x+iw,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
 if(pl.reload>0&&Math.sin(now*20)>-0.3)txt('装填中…',W/2,640,26,'#fff',INK,6);
@@ -107,7 +108,7 @@ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shTex);gl.uniform1i(p
 gl.disable(gl.DEPTH_TEST);gl.bindVertexArray(quadVao);gl.bindFramebuffer(gl.FRAMEBUFFER,pFbo);gl.useProgram(pP.p);const u=pP.u;
 gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,gCol);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,gNrm);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,gDep);
 gl.uniform1i(u.uC,0);gl.uniform1i(u.uN,1);gl.uniform1i(u.uD,2);gl.uniform2f(u.uPx,1/W,1/H);const tn=Math.tan(cam.fov/2);gl.uniform2f(u.uTan,tn*W/H,tn);
-let fx=0.5,fy=0.62;if(boss){const p=project(0,26+boss.yo,-26);if(p){fx=p.x/W;fy=1-p.y/H}}gl.uniform2f(u.uFocus,fx,fy);
+let fx=0.5,fy=0.62;if(boss){const p=boss.monk?project(boss.x,boss.y+4.5,boss.z):project(0,26+boss.yo,-26);if(p){fx=p.x/W;fy=1-p.y/H}}gl.uniform2f(u.uFocus,fx,fy);
 gl.uniform1f(u.uNear,NEAR);gl.uniform1f(u.uFar,FAR);gl.uniform1f(u.uTime,now);gl.uniform1f(u.uMood,G.mood);gl.uniform1f(u.uFlash,Math.min(1,flashA));gl.uniform1f(u.uInv,invA>0.3?1:0);gl.uniform1f(u.uMono,monoA);gl.uniform1f(u.uHurt,hurtA);const sg=STG[curStage];gl.uniform3fv(u.uS0,sg.s0);gl.uniform3fv(u.uS1,sg.s1);gl.uniform3fv(u.uS2,sg.s2);gl.uniform3fv(u.uFogC,sg.fog);gl.uniform3fv(u.uGrade,sg.grade);gl.uniform1f(u.uNight,sg.night);gl.uniform3fv(u.uShade,sg.shade||[0.50,0.46,0.74]);gl.uniform3fv(u.uFogR,sg.fogR||[45,420,0.8]);
 gl.uniform3f(u.uCR,cR[0],cR[1],cR[2]);gl.uniform3f(u.uCU,cU[0],cU[1],cU[2]);gl.uniform3f(u.uCF,cF[0],cF[1],cF[2]);gl.drawArrays(gl.TRIANGLES,0,3);
 gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(pF.p);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,pTex);gl.uniform1i(pF.u.uT,0);gl.uniform2f(pF.u.uPx,1/W,1/H);gl.drawArrays(gl.TRIANGLES,0,3);gl.bindVertexArray(null)}
