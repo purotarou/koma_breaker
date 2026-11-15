@@ -1,9 +1,9 @@
-// Runs the code-built stage generator (buildStage1Code / buildStage2Code) with a stub GL and dumps its static instances,
+// Runs the code-built stage generator (buildStage1Code ... buildStage5Code) with a stub GL and dumps its static instances,
 // unit-primitive geometry and colliders as JSON (input for tools/blender_build_stage.py).
-// Usage: node tools/dump_stage.js <1|2> out.json
+// Usage: node tools/dump_stage.js <1-5> out.json
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const root = path.join(__dirname, '..'), stage = +process.argv[2], out = process.argv[3];
-if (!(stage === 1 || stage === 2) || !out) { console.error('usage: node tools/dump_stage.js <1|2> out.json'); process.exit(2) }
+if (!(stage >= 1 && stage <= 5) || !out) { console.error('usage: node tools/dump_stage.js <1-5> out.json'); process.exit(2) }
 const fnStub = new Proxy(function () {}, { get: (t, k) => (k === 'getShaderParameter' || k === 'getProgramParameter') ? () => true : () => ({}) });
 const gl = new Proxy({}, { get: (t, k) => typeof k === 'string' && /^[A-Z_0-9]+$/.test(k) ? 1 : fnStub[k] || (() => ({})) });
 const el = { getContext: t => t === 'webgl2' ? gl : {}, style: {} };
@@ -21,6 +21,11 @@ if (stage === 1) {
     ['toro(-7.5,-9)', 'lanterns'], ['fox(-6.6', 'fox'], ['leafy(-18.5,-22', 'sakura'], ['[C.flag1,C.flag2,C.flag3,C.flag1]', 'nobori'],
     ['// shimenawa', 'shimenawa'], ['// ema rack', 'ema_rack'], ['// fallen petals', 'fallen_petals'], ['// wall grass', 'wall_grass'], ['// gate lanterns', 'gate_lanterns']]);
   fn = 'buildStage1Code';
+} else if (stage >= 3) {
+  // stages 3-5 (js/stage345.js): needs the extra colours from players.js; groups are marked with "//#name" comments
+  const p = read('players.js'), c0 = p.indexOf('Object.assign(C,{');
+  src += '\n' + p.slice(c0, p.indexOf(';', c0) + 1) + '\n' + read('stage345.js').replace(/\/\/#(\w+)/g, "G('$1');");
+  fn = 'buildStage' + stage + 'Code';
 } else {
   // players.js can't run standalone; take only the extra colours and the stage-2 generator from it.
   const p = read('players.js'), c0 = p.indexOf('Object.assign(C,{'), f0 = p.indexOf('function buildStage2Code(');

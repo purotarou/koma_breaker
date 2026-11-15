@@ -7,12 +7,22 @@ Object.assign(C,{crim:hex(0x9a1626),skinH:hex(0xffd9b8),moon:hex(0xfff3b0),nGras
 const PCOL=[hex(0xe5402b),hex(0x2f6fd8),hex(0x35b85a),hex(0xf4b82e)],PCSS=['#ff4a3d','#3f8cff','#35d06a','#ffc21a'];
 const RING2=addPrim(mkRing(40,0.47));
 Object.assign(G,{menu:'main',mode:'solo',stage:0,np:1,paused:false,pk:[0,0,0,0],pd:[0,0,0,0],tm:0,itemT:6,demoN:0,allT:0});
-const STG=[{name:'朱の神社',sub:'ステージ１',desc:'桜舞う境内で墨の妖怪を迎え撃て',s0:[.14,.45,.95],s1:[.5,.8,1],s2:[.93,.97,1],fog:[.93,.97,1],grade:[1,1,1],night:0,boss:'大墨魔王ベタグロ'},
-{name:'月下の天守',sub:'ステージ２',desc:'爆弾鬼が走る夜の城。強敵・紅蓮魔王',s0:[.04,.05,.22],s1:[.12,.16,.46],s2:[.42,.36,.66],fog:[.26,.26,.5],grade:[.74,.8,1],night:1,boss:'紅蓮魔王アカベタ'}];
+// Stage table. hard: tougher boss (faster attacks, more HP, wider shock waves) / bom: boss summons bomb oni / ink: enemy ink colour /
+// line: second half of the boss's opening line / cut: boss name split for the cut-in (small, big) / pfx: ambient particles /
+// sun: light direction (default = high noon) / shade: shadow-tone tint / fogR: fog start, end, strength.
+// Stages 3-5 have no boss of their own yet: the existing demon king stands in (STORY.md 5).
+const STG=[{name:'朱の神社',sub:'ステージ１',desc:['桜舞う境内で','墨の妖怪を迎え撃て'],col:'#e5402b',s0:[.14,.45,.95],s1:[.5,.8,1],s2:[.93,.97,1],fog:[.93,.97,1],grade:[1,1,1],night:0,boss:'大墨魔王ベタグロ',cut:['大墨魔王','ベタグロ'],hard:0,bom:0,ink:C.ink,line:'黒ク塗ル!!',pfx:0},
+{name:'月下の天守',sub:'ステージ２',desc:['爆弾鬼が走る夜の城','強敵・紅蓮魔王'],col:'#7a3fd0',s0:[.04,.05,.22],s1:[.12,.16,.46],s2:[.42,.36,.66],fog:[.26,.26,.5],grade:[.74,.8,1],night:1,boss:'紅蓮魔王アカベタ',cut:['紅蓮魔王','アカベタ'],hard:1,bom:1,ink:C.crim,line:'紅ク染メル!!',pfx:1},
+{name:'黄昏の町',sub:'ステージ３',desc:['墨が降る夕暮れの町','橋の上で灯りを守れ'],col:'#ff8a2b',s0:[.26,.15,.44],s1:[.96,.5,.32],s2:[1,.84,.55],fog:[1,.8,.6],grade:[1.04,.94,.86],night:0,boss:'大入道',cut:['','大入道'],hard:1,bom:0,ink:C.ink,line:'叩キ壊ス!!',pfx:2,sun:[-0.8,0.48,-0.32],shade:[.64,.42,.6],fogR:[50,430,0.75]},
+{name:'雪の古寺',sub:'ステージ４',desc:['吹雪の山寺で','封印の秘密に迫れ'],col:'#3f9fe0',s0:[.52,.64,.82],s1:[.78,.85,.94],s2:[.95,.97,1],fog:[.9,.93,.98],grade:[.94,.98,1.06],night:0,boss:'鐘の僧',cut:['','鐘の僧'],hard:1,bom:0,ink:C.ink,line:'封ジル!!',pfx:3,sun:[0.42,0.72,0.55],shade:[.6,.68,.9],fogR:[22,240,0.85]},
+{name:'墨の池',sub:'ステージ５',desc:['色が溶けて消える','封印の最奥'],col:'#16121f',s0:[.78,.78,.8],s1:[.9,.9,.9],s2:[.97,.96,.93],fog:[.94,.93,.9],grade:[1,1,1],night:0,boss:'白抜魔王シロヌキ',cut:['白抜魔王','シロヌキ'],hard:1,bom:1,ink:C.ink,line:'白ク抜ク!!',pfx:4,shade:[.56,.56,.6],fogR:[30,300,0.85]}];
 const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:5}]},{ch:'第二話',name:'化け提灯の群れ',g:[{lan:3,imp:2},{lan:3,imp:3}],say:['上か！']},{ch:'第三話',name:'鎧鬼、突撃！',g:[{bru:1,imp:3},{lan:3,imp:3},{bru:1,lan:2}],say:['デカい','のが来た!']},{ch:'最終話',name:'大墨魔王ベタグロ',boss:1}],
-[{ch:'第一話',name:'爆弾鬼、乱入！',g:[{imp:3,bom:3},{imp:4,bom:3}],say:['赤いのは','爆発する!']},{ch:'第二話',name:'提灯地獄',g:[{lan:5},{lan:4,bom:3}]},{ch:'第三話',name:'双鬼の門番',g:[{bru:2,imp:3},{lan:4,bom:4},{bru:1,lan:3}],say:['二体も','いるのか!']},{ch:'最終話',name:'紅蓮魔王アカベタ',boss:1}]];
+[{ch:'第一話',name:'爆弾鬼、乱入！',g:[{imp:3,bom:3},{imp:4,bom:3}],say:['赤いのは','爆発する!']},{ch:'第二話',name:'提灯地獄',g:[{lan:5},{lan:4,bom:3}]},{ch:'第三話',name:'双鬼の門番',g:[{bru:2,imp:3},{lan:4,bom:4},{bru:1,lan:3}],say:['二体も','いるのか!']},{ch:'最終話',name:'紅蓮魔王アカベタ',boss:1}],
+[{ch:'第一話',name:'墨降る町',g:[{imp:4},{imp:4,lan:2}],say:['町にまで','墨が!']},{ch:'第二話',name:'提灯行列',g:[{lan:5},{lan:4,imp:3}],say:['提灯が','歩いてる!']},{ch:'第三話',name:'橋の上の鎧鬼',g:[{bru:1,lan:3},{imp:4,lan:3},{bru:2,imp:2}]},{ch:'最終話',name:'大入道',boss:1}],
+[{ch:'第一話',name:'吹雪の参道',g:[{imp:5},{imp:4,lan:2}],say:['さ、寒い…!']},{ch:'第二話',name:'凍える鎧鬼',g:[{bru:1,imp:3},{bru:1,lan:3}]},{ch:'第三話',name:'鐘の消えた鐘楼',g:[{lan:4,imp:3},{bru:2,lan:2},{imp:5,lan:2}],say:['鐘が','ない…?']},{ch:'最終話',name:'鐘の僧',boss:1}],
+[{ch:'第一話',name:'墨に溶ける色',g:[{imp:5,bom:2},{imp:4,lan:3}]},{ch:'第二話',name:'過去の影',g:[{bru:1,bom:3},{lan:4,bom:3}],say:['見覚えが','あるぞ…']},{ch:'第三話',name:'最後の門番',g:[{bru:2,imp:3},{lan:4,bom:4},{bru:2,lan:3}]},{ch:'最終話',name:'白抜魔王シロヌキ',boss:1}]];
 const SPAWN=[[0,16,0],[-4,18,0],[4,18,0],[0,20,0]],PSPAWN=[[-17,17],[17,-20],[17,17],[-17,-20],[0,17],[0,-13]];
-function setStage(n){if(curStage===n)return;curStage=n;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();(n?buildStage2:buildStage1)();mReset();curLayer=1}
+function setStage(n){if(curStage===n)return;curStage=n;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();[buildStage1,buildStage2,buildStage3,buildStage4,buildStage5][n]();mReset();curLayer=1;setSun(STG[n].sun)}
 // Stage 2 (castle) is authored in Blender: blender/stage_castle.blend -> assets/stage_castle.glb (loaded by js/glb.js).
 // buildStage2Code() is the original code-built version (fallback, and ?stage2=code for comparisons).
 function buildStage2(){if(STAGE_GLB[1])emitGlbStage(STAGE_GLB[1]);else buildStage2Code()}
@@ -138,7 +148,7 @@ function updateShots(dt){for(let i=shots.length-1;i>=0;i--){const s=shots[i];if(
 if(s.k===0){let hit=null;for(const p of allP())if(Math.hypot(s.x-p.x,s.y-p.y-1.1,s.z-p.z)<s.r+0.55)hit=p;if(hit){hurtT(hit,s.dmg,s.x,s.z);popShot(s)}else if(s.y<0.1||s.life<=0||Math.abs(s.x)>22||s.z>22||s.z<-26)popShot(s)}
 else if(s.y<0.35){s.dead=true;ev('bomb',r1(s.x),r1(s.z));areaHurt(s.x,s.z,3.4,s.dmg)}}}
 function bossIntro(){G.cine=3.2;cutBoss=3.2;musOn=2;snd('roar')}
-function spawnBoss(){const b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st:'rise',stT:0,flash:0,dead:false,seed:1,mine:-9,hp:(G.demoOn?3000:G.stage?4400:3600)*(1+0.8*(G.np-1)),yo:-38,hx:0,phase:1,atk:0,r:6,hL:restH(-1,-38),hR:restH(1,-38),mouth:0,cdT:1,ah:-1,tx:0,tz:0,vn:0,sm:false,s0:null,ti:null};
+function spawnBoss(){const b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st:'rise',stT:0,flash:0,dead:false,seed:1,mine:-9,hp:(G.demoOn?3000:STG[G.stage].hard?4400:3600)*(1+0.8*(G.np-1)),yo:-38,hx:0,phase:1,atk:0,r:6,hL:restH(-1,-38),hR:restH(1,-38),mouth:0,cdT:1,ah:-1,tx:0,tz:0,vn:0,sm:false,s0:null,ti:null};
 b.mhp=b.hp;enemies.push(b);boss=b;bossIntro();return b}
 function bossCos(b,dt){b.t+=dt;b.stT+=dt;b.flash-=dt;b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);
 if(b.st==='rise'){trauma=Math.max(trauma,0.3);if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12))fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3)}
@@ -150,7 +160,7 @@ function bossDieFx(b){b.pops=b.pops||0;for(let i=0;i<BDIE_POPS.length;i++){const
 // ---- shared FX events (host runs + broadcasts, clients replay) ----
 const FXE={
 bomb(x,z){explode(x,0.6,z,1.6,{ink:1,text:'ドォン！'});decals.push({x,z,r:3,life:6})},
-slam(x,z){explode(x,0.8,z,2.4,{ink:1,text:'ドゴォォン！'});fxRing(x,0.1,z,14,C.white,0.4);decals.push({x,z,r:5,life:7});shocks.push({x,z,r:1.5,v:12,max:G.stage?30:24,d:12,hit:false});if(G.stage)shocks.push({x,z,r:-4,v:12,max:30,d:12,hit:false})},
+slam(x,z){explode(x,0.8,z,2.4,{ink:1,text:'ドゴォォン！'});fxRing(x,0.1,z,14,C.white,0.4);decals.push({x,z,r:5,life:7});shocks.push({x,z,r:1.5,v:12,max:STG[G.stage].hard?30:24,d:12,hit:false});if(STG[G.stage].hard)shocks.push({x,z,r:-4,v:12,max:30,d:12,hit:false})},
 smash(x,z){fxRing(x,0.1,z,8,C.white,0.3);fxSmoke(x,0.3,z,5,1,C.smoke,4);fxStar(x,0.6,z,3.5,C.yellow,0.1);shake(0.4);stopT(0.05);snd('boom',0.7);sfxAt('ドゴォ！',x,3.4,z,{size:66,st:'boom',life:0.6})},
 stun(x,z){fxStar(x,2,z,4,C.white,0.12);shake(0.45);stopT(0.06);sfxAt('ガァン！',x,4.4,z,{size:70,st:'boom',life:0.6});snd('boom',0.6)},
 roar(k){snd('roar');addText(k?'グオオオオ！':'グオオオ！',W/2,150,{size:k?100:86,st:'hurt',life:1.1});shake(0.6);if(k)invA=1},

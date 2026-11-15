@@ -62,8 +62,8 @@ for(let i=0;i<items.length;i++){const a=bb[i];near.fill(Infinity);
 // Emit a loaded stage into the current (static) layer.
 function emitGlbStage(st){for(const it of st.items){mPush();M.set(it.m);gId=it.id;emit(it.pi,it.c,it.mat,it.gloss,it.fl,it.rim);gId=0;mPop()}
 for(const c of st.colC)colC.push({...c});for(const b of st.colB)colB.push({...b})}
-// ---- stages authored in Blender. ?stage1=code / ?stage2=code force the old code-built version (comparison / fallback). ----
-const STAGE_FILES=['assets/stage_shrine.glb','assets/stage_castle.glb'],STAGE_GLB=STAGE_FILES.map(()=>null);
+// ---- stages authored in Blender. ?stage1=code ... ?stage5=code force the code-built version (comparison / fallback). ----
+const STAGE_FILES=['assets/stage_shrine.glb','assets/stage_castle.glb','assets/stage_town.glb','assets/stage_temple.glb','assets/stage_inkpond.glb'],STAGE_GLB=STAGE_FILES.map(()=>null);
 const stageReady=Promise.all(STAGE_FILES.map((f,i)=>new URLSearchParams(location.search).get('stage'+(i+1))==='code'?null:
  fetch(f,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>{STAGE_GLB[i]=glbStage(b)})
  .catch(e=>console.warn('[stage] '+f+' failed to load, using the code-built stage:',e))));

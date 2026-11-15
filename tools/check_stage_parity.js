@@ -1,9 +1,9 @@
-// Checks that a Blender stage GLB (via js/glb.js) reproduces its code-built version (buildStage1Code / buildStage2Code) exactly:
+// Checks that a Blender stage GLB (via js/glb.js) reproduces its code-built version (buildStage1Code ... buildStage5Code) exactly:
 // same instances (transform, colour, pattern/gloss/flags/rim), same geometry (positions, normals, winding) and colliders.
-// Usage: node tools/check_stage_parity.js [1|2]   (no argument = both; exit code 1 on mismatch)
+// Usage: node tools/check_stage_parity.js [1-5]   (no argument = all; exit code 1 on mismatch)
 // Only meaningful while the Blender stage is meant to match the code version; once the stage is edited in Blender, expect diffs.
 const fs = require('fs'), vm = require('vm'), path = require('path');
-const root = path.join(__dirname, '..'), FILES = { 1: 'assets/stage_shrine.glb', 2: 'assets/stage_castle.glb' };
+const root = path.join(__dirname, '..'), FILES = { 1: 'assets/stage_shrine.glb', 2: 'assets/stage_castle.glb', 3: 'assets/stage_town.glb', 4: 'assets/stage_temple.glb', 5: 'assets/stage_inkpond.glb' };
 const stub = new Proxy(function () {}, { get: (t, k) => (k === 'getShaderParameter' || k === 'getProgramParameter') ? () => true : () => ({}) });
 const gl = new Proxy({}, { get: (t, k) => typeof k === 'string' && /^[A-Z_0-9]+$/.test(k) ? 1 : stub[k] || (() => ({})) });
 const el = { getContext: t => t === 'webgl2' ? gl : {}, style: {} };
@@ -12,9 +12,10 @@ const ctx = vm.createContext({ document: { getElementById: () => el }, addEventL
   location: { search: '' }, fetch: () => new Promise(() => {}) });
 const read = f => fs.readFileSync(path.join(root, 'js', f), 'utf8');
 for (const f of ['core.js', 'gfx.js', 'glb.js', 'stage.js']) vm.runInContext(read(f), ctx, { filename: f });
-if (stage === 2) { // players.js can't run standalone: take its extra colours and the stage-2 builders only
+{ // players.js can't run standalone: take its extra colours and the stage-2 builders only; then stages 3-5
   const p = read('players.js'), c0 = p.indexOf('Object.assign(C,{'), f0 = p.indexOf('function buildStage2(');
-  vm.runInContext(p.slice(c0, p.indexOf(';', c0) + 1) + '\n' + p.slice(f0, p.indexOf('\n// ---- players ----', f0)), ctx, { filename: 'players.js (stage 2)' }) }
+  vm.runInContext(p.slice(c0, p.indexOf(';', c0) + 1) + '\n' + p.slice(f0, p.indexOf('\n// ---- players ----', f0)), ctx, { filename: 'players.js (stage 2)' });
+  vm.runInContext(read('stage345.js'), ctx, { filename: 'stage345.js' }) }
 const buf = fs.readFileSync(path.join(root, FILES[stage]));
 ctx.GLB = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.length);
 const r = vm.runInContext(`(() => {
@@ -45,5 +46,5 @@ const r = vm.runInContext(`(() => {
   console.log('stage ' + stage + ' (' + FILES[stage] + ')', r);
   const ok = r.instances[0] === r.instances[1] && !r.unmatched && r.maxMatrixErr < 1e-4 && r.maxColorErr < 1e-5 && !r.attrMismatch && r.maxPosErr < 1e-4 && r.maxNormalErr < 1e-3 && !r.flippedTris && r.colliders;
   console.log(ok ? 'PARITY OK' : 'PARITY MISMATCH'); return ok }
-const stages = process.argv[2] ? [+process.argv[2]] : [1, 2];
+const stages = process.argv[2] ? [+process.argv[2]] : [1, 2, 3, 4, 5];
 process.exit(stages.map(check).every(Boolean) ? 0 : 1);

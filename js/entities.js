@@ -50,14 +50,14 @@ if(b.phase===1&&b.hp<b.mhp*0.5){b.phase=2;b.st='stag';b.stT=0;b.ah=-1;ev('roar',
 for(let i=0;i<2;i++){if(b.ah===i)continue;const r=restH(i?1:-1,0),h=hands[i],k=Math.min(1,dt*4);h.x+=(r.x-h.x)*k;h.y+=(r.y-h.y)*k;h.z+=(r.z-h.z)*k}
 const p2=b.phase>1;
 if(b.st==='stag'){b.mouth=1;if(b.stT>1.8){b.st='idle';b.stT=0;b.cdT=0.5}}
-else if(b.st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*(G.stage?0.6:1)){b.atk++;b.ti=null;T=bossT(b);const m=b.atk%4;b.stT=0;if(m===1||m===3||(m===0&&p2)){b.st='up';b.ah=(T.x<0?0:1)^(b.atk%3===0?1:0);const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}else if(m===2){b.st='volley';b.vn=0}else b.st='summon'}}
+else if(b.st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*(STG[G.stage].hard?0.6:1)){b.atk++;b.ti=null;T=bossT(b);const m=b.atk%4;b.stT=0;if(m===1||m===3||(m===0&&p2)){b.st='up';b.ah=(T.x<0?0:1)^(b.atk%3===0?1:0);const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}else if(m===2){b.st='volley';b.vn=0}else b.st='summon'}}
 else if(b.st==='up'){const h=hands[b.ah],u=Math.min(1,b.stT/(p2?0.6:0.85));if(u<0.7){b.tx=clamp(T.x,-20,20);b.tz=clamp(T.z,-11,20)}const e=easeOut(u);h.x=lerp(b.s0.x,b.tx,e);h.z=lerp(b.s0.z,b.tz,e);h.y=lerp(b.s0.y,10,e)+Math.sin(u*PI)*3;if(u>=1){b.st='down';b.stT=0}}
 else if(b.st==='down'){const h=hands[b.ah];h.y=lerp(10,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){h.y=1.1;b.st='hold';b.stT=0;ev('slam',r1(h.x),r1(h.z));areaHurt(h.x,h.z,4.3,28)}}
 else if(b.st==='hold'){if(b.stT>(p2?0.8:1.2)){b.ah=-1;b.st='idle';b.stT=0;b.cdT=p2?0.5:1.0}}
 else if(b.st==='volley'){b.mouth=1;const n=p2?8:5,want=Math.floor((b.stT-0.4)/0.17);while(b.vn<=want&&b.vn<n){b.vn++;T=pickR();const ox=b.hx*2.7,oy=23.4,oz=-19.6,tx=clamp(T.x+rnd(-5,5),-20,20),tz=clamp(T.z+rnd(-5,5),-12,20),FT=1.5;
   shots.push({id:++eidN,k:1,x:ox,y:oy,z:oz,vx:(tx-ox)/FT,vy:-oy/FT+8*FT,vz:(tz-oz)/FT,r:0.55,dmg:16,g:16,life:9,tx,tz});fxStar(ox,oy,oz,3,C.white,0.08);if(lim('bo',0.3))sfxAt('ボッ',ox,oy+2,oz,{size:70,st:'ink',life:0.4});snd('spawn')}
  if(b.stT>0.4+n*0.17+0.4){b.st='idle';b.stT=0;b.cdT=p2?0.6:1.1}}
-else if(b.st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);for(let i=0;i<(p2?4:3)+G.np-1;i++)spawnNear(G.stage&&i%2?'bom':'imp');if(p2)spawnNear('lan')}if(b.stT>1.3){b.sm=false;b.st='idle';b.stT=0;b.cdT=1}}}
+else if(b.st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);for(let i=0;i<(p2?4:3)+G.np-1;i++)spawnNear(STG[G.stage].bom&&i%2?'bom':'imp');if(p2)spawnNear('lan')}if(b.stT>1.3){b.sm=false;b.st='idle';b.stT=0;b.cdT=1}}}
 // ================= DRAW ENTITIES =================
 function drawImp(e){const s=e.sc;let sq=1,hop=0,lean=0,arm=0.5;mPush();
 if(e.st==='spawn'){const u=e.stT/0.7,k=0.3+0.7*easeBack(Math.min(1,u));mT(e.x,-1.2*(1-easeOut(Math.min(1,u))),e.z);mRY(e.yaw);mS(s*k,s*k,s*k)}
@@ -104,7 +104,7 @@ if(p2){put(BOX,0.9,1.2,2.4,0,0,0.6,0.12,1.6,0.3,C.inkD);put(BOX,-0.5,-0.3,2.6,0,
 for(let i=0;i<5;i++)put(CONE,(i-2)*0.9,2.3-Math.abs(i-2)*0.3,-1.2,-0.9,0,-(i-2)*0.25,1.0,2.4,1.0,C.inkD);
 mPop();mPop();gTint=b.flash>0?0.45:0;drawBossArm(b,-1);drawBossArm(b,1);gTint=0;
 if(b.st==='up'){const s=6+Math.sin(t*20)*0.8;put(RING,b.tx,0.12,b.tz,0,0,0,s,1,s,C.red,0,0,F_UNLIT|F_NOCAST);put(RING,b.tx,0.12,b.tz,0,0,0,s*0.5,1,s*0.5,C.red,0,0,F_UNLIT|F_NOCAST)}}
-function drawEnemies(){BI=G.stage?C.crim:C.ink;for(const e of enemies){if(e.dead)continue;if(e.type==='imp')drawImp(e);else if(e.type==='lan')drawLan(e);else if(e.type==='bru')drawBru(e);else drawBoss(e)}
+function drawEnemies(){BI=STG[G.stage].ink;for(const e of enemies){if(e.dead)continue;if(e.type==='imp')drawImp(e);else if(e.type==='lan')drawLan(e);else if(e.type==='bru')drawBru(e);else drawBoss(e)}
 for(const s of shots){if(s.k===0){sph(s.x,s.y,s.z,s.r*2,s.r*2,s.r*2,C.ink,0,1,0,1);sph(s.x-s.vx*0.03,s.y-s.vy*0.03,s.z-s.vz*0.03,s.r*1.3,s.r*1.3,s.r*1.3,C.purple,0,0,F_UNLIT|F_NOCAST)}
 else{sph(s.x,s.y,s.z,1.1,1.1,1.1,C.ink,0,1,0,1);bill(BURST,s.x,s.y+0.65,s.z,0.7,now*9,C.yellow,F_UNLIT|F_NOCAST);const r=3.4+Math.sin(now*18)*0.4;put(RING,s.tx,0.11,s.tz,0,0,0,r,1,r,C.red,0,0,F_UNLIT|F_NOCAST)}}}
 function drawGun(){curLayer=2;mPush();M.set(CAMW);const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0);
@@ -123,6 +123,8 @@ if(pl.sp===2){const d=aimDir(),u=sat(pl.spT/0.1)*(pl.spT>0.6?sat((0.8-pl.spT)/0.
 mPush();mT(ox+d[0]*50,oy+d[1]*50,oz+d[2]*50);orient(d[0],d[1],d[2]);mRX(PI/2);mPush();mS(1.5*u,94,1.5*u);emit(CYL,C.white,0,0,NF,0);mPop();mPop();
 for(let i=0;i<9;i++){const tt=((now*3+i/9)%1)*80+2;mPush();mT(ox+d[0]*tt,oy+d[1]*tt,oz+d[2]*tt);orient(d[0],d[1],d[2]);mRX(PI/2);const s=(3+i%3*1.2)*u;mS(s,1,s);emit(RING,i%2?C.cyan:C.white,0,0,NF,0);mPop()}
 bill(BURST,ox+d[0]*2.6,oy+d[1]*2.6,oz+d[2]*2.6,2.6*u,now*25,C.cyan,NF);bill(STAR,ox+d[0]*2.4,oy+d[1]*2.4,oz+d[2]*2.4,1.3*u,-now*25,C.white,NF)}}
-const petals=[];for(let i=0;i<70;i++)petals.push({x:rnd(-18,18),y:rnd(0,11),z:rnd(-18,18),p:rnd(0,TAU),s:rnd(0.07,0.13)});
-function drawPetals(dt){for(const p of petals){p.y-=dt*(G.stage?-1.2:1)*(0.7+Math.sin(p.p)*0.2);p.p+=dt*2.2;p.x+=dt*(0.9+Math.sin(p.p*0.7)*0.8);if(p.y<0)p.y+=11;else if(p.y>11)p.y-=11;let dx=p.x-cam.x,dz=p.z-cam.z;if(dx>18)p.x-=36;else if(dx<-18)p.x+=36;if(dz>18)p.z-=36;else if(dz<-18)p.z+=36;
-put(QUAD,p.x,p.y,p.z,p.p,p.p*1.3,p.p*0.7,p.s,p.s*0.7,1,G.stage?C.orange:C.sakura,0,0,F_UNLIT|F_NOEDGE|F_NOCAST)}}
+const petals=[];for(let i=0;i<70;i++)petals.push({x:rnd(-18,18),y:rnd(0,11),z:rnd(-18,18),p:rnd(0,TAU),s:rnd(0.07,0.13),k:i});
+// ambient particles per stage (STG[].pfx): v = fall speed (negative rises), w = wind, c = colours, sz = size scale
+const PFX=[{v:1,w:1,c:['sakura']},{v:-1.2,w:1,c:['orange']},{v:0.55,w:0.7,c:['inkD','inkD','ink']},{v:1.7,w:2.4,c:['white'],sz:0.8},{v:-0.6,w:0.5,c:['inkD','inkD','inkD','inkD','red'],sz:1.2}];
+function drawPetals(dt){const f=PFX[STG[G.stage].pfx],sz=f.sz||1;for(const p of petals){p.y-=dt*f.v*(0.7+Math.sin(p.p)*0.2);p.p+=dt*2.2;p.x+=dt*(0.9+Math.sin(p.p*0.7)*0.8)*f.w;if(p.y<0)p.y+=11;else if(p.y>11)p.y-=11;let dx=p.x-cam.x,dz=p.z-cam.z;if(dx>18)p.x-=36;else if(dx<-18)p.x+=36;if(dz>18)p.z-=36;else if(dz<-18)p.z+=36;
+put(QUAD,p.x,p.y,p.z,p.p,p.p*1.3,p.p*0.7,p.s*sz,p.s*0.7*sz,1,C[f.c[p.k%f.c.length]],0,0,F_UNLIT|F_NOEDGE|F_NOCAST)}}

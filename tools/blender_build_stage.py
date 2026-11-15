@@ -1,6 +1,6 @@
 """One-time migration: rebuild a code-generated stage (buildStage1Code / buildStage2Code) in Blender.
 
-Input: JSON from `node tools/dump_stage.js <1|2> out.json` (instances, unit-primitive geometry, colliders).
+Input: JSON from `node tools/dump_stage.js <1-5> out.json` (instances, unit-primitive geometry, colliders).
 Run inside Blender (in an empty file):
     exec(open('tools/blender_build_stage.py').read(), {'DUMP': '/path/stage1.json', 'SCENE': 'Stage_Shrine', 'ROOT': 'Shrine'})
 
@@ -66,11 +66,13 @@ def material(i):
     if i['fl'] & 4: nm += '_nocast'
     if i['rim']: nm += '_rim'
     m = bpy.data.materials.new(nm)
+    m.use_nodes = True
     nt = m.node_tree
-    bsdf = nt.nodes.get('Principled BSDF')
+    # look nodes up by type: their names are localised (e.g. a Japanese UI names it 'プリンシプルBSDF')
+    bsdf = next((n for n in nt.nodes if n.bl_idname == 'ShaderNodeBsdfPrincipled'), None)
     if bsdf is None:  # Blender 5.x: new materials may start with an empty node tree
         bsdf = nt.nodes.new('ShaderNodeBsdfPrincipled')
-        out = nt.nodes.get('Material Output') or nt.nodes.new('ShaderNodeOutputMaterial')
+        out = next((n for n in nt.nodes if n.bl_idname == 'ShaderNodeOutputMaterial'), None) or nt.nodes.new('ShaderNodeOutputMaterial')
         out.location = (300, 0)
         nt.links.new(bsdf.outputs['BSDF'], out.inputs['Surface'])
     bsdf.inputs['Base Color'].default_value = (*i['c'], 1.0)

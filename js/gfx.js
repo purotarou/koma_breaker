@@ -53,7 +53,7 @@ if(mat>0.5){
   alb=mix(alb,alb*0.55,max(ln(dd.x,0.02),ln(dd.y,0.02))*pf);}
  else if(mat<6.5){float d=abs(fract(vO.y/0.17)-0.5)*0.17;alb=mix(alb,alb*0.62,ln(d,0.012)*pf);}
  else if(mat<7.5){vec2 p=vO.xz;float d=abs(fract((p.x*0.8+p.y*0.5)*2.2+sin(p.y*3.0+uT*1.5)*0.25-uT*0.35)-0.5)/2.2;
-  alb=mix(alb,vec3(1.0),ln(d,0.035)*step(0.1,sin(p.x*5.0-p.y*3.0+uT*0.9))*0.85);}
+  alb=mix(alb,vec3(1.0),ln(d,0.035)*step(0.1,sin(p.x*5.0-p.y*3.0+uT*0.9))*0.85*pf);}
  else if(mat<8.5){vec3 an=abs(N);vec2 p=an.y>max(an.x,an.z)*1.3?vO.xz:(an.x>an.z?vO.zy:vO.xy);p*=0.72;vec2 c=floor(p);
   if(hash(c+vec2(3.1,7.7))>0.3){vec2 q=fract(p)-0.5-(vec2(hash(c+1.3),hash(c+5.9))-0.5)*0.35;float r=0.2+0.1*hash(c+2.2);
    float m=ln(abs(length(q)-r),0.03)*step(q.y,-0.04);alb=mix(alb,alb*0.5,m*pf*(L<0.62?1.0:0.75));}}
@@ -84,7 +84,7 @@ precision highp float;
 in vec2 vUv;out vec4 oC;
 uniform sampler2D uC,uN;uniform highp sampler2D uD;
 uniform vec2 uPx,uTan,uFocus;uniform float uNear,uFar,uTime,uMood,uFlash,uInv,uMono,uHurt;
-uniform vec3 uCR,uCU,uCF,uS0,uS1,uS2,uFogC,uGrade;uniform float uNight;
+uniform vec3 uCR,uCU,uCF,uS0,uS1,uS2,uFogC,uGrade,uShade,uFogR;uniform float uNight;
 const vec2 OFF[4]=vec2[4](vec2(1.,0.),vec2(0.,1.),vec2(.7071,.7071),vec2(.7071,-.7071));
 const mat2 R45=mat2(.7071,-.7071,.7071,.7071);
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
@@ -125,7 +125,7 @@ void main(){
  if(n.b<0.001&&d>0.99999){col=sky(uv,fc);}
  else{
   vec3 base=c.rgb;float a=c.a;float L=a/0.85;
-  vec3 shc=base*mix(vec3(0.50,0.46,0.74),vec3(0.60,0.36,0.52),uMood);
+  vec3 shc=base*mix(uShade,vec3(0.60,0.36,0.52),uMood);
   float t=clamp((0.60-L)/0.30,0.0,1.0);
   vec2 q=R45*fc/5.5;float dd=length(fract(q)-0.5);float r=t*0.78;
   float m=(1.0-smoothstep(r-0.07,r+0.07,dd))*step(0.001,t);
@@ -134,7 +134,7 @@ void main(){
   col=mix(col,base,unlit);
   col*=mix(uGrade,vec3(1.0),unlit);
   col=mix(col,col*vec3(1.06,0.84,0.88)+vec3(0.05,0.0,0.03),uMood*0.5*(1.0-unlit));
-  col=mix(col,fogC,smoothstep(45.0,420.0,z)*0.8*(1.0-unlit));
+  col=mix(col,fogC,smoothstep(uFogR.x,uFogR.y,z)*uFogR.z*(1.0-unlit));
  }
  float lf=1.0-smoothstep(60.0,400.0,zm)*0.6;
  col=mix(col,vec3(0.07,0.05,0.10),e*lf);
@@ -161,7 +161,7 @@ vec3 B=A*0.5+0.25*(texture(uT,vUv+dir*-0.5).rgb+texture(uT,vUv+dir*0.5).rgb);
 float lb=dot(B,lu);oC=vec4((lb<mn||lb>mx)?A:B,1.0);}`;
 const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT']);
 const pS=mkProg(VS_S,FS_S,['uLVP','uT']);
-const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight']);
+const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight','uShade','uFogR']);
 const pF=mkProg(VS_Q,FS_F,['uT','uPx']);
 // ---- render targets ----
 function mkTex(w,h,ifmt,fmt,type,filt){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,ifmt,w,h,0,fmt,type,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filt);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filt);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t}
@@ -230,3 +230,6 @@ function project(x,y,z){const cx=VP[0]*x+VP[4]*y+VP[8]*z+VP[12],cy=VP[1]*x+VP[5]
 function bill(pi,x,y,z,s,rot,c,fl){mPush();const cr=Math.cos(rot)*s,sr=Math.sin(rot)*s;M[0]=cR[0]*cr+cU[0]*sr;M[1]=cR[1]*cr+cU[1]*sr;M[2]=cR[2]*cr+cU[2]*sr;M[4]=-cR[0]*sr+cU[0]*cr;M[5]=-cR[1]*sr+cU[1]*cr;M[6]=-cR[2]*sr+cU[2]*cr;M[8]=-cF[0]*s;M[9]=-cF[1]*s;M[10]=-cF[2]*s;M[12]=x;M[13]=y;M[14]=z;emit(pi,c,0,0,fl,0);mPop()}
 const LD=(()=>{const v=[0.52,0.76,0.40],l=Math.hypot(v[0],v[1],v[2]);return[v[0]/l,v[1]/l,v[2]/l]})();
 m4look(LV,LD[0]*90,LD[1]*90,LD[2]*90-2,0,0,-2,0,1,0);m4ortho(LP,-44,44,-44,44,10,175);m4mul(LVP,LP,LV);
+// per-stage sun direction (STG[n].sun); the shadow camera follows it
+const LD0=LD.slice();
+function setSun(v){v=v||LD0;const l=Math.hypot(v[0],v[1],v[2]);for(let i=0;i<3;i++)LD[i]=v[i]/l;m4look(LV,LD[0]*90,LD[1]*90,LD[2]*90-2,0,0,-2,0,1,0);m4mul(LVP,LP,LV)}
