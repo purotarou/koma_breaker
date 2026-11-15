@@ -172,7 +172,7 @@ for(const[x,z]of[[-6,28],[6,28],[-6,12],[6,12],[-6,-14],[6,-14]]){toro(x,z);put(
 {const x=0,z=-4;box(x,0.25,z,2.4,0.5,2.4,C.stoneD,5);for(let i=0;i<3;i++){const a=i/3*TAU;put(CYL,x+Math.cos(a)*0.7,0.85,z+Math.sin(a)*0.7,0,0,0,0.22,0.8,0.22,C.bronze4)}
  put(CYL,x,1.5,z,0,0,0,2.0,0.7,2.0,C.bronze4,0,.6);cyl(x,1.87,z,1.7,0.06,1.7,C.stoneL);cyl(x,1.9,z,1.0,0.04,1.0,C.orange,0,0,NF);for(let i=0;i<3;i++){const a=i/3*TAU+0.4,fx=x+Math.cos(a)*0.32,fz=z+Math.sin(a)*0.32;put(CONE,fx,2.12,fz,0,a,0,0.32,0.46,0.32,C.orange,0,0,NF|F_FLAME);put(CONE,fx,2.06,fz,0,a+1,0,0.18,0.3,0.18,C.yellow,0,0,NF|F_FLAME)}
  for(let k=0;k<5;k++){const a=k/5*TAU,bx=x+Math.cos(a)*0.66,bz=z+Math.sin(a)*0.66;for(let j=0;j<3;j++){const ox=bx+(j-1)*0.07,tl=0.06*(j-1);put(CYL,ox,2.2,bz,0,0,tl,0.035,0.62,0.035,C.willow,0,0,F_NOCAST|F_NOEDGE);sph(ox-Math.sin(tl)*0.31,2.52,bz,0.07,0.07,0.07,C.orange,0,0,NF|F_NOEDGE)}}for(const[dx,dz]of[[-0.6,-0.6],[0.6,-0.6],[-0.6,0.6],[0.6,0.6]])cyl(x+dx,2.5,z+dz,0.12,1.2,0.12,C.bronze4);
- put(PYR,x,3.45,z,0,0,0,2.4,0.8,2.4,C.bronze4,0,.6);put(PYR,x,3.62,z,0,0,0,1.6,0.46,1.6,C.snow);sph(x,4.1,z,0.3,0.3,0.3,C.bronze4,0,.6);
+ put(PYR,x,3.45,z,0,0,0,2.4,0.8,2.4,C.bronze4,0,.6);put(PYR,x,3.62,z,0,0,0,1.6,0.46,1.6,C.snow);
  colC.push({x,z,r:1.4,h:4})}
 //#seal_stone
 {const x=-11,z=-19;box(x,0.3,z,2.4,0.6,1.4,C.stoneD,5);box(x,2.1,z,1.5,3.0,0.5,C.stone);box(x,3.64,z,1.6,0.1,0.6,C.snow);put(CYL,x,2.4,z+0.26,PI/2,0,0,0.9,0.02,0.9,C.ink);
