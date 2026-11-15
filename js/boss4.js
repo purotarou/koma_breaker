@@ -13,7 +13,7 @@
 const MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_RING=100;
 const ices=[];
 const MONK={ready:false,root:null};
-fetch('assets/boss_monk.glb',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(monkLoad)
+loadGlbBuf('assets/boss_monk.glb').then(monkLoad)
  .catch(e=>console.warn('[boss4] assets/boss_monk.glb failed to load, drawing a stand-in shape:',e));
 function monkLoad(buf){const g=glbParse(buf),J=g.j,geo=new Map();
 const primOf=p=>{const key=p.attributes.POSITION+'/'+p.attributes.NORMAL+'/'+p.indices;if(geo.has(key))return geo.get(key);

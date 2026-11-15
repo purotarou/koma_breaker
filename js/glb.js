@@ -62,8 +62,15 @@ for(let i=0;i<items.length;i++){const a=bb[i];near.fill(Infinity);
 // Emit a loaded stage into the current (static) layer.
 function emitGlbStage(st){for(const it of st.items){mPush();M.set(it.m);gId=it.id;emit(it.pi,it.c,it.mat,it.gloss,it.fl,it.rim);gId=0;mPop()}
 for(const c of st.colC)colC.push({...c});for(const b of st.colB)colB.push({...b})}
+// Load a GLB as an ArrayBuffer. fetch() is refused when index.html is opened straight from disk (file://), so then fall back
+// to <script src="<path>.js">, which sets KB_GLB[path] to the same file as base64 (written next to each .glb by the export tool).
+const KB_GLB={};
+function loadGlbBuf(path){return fetch(path,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()})
+ .catch(e=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=path+'.js';s.onerror=()=>rej(e);
+  s.onload=()=>{const b=KB_GLB[path];if(!b)return rej(e);delete KB_GLB[path];const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);res(u.buffer)};
+  document.head.appendChild(s)}))}
 // ---- stages authored in Blender. ?stage1=code ... ?stage5=code force the code-built version (comparison / fallback). ----
 const STAGE_FILES=['assets/stage_shrine.glb','assets/stage_castle.glb','assets/stage_town.glb','assets/stage_temple.glb','assets/stage_inkpond.glb'],STAGE_GLB=STAGE_FILES.map(()=>null);
 const stageReady=Promise.all(STAGE_FILES.map((f,i)=>new URLSearchParams(location.search).get('stage'+(i+1))==='code'?null:
- fetch(f,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>{STAGE_GLB[i]=glbStage(b)})
+ loadGlbBuf(f).then(b=>{STAGE_GLB[i]=glbStage(b)})
  .catch(e=>console.warn('[stage] '+f+' failed to load, using the code-built stage:',e))));
