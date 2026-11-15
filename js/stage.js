@@ -74,7 +74,8 @@ for(let i=0;i<24;i++){const side=i%4,t=R2();let x,z;if(side===0){x=-21.9;z=-25+t
 // gate lanterns
 for(const x of[-2.2,2.2])chochin(x,3.85,22.2,C.red);
 }
-function collide(o,r){o.x=clamp(o.x,-BX+r,BX-r);o.z=clamp(o.z,BZ0+r,BZ1-r);
+// while a boss is up, the yard north of z -25.6 is its body: close it whatever the stage's arena says
+function collide(o,r){o.x=clamp(o.x,-BX+r,BX-r);o.z=clamp(o.z,(boss?Math.max(BZ0,-25.6):BZ0)+r,BZ1-r);
 for(const c of colC){const dx=o.x-c.x,dz=o.z-c.z,rr=r+c.r,d2=dx*dx+dz*dz;if(d2<rr*rr&&d2>1e-6){const d=Math.sqrt(d2);o.x=c.x+dx/d*rr;o.z=c.z+dz/d*rr}}
 for(const b of colB){const nx=clamp(o.x,b.x0,b.x1),nz=clamp(o.z,b.z0,b.z1),dx=o.x-nx,dz=o.z-nz,d2=dx*dx+dz*dz;if(d2<r*r){if(d2>1e-8){const d=Math.sqrt(d2);o.x=nx+dx/d*r;o.z=nz+dz/d*r}else{o.z=b.z1+r}}}}
 function rayWorld(ox,oy,oz,dx,dy,dz,maxT){let t=maxT;if(dy<0){const tg=-oy/dy;if(tg<t)t=tg}

@@ -115,17 +115,23 @@ function buildStage4Code(){const R=mulberry(41),NF=F_UNLIT|F_NOCAST,WX=33.4,WS=3
 const wallSnow=(x0,z0,x1,z1)=>along(x0,z0,x1,z1,len=>{box(0,0.35,0,len,0.7,1.0,C.stoneD,5);box(0,1.6,0,len,1.8,0.6,C.ochre);for(const y of[1.15,1.6,2.05])box(0,y,0,len+0.02,0.07,0.62,C.white);
  put(PRISM,0,2.85,0,0,PI/2,0,1.7,0.7,len+0.3,C.troof4,3);put(PRISM,0,3.02,0,0,PI/2,0,1.2,0.5,len+0.36,C.snow)});
 const cedarSnow=(x,z,s,R)=>{const c=R()<.5?C.cedar:C.cedarD;cyl(x,1.5*s,z,0.8*s,3*s,0.8*s,C.trunk,9);for(const[yc,hh,wd]of[[5.5,7,6],[9,6,4.8],[12,5,3.4]]){put(CONE,x,yc*s,z,0,0,0,wd*s,hh*s,wd*s,c,8,0,F_SWAY);const ap=(yc+hh/2)*s,sh=hh*0.42*s;put(CONE,x,ap-sh/2+0.06*s,z,0,0,0,wd*0.47*s,sh,wd*0.47*s,C.snow,0,0,F_SWAY)}};
-const icicles=(x0,x1,y,z,n)=>{for(let i=0;i<n;i++){const l=0.4+R()*0.7;put(CONE,x0+(x1-x0)*(i+0.5)/n,y-l/2,z,PI,0,0,0.14,l,0.14,C.ice,0,0,F_NOCAST)}};
+const IR=mulberry(9173);
+const icicles=(x0,x1,y,z,n)=>{for(let i=0;i<n;i++)R();const m=Math.round(n*1.5);for(let i=0;i<m;i++){if(IR()<0.3)continue;const u=IR(),l=0.18+u*u*u*1.4,w=0.07+IR()*0.1+l*0.04,px=x0+(x1-x0)*IR();put(CONE,px,y-l/2,z+(IR()-0.5)*0.12,PI,0,0,w,l,w,C.ice,0,0,F_NOCAST);if(IR()<0.35){const l2=l*(0.3+IR()*0.4);put(CONE,px+(IR()<.5?-1:1)*(0.12+IR()*0.1),y-l2/2,z,PI,0,0,w*0.7,l2,w*0.7,C.ice,0,0,F_NOCAST)}}};
+const burn=n=>{for(let i=0;i<n;i++)R()};
+// one smooth snow bank (a half-buried flattened cylinder with rounded ends) from (x0,z0) to (x1,z1)
+const bank=(x0,z0,x1,z1,w,h,fl)=>along(x0,z0,x1,z1,len=>{put(CYL,0,0,0,0,0,PI/2,h,len,w,C.snow,0,0,fl||0);for(const e of[-1,1])sph(e*len/2,0,0,w,h,w,C.snow,0,0,fl||0)});
 const snowRoofPyr=(x,y,z,w,h)=>{put(PYR,x,y,z,0,0,0,w,h,w,C.troof4);put(PYR,x,y+h*0.21,z,0,0,0,w*0.7,h*0.62,w*0.7,C.snow)};
 //#ground
-box(0,-0.62,0,1700,1,1700,C.snow);box(0,0.02,4,5,0.1,62,C.stoneL,1);put(CYL,0,0,-4,0,0,0,15,0.06,15,C.stone,1);
-for(let i=0;i<12;i++)sph((R()-0.5)*4,0.06,-24+i*5+R()*2,1.6+R(),0.1,1.1+R()*0.6,C.snow,0,0,F_NOCAST);
+box(0,-0.62,0,1700,1,1700,C.snow);box(0,0.02,2.45,5,0.1,65.1,C.stoneL,1);put(CYL,0,0,-4,0,0,0,15,0.06,15,C.stone,1);
+burn(48);for(const sx of[-1,1]){bank(sx*2.95,-29.4,sx*2.95,-12.6,1.0,0.5,F_NOCAST);bank(sx*2.95,4.6,sx*2.95,34.4,1.0,0.5,F_NOCAST)}
 for(let i=0;i<14;i++){const a=i/14*TAU,r=7.6;box(Math.cos(a)*r,0.05,-4+Math.sin(a)*r,0.9,0.1,0.5,C.stoneD)}
 //#walls
-wallSnow(-WX,-27,WX,-27);wallSnow(-WX,WS,-5,WS);wallSnow(5,WS,WX,WS);wallSnow(-WX,-27,-WX,WS);wallSnow(WX,-27,WX,WS);
-for(const[x,z]of[[-WX,-27],[WX,-27],[-WX,WS],[WX,WS]]){box(x,1.9,z,1.1,3.8,1.1,C.twood,2);snowRoofPyr(x,4.1,z,1.7,0.7)}
+wallSnow(-WX,-53,WX,-53);wallSnow(-WX,WS,-5,WS);wallSnow(5,WS,WX,WS);wallSnow(-WX,-53,-WX,WS);wallSnow(WX,-53,WX,WS);
+for(const[x,z]of[[-WX,-53],[WX,-53],[-WX,WS],[WX,WS]]){box(x,1.9,z,1.1,3.8,1.1,C.twood,2);snowRoofPyr(x,4.1,z,1.7,0.7)}
 //#snow_drifts
-for(let i=0;i<16;i++){const side=i%4,t=R();let x,z;if(side===0){x=-WX+1.6;z=-24+t*56}else if(side===1){x=WX-1.6;z=-24+t*56}else if(side===2){x=-30+t*60;z=-25.6}else{x=t<0.5?-30+t*44:8+(t-0.5)*44;z=WS-1.6}sph(x,0,z,3.6+R()*2,1.1,1.6+R()*0.8,C.snow)}
+burn(48);const DX=WX-0.9,DS=WS-0.9;
+bank(DX,-36.6,DX,-3,2.4,1.6);bank(DX,18,DX,33.6,2.4,1.6);bank(-DX,-36.6,-DX,15,2.4,1.6);bank(-DX,25.4,-DX,33.6,2.4,1.6);
+bank(-31.4,-52.1,31.4,-52.1,2.4,1.6);bank(-31.4,DS,-7.4,DS,2.4,1.6);bank(7.4,DS,31.4,DS,2.4,1.6);
 //#sanmon
 {const z=WS;for(const x of[-5,-2.4,2.4,5])cyl(x,2.7,z,0.7,5.4,0.7,C.twood);for(const s of[-1,1])box(s*1.2,2.4,z+0.1,2.3,4.8,0.25,C.wood,2);box(0,5.08,z+0.1,4.8,0.56,0.25,C.twood);
  for(const s of[-1,1]){const cx=s*3.7;box(cx,1.0,z,2.62,2.0,0.5,C.twood,2);box(cx,3.7,z,2.62,3.4,0.42,C.ochre);box(cx,3.5,z-0.24,1.7,1.9,0.06,C.ink);for(let i=0;i<5;i++)box(cx-0.68+i*0.34,3.5,z-0.3,0.08,1.9,0.08,C.twood);box(cx,3.5,z-0.3,1.8,0.1,0.1,C.twood)}
@@ -136,6 +142,8 @@ for(let i=0;i<16;i++){const side=i%4,t=R();let x,z;if(side===0){x=-WX+1.6;z=-24+
 //#main_hall
 box(0,0.6,-41,36,1.2,18,C.stoneD,5);box(0,4.0,-41,26,5.6,12,C.twood,2);box(0,3.6,-34.95,13,3.4,0.1,C.paper);for(let i=0;i<8;i++)cyl(-12.25+i*3.5,4.0,-34.7,0.5,5.6,0.5,C.twood);
 for(let i=0;i<3;i++)box(0,0.2+i*0.4,-31.6+i*0.5,8,0.4,1.0,C.stone);
+colB.push({x0:-18,x1:18,z0:-50,z1:-32,h:1.2},{x0:-4,x1:4,z0:-32,z1:-30.1,h:1.0},{x0:-13,x1:13,z0:-47,z1:-35,h:13},{x0:-31,x1:-21,z0:-46,z1:-38,h:8},{x0:21,x1:31,z0:-46,z1:-38,h:8});
+for(const x of[-9,9]){toro(x,-29.6);put(PYR,x,3.14,-29.6,0,0,0,1.25,0.32,1.25,C.snow);sph(x,0.05,-29.6,1.75,0.5,1.75,C.snow,0,0,F_NOCAST)}
 put(PRISM,0,9.6,-41,0,PI/2,0,18.6,5.6,33,C.troof4,3);put(PRISM,0,10.8,-41,0,PI/2,0,13.4,4.0,33.4,C.snow);box(0,12.9,-41,28,0.45,0.6,C.troof4);for(const s of[-1,1])put(CONE,s*14,13.4,-41,0,0,0,0.9,1.4,0.9,C.troof4);
 icicles(-15,15,6.75,-31.9,16);
 for(const s of[-1,1]){box(s*26,3.2,-42,10,4.4,8,C.paper);box(s*26,1.0,-42,10.04,2.0,8.04,C.twood,2);put(PRISM,s*26,6.4,-42,0,PI/2,0,9.4,2.4,11,C.troof4,3);put(PRISM,s*26,6.9,-42,0,PI/2,0,6.8,1.6,11.2,C.snow)}
@@ -159,12 +167,13 @@ for(let i=0;i<6;i++){const x=31.2,z=1+i*2.6;box(x,0.2,z,1.0,0.4,1.0,C.stoneD,5);
 box(31.6,2.6,7.5,1.6,0.16,16.6,C.troof4);for(const z of[-0.6,15.6])box(31.6,1.3,z,0.16,2.6,0.16,C.twood);box(31.6,2.75,7.5,1.3,0.1,16.4,C.snow);
 colB.push({x0:30.5,x1:32.4,z0:-0.8,z1:15.8,h:2.8});
 //#lanterns
-for(const[x,z]of[[-6,28],[6,28],[-6,12],[6,12],[-6,-14],[6,-14]]){toro(x,z);put(PYR,x,3.14,z,0,0,0,1.25,0.32,1.25,C.snow);sph(x,0.4,z,1.6,0.2,1.6,C.snow)}
+for(const[x,z]of[[-6,28],[6,28],[-6,12],[6,12],[-6,-14],[6,-14]]){toro(x,z);put(PYR,x,3.14,z,0,0,0,1.25,0.32,1.25,C.snow);sph(x,0.05,z,1.75,0.5,1.75,C.snow,0,0,F_NOCAST)}
 //#incense_burner
 {const x=0,z=-4;box(x,0.25,z,2.4,0.5,2.4,C.stoneD,5);for(let i=0;i<3;i++){const a=i/3*TAU;put(CYL,x+Math.cos(a)*0.7,0.85,z+Math.sin(a)*0.7,0,0,0,0.22,0.8,0.22,C.bronze4)}
- put(CYL,x,1.5,z,0,0,0,2.0,0.7,2.0,C.bronze4,0,.6);cyl(x,1.87,z,1.7,0.06,1.7,C.ink);for(const[dx,dz]of[[-0.6,-0.6],[0.6,-0.6],[-0.6,0.6],[0.6,0.6]])cyl(x+dx,2.5,z+dz,0.12,1.2,0.12,C.bronze4);
+ put(CYL,x,1.5,z,0,0,0,2.0,0.7,2.0,C.bronze4,0,.6);cyl(x,1.87,z,1.7,0.06,1.7,C.stoneL);cyl(x,1.9,z,1.0,0.04,1.0,C.orange,0,0,NF);for(let i=0;i<3;i++){const a=i/3*TAU+0.4,fx=x+Math.cos(a)*0.32,fz=z+Math.sin(a)*0.32;put(CONE,fx,2.12,fz,0,a,0,0.32,0.46,0.32,C.orange,0,0,NF|F_FLAME);put(CONE,fx,2.06,fz,0,a+1,0,0.18,0.3,0.18,C.yellow,0,0,NF|F_FLAME)}
+ for(let k=0;k<5;k++){const a=k/5*TAU,bx=x+Math.cos(a)*0.66,bz=z+Math.sin(a)*0.66;for(let j=0;j<3;j++){const ox=bx+(j-1)*0.07,tl=0.06*(j-1);put(CYL,ox,2.2,bz,0,0,tl,0.035,0.62,0.035,C.willow,0,0,F_NOCAST|F_NOEDGE);sph(ox-Math.sin(tl)*0.31,2.52,bz,0.07,0.07,0.07,C.orange,0,0,NF|F_NOEDGE)}}for(const[dx,dz]of[[-0.6,-0.6],[0.6,-0.6],[-0.6,0.6],[0.6,0.6]])cyl(x+dx,2.5,z+dz,0.12,1.2,0.12,C.bronze4);
  put(PYR,x,3.45,z,0,0,0,2.4,0.8,2.4,C.bronze4,0,.6);put(PYR,x,3.62,z,0,0,0,1.6,0.46,1.6,C.snow);sph(x,4.1,z,0.3,0.3,0.3,C.bronze4,0,.6);
- for(let i=0;i<3;i++)sph(x+0.25*i,4.6+i*0.9,z,0.7+i*0.25,0.5+i*0.15,0.7+i*0.25,C.smoke,0,0,F_NOCAST|F_SWAY);colC.push({x,z,r:1.4,h:4})}
+ colC.push({x,z,r:1.4,h:4})}
 //#seal_stone
 {const x=-11,z=-19;box(x,0.3,z,2.4,0.6,1.4,C.stoneD,5);box(x,2.1,z,1.5,3.0,0.5,C.stone);box(x,3.64,z,1.6,0.1,0.6,C.snow);put(CYL,x,2.4,z+0.26,PI/2,0,0,0.9,0.02,0.9,C.ink);
  for(let k=0;k<3;k++){const a=k/3*TAU+0.5;sph(x+Math.cos(a)*0.2,2.4+Math.sin(a)*0.2,z+0.28,0.2,0.2,0.04,C.paper)}cyl(x,2.9,z,1.62,0.14,0.62,C.rope);box(x,2.55,z+0.33,0.24,0.5,0.03,C.white);colB.push({x0:x-1.2,x1:x+1.2,z0:z-0.7,z1:z+0.7,h:3.7})}
@@ -174,13 +183,10 @@ for(const[x,z]of[[-6,28],[6,28],[-6,12],[6,12],[-6,-14],[6,-14]]){toro(x,z);put(
  icicles(x-1.9,x+1.9,2.95,z+2.3,5);icicles(x-1.9,x+1.9,2.95,z-2.3,5);colB.push({x0:x-1.9,x1:x+1.9,z0:z-1.4,z1:z+1.4,h:3.5})}
 //#frozen_pond
 {const x=19,z=15;put(CYL,x,0.03,z,0,0,0,12,0.06,8,C.iceP);for(let i=0;i<5;i++)put(BOX,x+(R()-0.5)*7,0.07,z+(R()-0.5)*4,0,R()*PI,0,2+R()*2,0.02,0.05,C.white,0,0,F_NOCAST);for(let i=0;i<14;i++){const a=i/14*TAU+R()*0.2;sph(x+Math.cos(a)*6.2,0.12,z+Math.sin(a)*4.2,1.2+R()*0.6,0.45,0.9+R()*0.4,i%3?C.stone:C.stoneD)}
- {const Q=mulberry(4242);for(let i=0;i<30;i++){const a=i/30*TAU+Q()*0.15,ca=Math.cos(a),sa=Math.sin(a);if(Math.abs(ca)<0.3)continue;const k=1.0+Q()*0.12,sz=0.7+Q()*0.9;sph(x+ca*6.3*k,0.1,z+sa*4.3*k,sz*1.2,0.35+sz*0.35,sz,Q()<.35?C.stoneD:C.stone);if(Q()<.4)sph(x+ca*6.3*k,0.3+sz*0.32,z+sa*4.3*k,sz*0.8,0.16,sz*0.65,C.snow)}
+ {const Q=mulberry(4242);for(let i=0;i<30;i++){const a=i/30*TAU+Q()*0.15,ca=Math.cos(a),sa=Math.sin(a);if(Math.abs(ca)<0.3)continue;const k=1.0+Q()*0.12,sz=0.7+Q()*0.9,H=0.35+sz*0.35,rx=x+ca*6.3*k,rz=z+sa*4.3*k;sph(rx,0.1,rz,sz*1.2,H,sz,Q()<.35?C.stoneD:C.stone);if(Q()<.4)sph(rx,0.06+H/2,rz,sz*0.78,0.2,sz*0.62,C.snow);colC.push({x:rx,z:rz,r:sz*0.5,h:0.1+H/2})}
   for(const[a,h,r]of[[0.5,2.0,0.9],[2.5,1.6,0.8],[3.6,2.4,1.0],[5.6,1.4,0.7]]){const px=x+Math.cos(a)*7.4,pz=z+Math.sin(a)*5.2;sph(px,h*0.42,pz,r*1.3,h,r,C.stoneD);sph(px,h*0.88,pz,r*0.9,0.3,r*0.75,C.snow);colC.push({x:px,z:pz,r:r*0.6,h})}
   for(const[dx,dz,r]of[[-3.6,-1.2,0.6],[3.2,1.4,0.5],[-2.2,2.2,0.4],[4.4,-1.8,0.45]])sph(x+dx,0.06,z+dz,r*1.3,0.3,r,C.stone)}
- for(let i=0;i<6;i++){const a=R()*TAU;sph(x+Math.cos(a)*6.2,0.34,z+Math.sin(a)*4.2,0.9,0.22,0.7,C.snow)}
- for(let i=0;i<7;i++){const t=(i-3)/3,y=0.25+0.75*(1-t*t);box(x,y,z+t*4.2,1.6,0.16,1.3,C.red)}for(const s of[-1,1]){for(let i=0;i<7;i++){const t=(i-3)/3,y=0.25+0.75*(1-t*t);box(x+s*0.75,y+0.45,z+t*4.2,0.1,0.8,0.1,C.red)}
-  for(let i=0;i<6;i++){const t0=(i-3)/3,t1=(i-2)/3,y0=1.3+0.75*(1-t0*t0),y1=1.3+0.75*(1-t1*t1);put(BOX,x+s*0.75,(y0+y1)/2-0.05,z+(t0+t1)/2*4.2,Math.atan2(y0-y1,1.4),0,0,0.12,0.1,1.45,C.red)}}
- box(x,1.0,z,1.66,0.08,9.6,C.snow,0,0,F_NOCAST);colB.push({x0:x-1,x1:x+1,z0:z-4.6,z1:z+4.6,h:1.6})}
+ burn(6);for(const[dx,r]of[[0,4.5],[-2.4,3.9],[2.4,3.9],[-4.3,2.3],[4.3,2.3]])colC.push({x:x+dx,z,r,h:0.12})}
 //#yukitsuri_pines
 for(const[x,z]of[[-15,25],[15,26]]){put(CYL,x,1.4,z,0,0,0.1,0.6,2.8,0.6,C.trunk,9);for(const[dy,w]of[[2.8,5.6],[3.9,4.2],[4.9,2.8]]){sph(x,dy,z,w,1.1,w,C.cedarD,8,0,F_SWAY);sph(x,dy+0.42,z,w*0.82,0.42,w*0.82,C.snow,0,0,F_SWAY)}
  cyl(x,4.4,z,0.1,6.6,0.1,C.wood);for(let i=0;i<10;i++){const a=i/10*TAU,ex=x+Math.cos(a)*2.9,ez=z+Math.sin(a)*2.9,top=7.6,bot=2.6,dx=ex-x,dz=ez-z,hl=2.9,l=Math.hypot(hl,top-bot);
@@ -195,7 +201,7 @@ for(const[cx,cz]of[[-29.5,-23],[29.5,-23],[29.5,30],[-28.5,30]]){for(let i=0;i<7
 //#garden_rocks
 for(const[x,z]of[[-17,-22],[-28,-6],[16,-23],[28,-6],[-27,4],[26,26]]){const w=1.6+R()*1.2;sph(x,0.4,z,w,1.3,w*0.8,C.stoneD);sph(x,0.95,z,w*0.8,0.35,w*0.6,C.snow);colC.push({x,z,r:w*0.45,h:1.2})}
 //#cedars
-for(const[x,z,s]of[[-29,30,0.7],[-28.5,-1,0.6],[-27.5,16,0.6],[29,22,0.6]]){cedarSnow(x,z,s,R);colC.push({x,z,r:0.7,h:6})}
+for(const[x,z,s]of[[-23.5,30.5,0.7],[-28.5,-1,0.6],[-27.5,16,0.6],[29,22,0.6]]){cedarSnow(x,z,s,R);colC.push({x,z,r:0.7,h:6})}
 //#outer_buildings
 for(const[x,z,ry,w]of[[-50,-8,PI/2,18],[50,6,-PI/2,16]]){mPush();mT(x,0,z);mRY(ry);box(0,0.5,0,w+2,1,9,C.stoneD,5);box(0,3.0,0,w,4.2,8,C.paper);box(0,1.6,0,w+0.04,2.2,8.04,C.twood,2);box(0,3.6,4.02,w*0.6,1.0,0.08,C.glow,0,0,F_UNLIT);
  put(PRISM,0,6.6,0,0,PI/2,0,10.4,2.8,w+1.4,C.troof4,3);put(PRISM,0,7.2,0,0,PI/2,0,7.4,1.9,w+1.6,C.snow);mPop()}
