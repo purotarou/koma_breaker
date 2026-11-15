@@ -62,7 +62,8 @@ if(full){ctx.save();ctx.translate(372,84);ctx.rotate(-0.1);const s=1+0.12*Math.s
 txt('撃破',W-150,40,22,'#fff',INK,6,'right');txt(String(G.kills),W-40,40,44,'#ffd91a',INK,8,'right');txt(String(G.score).padStart(6,'0'),W-40,82,26,'#fff',INK,6,'right');
 if(G.combo>=2){const s=1+Math.max(0,G.comboPop)*1.2;ctx.save();ctx.translate(W-110,128);ctx.rotate(-0.1);ctx.scale(s,s);txt(G.combo+'連撃!',0,0,38,'#ff3b30',INK,8,'center','#fff',14);ctx.restore()}
 if(boss&&boss.st!=='rise'&&!(boss.monk&&boss.st==='drop')){const v=sat(boss.hp/boss.mhp);gauge(480,28,520,24,v,boss.phase>1?'#ff3b30':'#a04cff',boss.monk?'ボス':'魔王');txt(STG[G.stage].boss,740,70,22,'#fff',INK,6);
- if(boss.monk&&boss.phase<2){gauge(560,92,300,16,sat(boss.bhp/boss.bmax),boss.bflash>0?'#fff':'#ffc21a','鐘');txt('背中の鐘を撃て！',W/2,132,20,'#fff',INK,5)}}
+ if(boss.monk&&boss.st==='tired'){const r=Math.max(0,boss.dur-boss.stT),k=(now*6|0)%2;txt('背中ガラ空き！',W/2,boss.bell?140:112,34,k?'#ffd91a':'#fff',INK,7);gauge(540,boss.bell?168:140,200,12,sat(r/boss.dur),'#59d8ff','')}
+ if(boss.monk&&boss.bell&&boss.st!=='trans'){gauge(560,92,300,16,sat(boss.bhp/boss.bmax),boss.bflash>0?'#fff':boss.st==='tired'?'#ff8a1a':'#ffc21a','鐘');if(boss.st!=='tired')txt('背後に回って鐘を撃て！',W/2,132,20,'#fff',INK,5)}}
 // ammo
 const na=SK.mag,st=Math.min(18,288/na),iw=st*0.67,bx=W/2-na*st/2;for(let i=0;i<na;i++){const x=bx+i*st,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+iw/2,y-14);ctx.lineTo(x+iw,y-2);ctx.lineTo(x+iw,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
 if(pl.reload>0&&Math.sin(now*20)>-0.3)txt('装填中…',W/2,640,26,'#fff',INK,6);
@@ -99,7 +100,7 @@ function drawCutBoss(){const t=3.2-cutBoss,u=sat(t/0.25)*sat(cutBoss/0.3);ctx.fi
 if(t>0.5){const k=easeBack(sat((t-0.5)/0.25));ctx.save();ctx.translate(60,H-74);ctx.rotate(-0.045);ctx.scale(k,k);const bc=STG[G.stage].cut;if(bc[0])txt(bc[0],0,-10,54,'#fff',null,0,'left');txt(bc[1],bc[0]?250:0,-4,92,'#ff2e2e','#fff',10,'left');ctx.restore()}}
 function drawWipe(){const t=wipe.t,c=easeOut(t<0.5?t*2:(1-t)*2);ctx.fillStyle=INK;const n=7,bw=W/n+60;for(let i=0;i<n;i++){const x=i*(W/n)-30,w=bw*c*1.02;ctx.beginPath();const o=t<0.5?0:bw-w;ctx.moveTo(x+o+70,-10);ctx.lineTo(x+o+w+70,-10);ctx.lineTo(x+o+w-70,H+10);ctx.lineTo(x+o-70,H+10);ctx.fill()}}
 // ================= MAIN =================
-function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawTempleDoor(GDT);drawParts();if(!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0))drawGun();
+function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawTempleDoor(GDT);drawParts();if(!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine())drawGun();
 gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthRange(0,1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,shFbo);gl.viewport(0,0,SHN,SHN);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(pS.p);gl.uniformMatrix4fv(pS.u.uLVP,false,LVP);gl.uniform1f(pS.u.uT,now);flushLayer(0);flushLayer(1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,gFbo);gl.viewport(0,0,W,H);gl.clearBufferfv(gl.COLOR,0,[0,0,0,1]);gl.clearBufferfv(gl.COLOR,1,[0.5,0.5,0,0]);gl.clearBufferfv(gl.DEPTH,0,[1]);

@@ -24,6 +24,7 @@ case'ui':tone('square',660,990,0.09,0.2*v);tone('square',990,1320,0.1,0.2*v,0.08
 case'jump':tone('square',260,520,0.1,0.15*v);break;
 case'land':noise(0.1,0.3*v,'lowpass',700,150);break;
 case'item':tone('triangle',880,1320,0.1,0.25*v);tone('triangle',1320,1760,0.14,0.25*v,0.09);break;
+case'heart':tone('sine',62,40,0.22,0.9*v);tone('sine',55,36,0.26,0.75*v,0.28);break;
 case'gong':tone('sine',196,192,2.4,0.55*v);tone('sine',392,386,1.6,0.25*v);tone('triangle',523,515,1.1,0.12*v);tone('sine',98,96,2.6,0.4*v);noise(0.25,0.35*v,'bandpass',2600,900);break;
 case'clank':tone('triangle',1800,1500,0.09,0.18*v);tone('square',900,700,0.05,0.1*v);break;
 case'orb':tone('triangle',1200,1800,0.05,0.08*v);break;}}

@@ -89,13 +89,13 @@ for(const s of shots){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.35);if(t>0&&t<
 if(pvp)for(const o of others){if(o.dead)continue;const t1=raySph(ox,oy,oz,d,o.x,o.y+0.85,o.z,0.6),t2=raySph(ox,oy,oz,d,o.x,o.y+1.62,o.z,0.34),t=t1>0&&t2>0?Math.min(t1,t2):Math.max(t1,t2);if(t>0&&t<tw){tw=t;he=null;hs=null;ho=o;hm=t2>0?2:1}}
 const hx=ox+d[0]*tw,hy=oy+d[1]*tw,hz=oz+d[2]*tw;fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,pw>1?C.orange:C.white,pw>1?0.11:0.07);if(net.on)net.q.f.push([r1(hx),r1(hy),r1(hz)]);
 addText(pick(['ドン！','ダン！','バン！']),W*0.73+rnd(-40,60),H*0.62+rnd(-40,30),{size:pw>1?52:40,st:pw>1?'boom':'fire',life:0.2,grow:0.12});
-if(he&&htg==='bell')monkBellHit(he,20*pw,hx,hy,hz);else if(he&&he.monk&&hm<=0)monkClank(he,hx,hy,hz);else if(he)damage(he,20*hm*pw,hm>1.5,hx,hy,hz);else if(htg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(ho)pvHit(ho,(hm>1.5?32:16)*pw,hm>1.5,hx,hy,hz);else if(hs){popShot(hs);if(isCli())net.q.ps.push(hs.id)}
+if(he&&htg==='bell'){monkBellHit(he,20*pw,hx,hy,hz);damage(he,20*pw,false,hx,hy,hz,true)}else if(he&&htg==='front'){monkClank(he,hx,hy,hz);if(hm>0)damage(he,20*hm*pw,false,hx,hy,hz,true)}else if(he)damage(he,20*hm*pw,hm>1.5,hx,hy,hz);else if(htg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(ho)pvHit(ho,(hm>1.5?32:16)*pw,hm>1.5,hx,hy,hz);else if(hs){popShot(hs);if(isCli())net.q.ps.push(hs.id)}
 else if(tw<140&&tw===wallT){fxStar(hx,hy,hz,0.7,C.white,0.08);fxSparks(hx,hy,hz,4,5,C.yellow)}}
 function pvHit(o,dmg,crit,hx,hy,hz){o.flash=0.08;hitMark=0.12;hitCrit=crit;fxStar(hx,hy,hz,crit?1.5:1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,3,5,PCOL[o.slot],0.1);snd(crit?'crit':'hit');pl.gauge=Math.min(100,pl.gauge+4);
 if(lim('hitT',0.22))sideText(crit?'キィン！':pick(['バキッ！','ガッ！','ドカッ！']),o,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+dmg}
 function beamDamage(dt){const d=aimDir(),ox=cam.x,oy=cam.y-0.2,oz=cam.z,pw=pl.pow>0?1.6:1;
 const near=(x,y,z,r)=>{const px=x-ox,py=y-oy,pz=z-oz,t=px*d[0]+py*d[1]+pz*d[2];return t>0&&Math.sqrt(Math.max(0,px*px+py*py+pz*pz-t*t))<r};
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(near(s[0],s[1],s[2],s[3]+2)){if(e.monk&&e.phase<2&&!mkFront(e,pl.x,pl.z))monkBellHit(e,1400*dt*pw*0.5,s[0],s[1],s[2],true);else damage(e,1400*dt*pw*(e.monk&&e.phase<2?0.45:e.type==='boss'?0.8:1),false,s[0],s[1],s[2],true);break}}
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(near(s[0],s[1],s[2],s[3]+2)){if(e.monk){const k=monkK(e,pl.x,pl.z);if(k>=1&&e.bell)monkBellHit(e,1400*dt*pw*0.5,s[0],s[1],s[2],true);if(k>0)damage(e,1400*dt*pw*0.8*k,false,s[0],s[1],s[2],true)}else damage(e,1400*dt*pw*(e.type==='boss'?0.8:1),false,s[0],s[1],s[2],true);break}}
 for(const s of shots)if(near(s.x,s.y,s.z,2.5)){popShot(s);if(isCli())net.q.ps.push(s.id)}
 if(G.mode==='pvp')for(const o of others)if(!o.dead&&near(o.x,o.y+1,o.z,1.9)){o.flash=0.08;hitMark=0.1;net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+170*dt*pw}}
 function respawn(){let b=PSPAWN[0],bs=-1;for(const s of PSPAWN){let m=99;for(const o of others)if(!o.dead)m=Math.min(m,Math.hypot(o.x-s[0],o.z-s[1]));m+=Math.random()*4;if(m>bs){bs=m;b=s}}resetPlayer(b[0],b[1],Math.atan2(b[0],b[1]+2));pl.inv=2.5;snd('ui')}
@@ -120,7 +120,7 @@ if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;
 else if(pl.sp===2){pl.spT+=dt;trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt);if(pl.spT>SK.beam)pl.sp=0}
 if(inp.fire&&pl.cool<=0&&pl.reload<=0&&!pl.sp&&!cine){if(pl.ammo>0)shoot();else startReload()}
 pl.gunDip=lerp(pl.gunDip,pl.reload>0?1:0,1-Math.exp(-14*dt))}
-function hurtPlayer(d,x,z,by){if(DEV&&G.mode!=='pvp')return;if(pl.inv>0||pl.dead||G.cine>0||G.state==='clear'||G.state==='menu')return;if(pl.sp&&SK.spinv)return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
+function hurtPlayer(d,x,z,by){if(DEV&&G.mode!=='pvp')return;if(pl.inv>0||pl.dead||G.cine>0||monkCine()||G.state==='clear'||G.state==='menu')return;if(pl.sp&&SK.spinv)return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
 d*=SK.def;pl.hp-=d;G.dmg+=d;pl.inv=by==null?0.45:0.1;hurtA=1;shake(0.5);snd('hurt');stopT(0.04);lines(0.6,'#c20020');pl.tilt=(Math.random()<.5?-1:1)*0.09;pl.lastBy=by==null?-1:by;
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
 if(pl.hp<=0&&SK.rev&&!pl.revU){pl.revU=1;pl.hp=Math.round(SK.hp*0.5);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
@@ -136,7 +136,7 @@ if(mine){G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.
 if(e.type==='imp'){if(e.v)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);if(!pl.sp||lim('spx',0.5))sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
 else if(e.type==='lan')explode(e.x,y,e.z,1.1);else{explode(e.x,1.8,e.z,2.3,{text:'ズドォォン！'});fxBlobs(e.x,1.5,e.z,20,10,C.ink,0.25);stopT(0.12);invA=1}
 for(let i=0;i<(e.type==='bru'?8:3);i++)fxOrb(e.x,y,e.z)}
-function kill(e,by){if(e.monk&&e.phase<2&&e.st!=='die'){e.hp=Math.max(1,e.mhp*0.5-1);monkBreak(e);return}if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
+function kill(e,by){if(e.monk&&(e.phase<2||e.st==='trans')&&e.st!=='die'){e.hp=Math.max(1,e.hp);return}if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
 if(e.dead)return;e.dead=true;G.kills++;if(by>=0)G.pk[by]++;G.score+=({imp:100,lan:150,bru:500})[e.type]*(10+Math.min(G.combo,10))/10|0;killFx(e);
 if(boss===null&&Math.random()<(e.type==='bru'?1:0.12))spawnItem((Math.random()*3)|0,e.x,e.z);
 if(e.v){areaHurt(e.x,e.z,2.8,14);for(const o of enemies)if(!o.dead&&o.type!=='boss'&&Math.hypot(o.x-e.x,o.z-e.z)<3.8){o.hp-=70;o.flash=0.1;if(o.hp<=0)kill(o,by)}}}

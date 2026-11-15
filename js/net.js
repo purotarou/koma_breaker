@@ -49,7 +49,7 @@ const TC={i:'imp',l:'lan',b:'bru'};
 function snapMsg(){const m={t:'s',gs:G.state,r:net.roster.map(r=>[r.id,r.slot]),g:[G.wave,G.kills,G.score,r1(G.time),G.pk,G.pd,r1(G.tm)],it:items.map(i=>[i.id,i.k,r1(i.x),r1(i.z)])};
 if(G.mode!=='pvp'){m.e=[];for(const e of enemies)if(!e.dead&&e.type!=='boss')m.e.push([e.id,e.type[0],r1(e.x),r1(e.y),r1(e.z),r2(e.yaw),e.st,r2(e.stT),Math.ceil(e.hp),r2(e.sc),e.v]);
 m.sh=shots.filter(s=>!s.dead).map(s=>[s.id,s.k,r1(s.x),r1(s.y),r1(s.z),r1(s.vx),r1(s.vy),r1(s.vz),s.tx||0,s.tz||0]);m.et=r1(G.endT);
-const b=boss;if(b&&b.monk)m.k=[b.id,b.st,r2(b.stT),Math.ceil(b.hp),Math.ceil(b.mhp),r1(b.x),r1(b.y),r1(b.z),r2(b.yaw),b.phase,Math.ceil(b.bhp),Math.ceil(b.bmax),r1(b.tx),r1(b.tz),b.bell2?[r1(b.bell2.x),r1(b.bell2.z),r2(b.bell2.yaw)]:0];else if(b)m.b=[b.id,b.st,r2(b.stT),Math.ceil(b.hp),Math.ceil(b.mhp),r1(b.yo),b.phase,r2(b.mouth),b.ah,r1(b.tx),r1(b.tz),r1(b.hL.x),r1(b.hL.y),r1(b.hL.z),r1(b.hR.x),r1(b.hR.y),r1(b.hR.z)]}
+const b=boss;if(b&&b.monk)m.k=[b.id,b.st,r2(b.stT),Math.ceil(b.hp),Math.ceil(b.mhp),r1(b.x),r1(b.y),r1(b.z),r2(b.yaw),b.phase,Math.ceil(b.bhp),Math.ceil(b.bmax),r1(b.tx),r1(b.tz),b.bell2?[r1(b.bell2.x),r1(b.bell2.z),r2(b.bell2.yaw)]:0,b.bell,b.tfB,r2(b.dur)];else if(b)m.b=[b.id,b.st,r2(b.stT),Math.ceil(b.hp),Math.ceil(b.mhp),r1(b.yo),b.phase,r2(b.mouth),b.ah,r1(b.tx),r1(b.tz),r1(b.hL.x),r1(b.hL.y),r1(b.hL.z),r1(b.hR.x),r1(b.hR.y),r1(b.hR.z)]}
 if(net.hq.length){m.h=net.hq;net.hq=[]}net.evq=net.evq.filter(e=>now-e[3]<0.7);if(net.evq.length)m.ev=net.evq.map(e=>[e[0],e[1],e[2]]);return m}
 function onSnap(m){if(G.state==='menu'||G.state==='title')return;setRoster(m.r);const g=m.g;G.wave=g[0];G.kills=g[1];G.score=g[2];G.time=g[3];G.pk=g[4];G.pd=g[5];G.tm=g[6];G.np=net.roster.length;
 if(m.gs!==G.state&&(m.gs==='clear'||m.gs==='over')&&G.state==='play'){G.state=m.gs;G.resT=0;musOn=0;snd('ui');if(m.gs==='clear')saveHi();skReward(m.gs==='clear')}
@@ -61,7 +61,7 @@ if(m.e){const map={},keep={};for(const e of enemies)map[e.id]=e;
   if(b.st!==a[1]){b.st=a[1];b.stT=a[2];if(a[1]==='die')musOn=0}b.hp=a[3];b.mhp=a[4];b.nyo=a[5];b.phase=a[6];b.mouth=a[7];b.ah=a[8];b.tx=a[9];b.tz=a[10];b.nL=[a[11],a[12],a[13]];b.nR=[a[14],a[15],a[16]];keep[a[0]]=1}
  if(m.k){const a=m.k;let b=map[a[0]];if(!b){b=mkMonk(a[0]);b.st=a[1];b.stT=a[2];b.x=b.px=a[5];b.y=a[6];b.z=b.pz=a[7];b.yaw=a[8];enemies.push(b);boss=b;if(a[1]==='drop'){bossIntro();templeDoor.target=1}}
   if(b.st!==a[1]){b.st=a[1];b.stT=a[2];if(a[1]==='die')musOn=0}else if(Math.abs(b.stT-a[2])>0.3)b.stT=a[2];
-  b.hp=a[3];b.mhp=a[4];b.nx=a[5];b.ny=a[6];b.nz=a[7];b.nyaw=a[8];b.phase=a[9];b.bhp=a[10];b.bmax=a[11];b.tx=a[12];b.tz=a[13];if(a[14]&&!b.bell2)b.bell2=mkBell2(b,a[14][0],a[14][1],a[14][2]);keep[a[0]]=1}
+  b.hp=a[3];b.mhp=a[4];b.nx=a[5];b.ny=a[6];b.nz=a[7];b.nyaw=a[8];b.phase=a[9];b.bhp=a[10];b.bmax=a[11];b.tx=a[12];b.tz=a[13];if(a[14]&&!b.bell2)b.bell2=mkBell2(b,a[14][0],a[14][1],a[14][2]);b.bell=a[15];b.tfB=a[16];b.dur=a[17];keep[a[0]]=1}
  for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(keep[e.id])continue;if(e.type==='boss')boss=null;else killFx(e);enemies.splice(i,1)}
  const sm={},sk={};for(const s of shots)sm[s.id]=s;for(const a of m.sh){let s=sm[a[0]];if(!s){s={id:a[0],k:a[1],r:a[1]?0.55:0.28,g:a[1]?16:0,dead:false,life:9};shots.push(s)}if(!s.dead){s.x=a[2];s.y=a[3];s.z=a[4];s.vx=a[5];s.vy=a[6];s.vz=a[7];s.tx=a[8];s.tz=a[9]}sk[a[0]]=1}
  for(let i=shots.length-1;i>=0;i--){const s=shots[i];if(sk[s.id])continue;if(!s.dead&&s.k===0)popShot(s);shots.splice(i,1)}

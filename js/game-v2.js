@@ -8,7 +8,7 @@ net.evseq=0;net.evDone=0;net.dacc={};net.pvAcc={};net.q={f:[],pk:[],kb:[],ps:[]}
 if(pvp){G.banner={ch:'対戦',name:'10撃破で勝利！'};G.bannerT=0;pl.inv=2}else if(!net.on)say(['ここが…','漫画の中!?'],0);else{G.banner={ch:'協力',name:'力を合わせて倒せ！'};G.bannerT=0}}
 function startGame(){G.mode='solo';beginGame()}
 function spawnGroup(g){for(const k in g){const n=Math.round(g[k]*(1+0.5*(G.np-1)));for(let i=0;i<n;i++)spawnNear(k)}}
-function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.boss){spawnBoss();ev('say','全テヲ',STG[G.stage].line,1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
+function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.boss){spawnBoss();if(!STG[G.stage].monk)ev('say','全テヲ',STG[G.stage].line,1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
 function updateWaves(dt){G.time+=dt;if(G.clearT>=0){G.clearT-=dt;if(G.clearT<0)startWave(G.wave+1);return}if(G.wave<0)return;const w=WAVESET[G.stage][G.wave];G.waveT+=dt;
 if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>2.3){G.state='clear';G.resT=0;snd('ui');saveHi();skReward(1)}}return}
 if(G.grp<w.g.length){if(enemies.length<=1||G.waveT>G.grp*12){spawnGroup(w.g[G.grp]);G.grp++}}
@@ -103,8 +103,8 @@ function drawUI(dt){ctx.clearRect(0,0,W,H);btns=[];const play=G.state==='play',d
 if(lineA>0.03){ctx.globalAlpha=Math.min(1,lineA*1.3);focusLines(lineCx,lineCy,300+(1-lineA)*200,64,lineCol,((now*24)|0));ctx.globalAlpha=1}
 if(boss&&boss.st==='rise'){ctx.globalAlpha=0.8;focusLines(W/2,H*0.4,380,56,INK,((now*20)|0)+50);ctx.globalAlpha=1}
 if(pl.dashT>0){ctx.globalAlpha=0.7;focusLines(W/2,H/2,330,50,INK,((now*30)|0)+90);ctx.globalAlpha=1}
-const kc=play&&G.kcT>=0;if(play&&!kc)drawTags();drawTexts();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
-if(kc){const k=easeOut(sat(G.kcT/0.25))*58;ctx.fillStyle=INK;ctx.fillRect(0,0,W,k);ctx.fillRect(0,H-k,W,k)}
+const kc=play&&(G.kcT>=0||monkCine());if(play&&!kc)drawTags();drawTexts();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
+if(kc){const k=G.kcT>=0?easeOut(sat(G.kcT/0.25))*58:monkBars();ctx.fillStyle=INK;ctx.fillRect(0,0,W,k);ctx.fillRect(0,H-k,W,k)}
 if(play&&!kc){drawHUD();drawHUD2();drawTouch();if(!hasTouch&&G.time<8&&G.mode!=='pvp')txt('WASD：移動　マウス：視点／射撃　SPACE：ジャンプ　SHIFT：回避　E：必殺　R：装填',W/2,610,20,'#fff',INK,6)}
 for(let i=balloons.length-1;i>=0;i--){const b=balloons[i];b.t+=dt;if(b.t>b.life)balloons.splice(i,1);else if(play)drawBalloon(b)}
 if(demo&&G.endT>1.2){const u=easeBack(sat((G.endT-1.2)/0.3));ctx.save();ctx.translate(W/2,H*0.42);ctx.rotate(-0.06);ctx.scale(u,u);txt('撃破！！',0,0,150,'#ffd91a',INK,20,'center','#fff',36);ctx.restore()}
@@ -121,7 +121,7 @@ cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty
 function setCamera(dt){if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
 else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
-cam.fov=lerp(cam.fov,(80+(pl.dashT>0?14:0)+(pl.sp===2?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10))}camUpdate()}
+cam.fov=lerp(cam.fov,(80+(pl.dashT>0?14:0)+(pl.sp===2?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));monkCam()}camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
 const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}
@@ -133,7 +133,7 @@ else if(!paused){const cli=isCli(),over=G.state==='over';
   if(!cli){if(G.mode==='pvp'){G.tm-=dt;if(G.tm<=0||Math.max.apply(null,G.pk)>=10){G.state='clear';G.resT=0;musOn=0;snd('ui')}}else updateWaves(g);updateItems(g)}
   if(net.on&&net.host&&G.mode==='coop'&&pl.dead&&others.every(o=>o.dead)){G.allT+=dt;if(G.allT>1.5)gameOver()}else G.allT=0}
  else{inp.fire=false;inp.mx=inp.mz=0}
- if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0){G.kcT+=dt;inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
+ if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0)G.kcT+=dt;if(G.kcT>=0||monkCine()){inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
  if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5),mk=boss&&boss.monk,drop=mk&&boss.st==='drop'&&boss.stT<1.9,tx=mk&&!drop?boss.x:0,tz=mk?(drop?-26:boss.z):-21,ty=mk?(drop?7:boss.y+4.5):20.6,dh=Math.hypot(pl.x-tx,pl.z-(mk?tz:-26));pl.yaw+=angDiff(Math.atan2(pl.x-tx,pl.z-tz),pl.yaw)*k;pl.pitch+=(Math.atan2(ty-1.6,dh)-pl.pitch)*k}
  updatePlayer(g);if(cli)clientInterp(g);else if(!over){updateEnemies(g);updateShots(g)}
  updateOthers(dt);if(!over){updateShocks(g);pickItems(g)}updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}
