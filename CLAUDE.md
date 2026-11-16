@@ -21,9 +21,14 @@
   - ステージごとの空・霧・影の色・太陽の向き・粒子・難しさは `STG`（players.js）にまとめてある（`hard` `bom` `ink` `line` `cut` `pfx` `sun` `shade` `fogR`）。遊べる範囲は標準で x ±21.6、z -25.6〜21.6 で、`STG[n].arena`（[半幅, 北端z, 南端z]）でステージごとに変えられる（雪の古寺は x ±31.6、z -37〜33.6 で、本堂の石段の前まで歩ける）。魔王型のボスは z -21.5 から出て、体は z -35 あたりまで占めるので、ボスがいる間は北端が z -25.6 に戻る（`collide()`）。4面の鐘の僧は動き回るので、北端は戻さない。当たり判定は高さを見ない（ジャンプしても越えられない）が、弾は `kb_col` の高さより上を通る（雪の古寺の池は高さ 0.12 の判定で、人は入れず弾は通る）。雪の古寺の本堂の中央の扉は GLB ではなくコードで毎フレーム描く（`drawTempleDoor`、stage345.js）。`templeDoor.target=1` で開き、0 で閉じる（ボスが本堂から出てくる演出用。ステージを切り替えると閉じた状態に戻る）。
   - 4面ボス「鐘の僧」: 元データ `blender/boss_monk.blend` → `tools/blender_export_stage.py`（OUT を `assets/boss_monk.glb` にして実行）。部品ごとに別ノード（Monk_Body / Monk_Head / Monk_Head2（第二形態の顔）/ Monk_Jaw・Monk_Jaw2（開いた口。縦に縮めて開き具合を出す）/ Monk_Arm_L・R / Monk_Leg_L・R / Bell / Striker / Striker_L（第二形態の左手））で、`js/boss4.js` が毎フレーム部品ごとに動かして描く。第二形態の黒い肌と赤い目はゲーム側の色の差し替え（`boss4_skin`→鬼面の紺、`boss4_eye`→赤）。動き・攻撃・鐘・息切れ・変身の演出とカメラ（`monkCam`、変身中は `monkCine()` が真で入力・被ダメージが止まる）・ネット同期（`m.k`）もすべて boss4.js。鐘の僧の時間は boss4.js の `monkAnim` だけが進める（entities.js では足さない）。`STG[n].monk` が立っているステージで `spawnBoss()` が鐘の僧を出す。
 - 武器6種（連珠銃・散華砲・氷魄砲・祓い刀・火消しの大槌・焙烙火矢）: 元データ `blender/weapons.blend`（武器ごとに別シーン）→ `assets/weapon_*.glb`（+ `.glb.js`）。作り方は `tools/weapons/`（`kbw_lib.py` と `common.py` を読んでから `wpn_*.py` を Blender で実行）。原点は持ち手側、先端が +Y、上が +Z（GLB では先端が -Z）。刀の刃は -Y 側。
-  - ゲーム側は `js/weapons.js`（性能表 `WPN`、通常攻撃・必殺、1人称の持ち方 `wpView`、主人公の持ち方と振り `wpHeroBody` / `wpHeroArms`、装備画面 `drawEquip` と立体プレビュー `wpPreview`）。妖弾銃は今まで通りコードの箱の銃。装備は1つだけで、メインメニュー／ロビーの「装備」から選ぶ（localStorage の `koma_wpn`）。6種は今後実装するガチャで排出（所持は `WS.own[武器ID]`、ガチャは `wsGive(id)` で付与。ステージクリアでは手に入らない）、開発者メニューの「超強化」(DEV) が ON の間は全部選べる。対戦でも装備した武器を使う。
+  - ゲーム側は `js/weapons.js`（性能表 `WPN`、通常攻撃・必殺、1人称の持ち方 `wpView`、主人公の持ち方と振り `wpHeroBody` / `wpHeroArms`、装備画面 `drawEquip` と立体プレビュー `wpPreview`）。妖弾銃は今まで通りコードの箱の銃。装備は1つだけで、メインメニュー／ロビーの「装備」から選ぶ（localStorage の `koma_wpn`）。6種は武器ガチャで排出（所持は `WS.own[武器ID]`、ガチャは `wsGive(id)` で付与。ステージクリアでは手に入らない）、開発者メニューの「超強化」(DEV) が ON の間は全部選べる。対戦でも装備した武器を使う。
   - 弾数・装填・連射の数値は `skApply()` の最後で `wpApply()` が SK に掛ける（弾を使う武器だけ）。必殺の長さは `spDur()`。主人公の動作は `pl.ak`（1・2=刀の斬り、3=大槌の溜め、4=振り下ろし、5=投げ、6=大玉の投げ、7=一閃、8=駒砕き）と `pl.at`（経過秒）で、通信では `pl.an`（動作の通し番号）と一緒に送り、他の人の画面で同じ振りを再生する。爆弾・斬撃の波・大槌の衝撃は `net.q.wx` の見た目だけのイベント、凍結・怯み・ボスの鈍化は `net.q.ef` でホストに送る。
   - `?hero=1&wp=N&act=1` で、武器 N（`WPN` の番号）を持った主人公4人が攻撃を繰り返す（持ち方の確認用）。
+- **武器ガチャ**: `js/gacha.js`（weapons.js の後に読む）。モード選択画面の右のガチャ機のボタン（`gaMenuBtn`）→ `G.menu='gacha'`（`drawGacha`）。
+  - 通貨「コマ札」と進行は localStorage の `koma_gacha`（`GA.f` 枚数、`GA.paid[ステージ]` 受け取った回数、`GA.pick` ピックアップ）。ステージクリアで `skReward` → `gaReward` が「ステージ番号×1枚」を各ステージ2回まで足す（`G.fuda`、リザルト右上のカード `gaRewardCard`）。
+  - 抽選は `gaRates()`（ピックアップ `GA_PU`=40%、ほかは均等。必殺Lv3（強化待ち込み）の武器は除く）。1回=1枚、6回=5枚。結果は引いた瞬間に保存し、そのあと演出（`gaA`: 封じられたコマが割れる → 武器の絵 → 6回なら一覧）。
+  - 必殺レベル: `WS.lv[id]`（使っているLv）と `WS.up[id]`（強化待ち）。重複は `wsGive` が強化待ちを増やすだけで、設定画面の「武器の強化」タブ（`setTab=1`、`drawWpUp`）で `wpLvUp` を押して上げる。効果は `SPLV`（`wpApply` が `SK.spw`・`SK.beam` に掛ける）。
+  - 画面の絵は `assets/gacha/cut_*.webp`（元絵 `weapon_*.webp` を切り詰めて640pxにしたもの。作り直しは `python3 tools/gacha/cutout.py`、Pillow が必要）。背景は3Dのハイライト：主人公がその武器で通常攻撃→必殺を繰り返す（`gaHi`、カメラは `gaCam`、`GH` が立ち位置）。爆弾・斬撃の波・炎は weapons.js の共有リストを `own:0`（ダメージなし）で使い、`wpWorld` で動かす。
 - **最終ボス「白抜魔王シロヌキ」第3形態（未着手）**: 元モデルは `blender/src/komabure_chara_last_boss3.glb`（本体。14部品・テクスチャ付き）と `..._sword_right.glb` / `..._sword_left.glb`（両手の剣）。出どころ・ライセンスは未確認（`ASSETS.md`）。
   - 作業は Blender MCP を使うので**手元（Mac）のセッションで行う**（クラウドでは Blender を動かせない）。
   - 方式は未決定。案A: 鐘の僧と同じ「部品ごとに別ノード・単色の材質・コードで動かす」（`blender/boss_monk.blend` → `tools/blender_export_stage.py` → `js/boss4.js` の作り方を参考に。輪郭線・トーンになじみやすく早い）。案B: 主人公と同じ「テクスチャ＋骨（CPU スキニング）」（`js/hero.js`、スキル `add-character` の手順を参考に）。決める前にユーザーに確認する。
@@ -43,7 +48,7 @@
 
 ## 技術メモ
 - `index.html`（骨組みのみ）+ `css/style.css` + `js/*.js` に分割済み。WebGL2、独自シェーダーで輪郭線・トーン描画。
-- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → hero → weapons → net → game-v2 → settings → game）で、**順序を変えると壊れる**。
+- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → foes → boss123 → hero → weapons → gacha → net → game-v2 → stagesel → settings → game）で、**順序を変えると壊れる**。
 - ファイルをまたぐトップレベルの処理は、呼び出す関数が先のファイルで定義済みであることが必要（別ファイルの後ろの関数はトップレベルでは呼べない。関数の中からなら可）。
 - ローカル確認は `file://` ではなく簡易サーバー（`python3 -m http.server`）を使う。
 - GLB は `loadGlbBuf()`（glb.js）で読む。`index.html` を直接開いた（`file://`）ときは fetch が使えないので、隣の `assets/*.glb.js`（同じ GLB を base64 にしたもの）を `<script>` で読む。`tools/blender_export_stage.py` が .glb と一緒に書き出すので、**GLB を書き出したら .glb.js も一緒に commit する**（古いままだと直接開いたときだけ古い形になる）。

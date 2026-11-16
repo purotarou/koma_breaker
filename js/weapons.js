@@ -2,7 +2,8 @@
 // ================= WEAPONS 武器 (STORY.md「武器と必殺技」) =================
 // Seven weapons: 妖弾銃 (the standard, box-built gun of old) + six models (blender/weapons.blend -> assets/weapon_*.glb).
 // One weapon is equipped (装備画面: main menu / lobby →「装備」, saved in localStorage koma_wpn) and used for the whole stage, versus too.
-// The six come only from the weapon gacha (not built yet: it calls wsGive(id), WS.own = {weaponId:1}), or all at once while the developer 超強化 switch (DEV) is on.
+// The six come only from the weapon gacha (gacha.js → wsGive(id), WS.own = {weaponId:1}), or all at once while the developer 超強化 switch (DEV) is on.
+// Gacha duplicates raise the 必殺 level (1-3, WS.lv / WS.up, applied in 設定 →「武器の強化」): special power and length ×SPLV (wpApply).
 // Each weapon has its own normal attack and its own special (必殺); the gauge (妖珠) is shared. Skills: damage / special power /
 // gauge work for every weapon; magazine / reload / fire rate only for the ones with ammo (wpApply scales SK after skApply).
 //  連珠銃 32発・威力24・毎秒7発・装填0.8秒・反動なし / 珠時雨: 5 s of free ammo, double rate, homing aim.
@@ -36,12 +37,17 @@ const WB_RF=4,RAIL_DM=9,RAIL_ICE=20;// bomb: seconds from its own throw until th
 const WS={eq:'gun',own:{}};
 try{const s=JSON.parse(localStorage.getItem('koma_wpn')||'null');if(s)Object.assign(WS,s)}catch(e){}
 function wsSave(){try{localStorage.setItem('koma_wpn',JSON.stringify(WS))}catch(e){}}
-// the gacha hands out a weapon with wsGive(id); returns true when it was new (false = a duplicate)
-function wsGive(id){if(id==='gun'||WS.own[id])return false;WS.own[id]=1;wsSave();return true}
+// 必殺レベル 1-3: WS.lv[id] = level in use, WS.up[id] = level-ups waiting (gacha duplicates, applied by hand in 設定 →「武器の強化」)
+if(!WS.lv||typeof WS.lv!=='object')WS.lv={};if(!WS.up||typeof WS.up!=='object')WS.up={};
+const SPLV=[[1,1],[1.2,1.15],[1.45,1.3]],SPLV_T=['','威力×1.2・時間×1.15','威力×1.45・時間×1.3'];// [special power, special duration] per level
+const wpLv=id=>WS.own[id]?clamp(WS.lv[id]|0||1,1,3):1,wpLvAll=id=>WS.own[id]?Math.min(3,wpLv(id)+(WS.up[id]|0)):0;
+// the gacha (gacha.js) hands out a weapon with wsGive(id): 'new' (first one), 'up' (duplicate → one more waiting level-up), 'max' (already Lv3)
+function wsGive(id){if(id==='gun')return'';if(!WS.own[id]){WS.own[id]=1;WS.lv[id]=1;wsSave();return'new'}if(wpLvAll(id)>=3)return'max';WS.up[id]=(WS.up[id]|0)+1;wsSave();return'up'}
+function wpLvUp(id){if(!WS.own[id]||!((WS.up[id]|0)>0)||wpLv(id)>=3)return false;WS.lv[id]=wpLv(id)+1;WS.up[id]--;wsSave();return true}
 const wpIdx=id=>Math.max(0,WPN.findIndex(w=>w.id===id)),wpOwn=i=>i===0||!!DEV||!!WS.own[WPN[i].id],wpW=()=>WPN[pl.wp|0]||WPN[0];
 function wpCur(){if(G.demoOn)return 0;const i=wpIdx(WS.eq);return wpOwn(i)?i:0}
 // weapon numbers on top of the skills (called at the end of skApply, pl.wp is set first in resetPlayer)
-function wpApply(s){const w=WPN[pl.wp|0];if(!w)return;if(w.ammo){s.mag=Math.max(2,Math.round(s.mag*w.mag/16));s.rel*=w.rel;s.cool*=w.cool/0.125}s.gauge*=w.g}
+function wpApply(s){const w=WPN[pl.wp|0];if(!w)return;if(w.ammo){s.mag=Math.max(2,Math.round(s.mag*w.mag/16));s.rel*=w.rel;s.cool*=w.cool/0.125}s.gauge*=w.g;const L=SPLV[(w.id==='gun'?1:wpLv(w.id))-1];s.spw*=L[0];s.beam*=L[1]}
 const spDur=()=>wpW().spd*SK.beam/0.8;// 必殺持続 / 極み stretch every timed special the same way
 const spLock=()=>pl.sp===1||(pl.sp===2&&wpW().spMode==='beam');// slow turning / walking while charging or firing the dragon beam
 function wpAct(k){pl.ak=k;pl.at=0;pl.an=((pl.an|0)+1)%250}
@@ -262,7 +268,7 @@ function drawCutSp(){const w=wpW(),S=CUTS[w.id]||CUTS.gun,t=0.6-cutSp,u=t<0.1?t/
 ctx.save();ctx.translate(W/2,330);ctx.rotate(S.rot);const h=150*u;ctx.beginPath();ctx.rect(-800,-h,1600,h*2);ctx.fillStyle=S.bg;ctx.fill();ctx.save();ctx.clip();
 cutBack(S.fx,t);ctx.save();ctx.scale(m,1);ctx.translate(-250+t*60,10);cutEye(S.iris);ctx.restore();cutFront(S.fx,t);ctx.restore();
 ctx.strokeStyle=INK;ctx.lineWidth=8;ctx.strokeRect(-800,-h,1600,h*2);
-if(u>0.9){txt('必殺！',260*m,-38,96,S.tc||'#ffd91a',INK,16,'center','#fff',28);const nm=w.sp;txt(nm,300*m,62,Math.min(84,440/nm.length),'#fff',INK,16)}ctx.restore()}
+if(u>0.9){txt('必殺！',260*m,-38,96,S.tc||'#ffd91a',INK,16,'center','#fff',28);const nm=w.sp,lv=w.id==='gun'?1:wpLv(w.id);txt(nm,300*m,62,Math.min(84,440/nm.length),'#fff',INK,16);if(lv>1){ctx.save();ctx.translate(260*m+182,-82);ctx.rotate(0.12);txt('Lv'+lv,0,0,44,'#fff',INK,10,'center','#e5402b',18);ctx.restore()}}ctx.restore()}
 // ================= DRAW: world =================
 function railBeam(a,b,ice){const NF=F_UNLIT|F_NOCAST,dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz);if(l<0.2)return;const w=ice?0.26:0.13;
 mPush();mT((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);orient(dx,dy,dz);mRX(PI/2);mS(w,l,w);emit(CYL,ice?C.white:C.cyan,0,0,NF,0);mPop();
@@ -390,8 +396,8 @@ panel(X,Y+PH+18,PW,170);const iy=Y+PH+18;para(X+16,iy-26,Math.min(PW-40,60+w.nam
 txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');txt(ok?w.type:'',X+PW-24,iy+22,18,'#555a70',null,0,'right');
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 if(ok){tag(X+18,iy+50,'通常',INK);fitTxt(w.d[0],X+92,iy+50,21,PW-110,INK);fitTxt(w.d[1],X+92,iy+80,18,PW-110,'#3a3f55');
- tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
-else{txt('武器ガチャで入手できる',X+PW/2,iy+68,24,INK);txt('（ガチャは近日実装）',X+PW/2,iy+108,20,'#555a70')}
+ tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');if(w.id!=='gun'){const ul=WS.own[w.id]&&(WS.up[w.id]|0)>0&&wpLv(w.id)<3;txt('必殺Lv'+wpLv(w.id)+(ul?'（設定で強化できる）':''),X+PW-24,iy+120,18,'#e5402b',null,0,'right')}fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
+else{txt('武器ガチャで入手できる',X+PW/2,iy+68,24,INK);txt('（モード選択の「ガチャ」から）',X+PW/2,iy+108,20,'#555a70')}
 if(eqDet&&ok)drawEqDet(w,X,Y,PW,PH+188);
 if(DEV)txt('超強化中：すべての武器が使えます',X,H-26,16,'#ffd91a',INK,5,'left');
 B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});

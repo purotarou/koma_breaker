@@ -5,7 +5,8 @@ const BTN0=JSON.parse(JSON.stringify(BTN));let setOpen=false;
 // SET.lay: custom button layout {key:{x,y,s}} in right-handed screen coords (mirrored when SET.lh); null = default layout
 function applySet(){const sc=SET.size,L=SET.lay;for(const k in BTN){const b0=BTN0[k],b=BTN[k],c=L&&L[k];if(c){b.x=SET.lh?W-c.x:c.x;b.y=c.y;b.r=b0.r*sc*(c.s||1)}else{const x=W-(W-b0.x)*sc;b.y=H-(H-b0.y)*sc;b.r=b0.r*sc;b.x=SET.lh?W-x:x}}touch.hx=SET.lh?W-150:150;touch.hy=560;if(touch.sid===null){touch.ox=touch.hx;touch.oy=touch.hy}if(musG)musG.gain.value=0.3*SET.bgm;try{localStorage.setItem('koma_set',JSON.stringify(SET))}catch(e){}}
 applySet();
-function openSet(){setOpen=true;layEdit=false}
+let setTab=0;// 0 = 基本, 1 = 武器の強化 (gacha.js drawWpUp)
+function openSet(){setOpen=true;layEdit=false;setTab=0}
 // dev cheat: tap the 「設定」 title 10 times -> super strong, invincible
 let devTap=0,devT=0;
 function devToggle(){DEV=DEV?0:1;skApply();if(typeof pl!=='undefined'&&!pl.dead&&G.state!=='menu')pl.hp=Math.min(pl.hp,SK.hp);if(DEV&&G.state!=='menu')pl.hp=SK.hp;snd('item');addText(DEV?'超強化 ON':'超強化 OFF',W/2,H*0.4,{size:90,st:'boom',life:1.2})}
@@ -54,7 +55,10 @@ else{panel(300,150,680,420);para(330,126,300,54,18);ctx.fillStyle='#d9262c';ctx.
 function gearBtn(x,y){btns.push({x,y,w:62,h:62,cb:openSet});ctx.fillStyle=INK;ctx.fillRect(x+5,y+6,62,62);ctx.fillStyle='#fff';ctx.fillRect(x,y,62,62);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.strokeRect(x,y,62,62);
 ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.beginPath();for(let i=0;i<32;i++){const a=(i+0.5)/32*TAU,r=(i>>1)%2?15:22;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,7,0,TAU);ctx.fill();ctx.restore()}
 function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');btns.push({x:160,y:36,w:360,h:90,cb:devTapTitle});
-B(950,90,150,54,'とじる',()=>{setOpen=false},{col:'#ffd91a',size:28});if(devOpen)B(640,90,280,54,G.mode==='pvp'?'超強化（対戦は不可）':DEV?'超強化 ON':'超強化 OFF',()=>{if(G.mode!=='pvp')devToggle()},{sk:8,size:24,col:DEV?'#ff8a2b':'#fff'});
+B(950,90,150,54,'とじる',()=>{setOpen=false},{col:'#ffd91a',size:28});
+['基本','武器の強化'].forEach((s,i)=>B(540+i*190,90,i?200:170,54,s,()=>{setTab=i},{sk:8,size:24,col:setTab===i?'#59d8ff':'#fff'}));{const n=wpUpN();if(n){ctx.beginPath();ctx.arc(930,92,16,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(String(n),930,93,18,'#fff')}}
+if(setTab===1){drawWpUp();return}
+if(devOpen)B(960,598,150,48,G.mode==='pvp'?'対戦は不可':DEV?'超強化 ON':'超強化 OFF',()=>{if(G.mode!=='pvp')devToggle()},{sk:8,size:20,col:DEV?'#ff8a2b':'#fff'});
 const rows=[['視点感度','sens',0.3,2.5,v=>'×'+v.toFixed(1)],['効果音','se',0,1,v=>String(Math.round(v*10))],['BGM','bgm',0,1,v=>String(Math.round(v*10))]];
 rows.forEach((r,i)=>{const y=156+i*72,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set=nv=>{SET[k]=clamp(Math.round(nv*10)/10,r[2],r[3]);applySet();if(k==='se')snd('hit')};txt(r[0],200,y+28,30,INK,null,0,'left');
  B(440,y+2,66,54,'－',()=>set(SET[k]-0.1),{sk:0,size:36});btns.push({x:526,y,w:330,h:58,cb:p=>set(r[2]+sat((p.x-532)/318)*(r[3]-r[2]))});
@@ -95,6 +99,7 @@ if(cl&&t>RS){const u2=t-RS,s=u2<0.16?lerp(2.6,1,easeOut(u2/0.16)):1+0.03*Math.si
  ctx.save();ctx.translate(985,400);ctx.rotate(0.08);ctx.scale(s,s);burstPath(7,9,175,160,16,1.22,8);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,175,160,16,1.22,8);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.stroke();
  txt('RANK',0,-100,28,INK);txt(rk,0,14,rk.length>1?132:168,RKC[rk],INK,14,'center','#ffd91a',rk[0]==='S'?28:0);ctx.restore();
  if(u2>0.35){const a=easeBack(sat((u2-0.35)/0.25));ctx.save();ctx.translate(985,580);ctx.rotate(-0.04);ctx.scale(a,a);para(-150,-24,300,48,14);ctx.fillStyle=INK;ctx.fill();txt(RKM[rk],8,1,26,'#fff');ctx.restore()}}
+if(cl&&t>1.7)gaRewardCard(t-1.7);// コマ札 (gacha.js)
 if(G.rew&&t>1.5){const s=easeBack(sat((t-1.5)/0.25));ctx.save();ctx.translate(1110,652);ctx.rotate(-0.06);ctx.scale(s,s);burstPath(3,4,118,34,12,1.25,6);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,118,34,12,1.25,6);ctx.fillStyle='#ff9ad0';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('スキルＰ ＋'+G.rew,0,1,26,INK);ctx.restore()}
 if(t>1.5){if(net.on){if(net.host)B(440,628,400,62,'ロビーへもどる',()=>hostLobby(),{col:'#ffd91a',size:32});else txt('ホストの操作を待っています…',W/2,652,26,'#fff',INK,6);B(60,632,200,54,'退出する',()=>netLeave(),{size:24})}
 else{B(330,628,300,62,'もう一度',()=>startWipe(startGame),{col:'#ffd91a',size:34});B(660,628,300,62,'メニューへ',()=>startWipe(toMenu),{size:34})}}}

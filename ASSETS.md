@@ -24,6 +24,7 @@
 | `assets/weapon_hammer.glb` | 火消しの大槌 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_bomb.glb` | 焙烙火矢（ボム） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/gacha/weapon_*.webp`（6枚） | 武器ガチャ用のサムネ画像（武器6種の設定画。対応表は `GACHA_WEAPONS.md`） | ユーザー提供の画像（生成方法・ライセンスは未確認。公開前に確認する） | **未確認** |
+| `assets/gacha/cut_*.webp`（6枚） | ガチャ画面用に上の6枚を見える部分で切り詰め、長辺640pxに縮小したもの | `tools/gacha/cutout.py`（Pillow）で作成 | 上と同じ（**未確認**） |
 | `blender/src/komabure_chara_kakeru.glb` | 主人公カケルの元モデル（Tripo の出力そのまま。12部品に分割済み、テクスチャ付き） | ユーザーが Tripo AI で生成（2026-11-16、**有料プラン**で生成） | Tripo の公式ヘルプ（https://www.tripo3d.ai/help/privacy-policy/can-i-use-models-commercially ）によると、有料プランで生成したモデルは商用利用・改変・配布ができる。表記義務の記載は見当たらない。ただし利用規約の原文そのものは未確認（公式ヘルプとブログの記述に基づく）。無料プランはモデルの権利の扱いが異なるので、無料で作ったモデルは使わない |
 | `blender/src/komabure_chara_last_boss3.glb`、`..._sword_right.glb`、`..._sword_left.glb` | 新ボス（最終ボス案）の元モデル。本体（14部品に分割、テクスチャ付き）と、右手・左手の剣（各1つ） | ユーザーが用意（2026-11-16 に Downloads から追加）。ファイル名の付け方が主人公カケルの元モデルと同じなので Tripo AI の出力と思われるが、生成方法・プラン（有料か無料か）は**未確認** | **未確認**（Tripo の有料プランで生成したものなら商用利用可。公開物に使う前に確認する） |
 | `blender/hero_kakeru.blend` | 主人公カケルのゲーム用元データ | 上記を Blender に取り込み、穴のない1つの形に作り直して減面（約8,000三角面）・新しい UV に元のテクスチャを焼き付け・16本の骨を入れたもの | 上記と同じ（Tripo 有料プランの生成物） |
