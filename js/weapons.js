@@ -17,7 +17,7 @@
 // + kind (others replay the swing / throw pose and slash trails), the hammer charge and rail-beam bits. Small visual-only events
 // (net.q.wx: bombs, the sword wave, hammer slams) are replayed by the others; freeze / stun / slow go to the host (net.q.ef), which runs the enemies.
 const WPN=[
-{id:'gun',name:'妖弾銃',type:'標準',kind:'gun',btn:'撃',file:null,col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:20,cool:0.125,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.045,-0.63],
+{id:'gun',name:'妖弾銃',type:'標準',kind:'gun',btn:'撃',file:null,col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:20,cool:0.15,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.045,-0.63],
  d:['16発の連射銃。撃ち切ったら装填','いちばん扱いやすい標準の武器'],s:'正面に太い光線を一直線に放つ'},
 {id:'rifle',name:'連珠銃',type:'アサルト',kind:'gun',btn:'撃',file:'weapon_rifle',col:'#3f6fd8',bg:[.84,.88,1],ammo:1,mag:32,dmg:24,cool:1/7,rel:0.8,kick:0.006,shk:0.03,snd:'rshot',g:1,sp:'珠時雨',spd:5,spMode:'buff',muz:[0,0.03,-0.6],fore:0.27,
  d:['32発・威力24の速射銃','妖弾銃の上位版。反動がなく装填も速い'],s:'数秒間、弾が減らずに連射２倍。弾が敵を追う'},
@@ -252,16 +252,14 @@ KV_S=[[0,KV_I],[0.2,[0.5,-0.2,-0.35,-1.6,0.15,1.4]],[0.32,[-0.5,-0.25,-0.5,1.6,0
 HV_I=[0.42,-0.52,-0.55,-0.15,1.15,-0.2],HV_R=[0.3,-0.22,-0.38,-0.1,2.15,-0.1],HV_D=[0.1,-0.36,-0.72,0,-0.3,0],
 HV_S=[[0,HV_R],[0.11,HV_D],[0.45,HV_D],[0.8,HV_I]],HV_SP=[[0,HV_I],[0.3,HV_R],[0.4,[0.25,-0.1,-0.3,-0.05,2.5,0]],[0.47,HV_D],[0.95,HV_D],[1.3,HV_I]],
 BV_I=[0.3,-0.34,-0.62],BV_T=[[0,BV_I],[0.12,[0.38,-0.06,-0.38]],[0.22,[0.12,-0.08,-0.95]],[0.4,[0.16,-0.6,-0.8]],[0.75,BV_I]];
-function glove(x,y,z){sph(x,y,z,0.1,0.12,0.13,C.glove)}
 function wpView(){const i=pl.wp|0,w=WPN[i];if(!wpReady(i))return false;curLayer=2;mPush();M.set(CAMW);
 const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0),at=pl.at,ak=pl.ak|0,br=Math.sin(now*2)*0.006;let tip=[0,0,-0.6],s=0.8,show=1,fl=0;
 mT(bx,-by-dip*0.3+br,0);
-if(w.kind==='gun'||w.kind==='rail'){mT(0.21,-0.25,-0.5+pl.rec*(w.kind==='rail'?0.01:0.05));mRY(0.05);mRX((w.kind==='rail'?pl.rec*0.01:pl.rec*(w.kick||0.01)*3)-dip*0.8);mRZ(-dip*0.5);s=0.62;tip=w.muz;fl=1;
- glove(0,-0.05,0.03);put(CYL,0.06,-0.21,0.27,1.05,0,-0.2,0.13,0.5,0.13,C.sleeve);glove(0,-0.04,-w.fore*s)}
-else if(w.kind==='katana'){const v=kf(ak===1?KV_A:ak===2?KV_B:ak===7?KV_S:[[0,KV_I]],at);mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);glove(0,0,0);glove(0,0,0.13);tip=[0,0,-0.76]}
+if(w.kind==='gun'||w.kind==='rail'){mT(0.21,-0.25,-0.5+pl.rec*(w.kind==='rail'?0.01:0.05));mRY(0.05);mRX((w.kind==='rail'?pl.rec*0.01:pl.rec*(w.kick||0.01)*3)-dip*0.8);mRZ(-dip*0.5);s=0.62;tip=w.muz;fl=1;}
+else if(w.kind==='katana'){const v=kf(ak===1?KV_A:ak===2?KV_B:ak===7?KV_S:[[0,KV_I]],at);mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);tip=[0,0,-0.76]}
 else if(w.kind==='hammer'){let v;if(ak===3&&pl.hon){v=HV_I.map((a,j)=>a+(HV_R[j]-a)*sat(at/0.18));v[0]+=rnd(-1,1)*0.006*pl.hc;v[1]+=rnd(-1,1)*0.006*pl.hc}else v=kf(ak===4?HV_S:ak===8?HV_SP:[[0,HV_I]],at);
- mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);glove(0,0,0);glove(0,0,-0.24);s=0.72;tip=[0,0,-0.84]}
-else{const th=ak===5||ak===6,v=th?kf(BV_T,at):BV_I;mT(v[0],v[1],v[2]);glove(0,-0.08,0.02);show=(!th||at<0.2||at>0.6)&&(pl.bombs>0||(ak===6&&at<0.2)||pl.sp>0);s=ak===6&&at<0.2||pl.sp===1?2:0.95;mT(0,0.1*s,0);mRY(now*0.6);tip=[0.035,0.19,0]}
+ mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]+PI);s=0.72;tip=[0,0,-0.84]}
+else{const th=ak===5||ak===6,v=th?kf(BV_T,at):BV_I;mT(v[0],v[1],v[2]);show=(!th||at<0.2||at>0.6)&&(pl.bombs>0||(ak===6&&at<0.2)||pl.sp>0);s=ak===6&&at<0.2||pl.sp===1?2:0.95;mT(0,0.1*s,0);mRY(now*0.6);tip=[0.035,0.19,0]}
 mPush();mS(s,s,s);if(show)wpModel(i);mPop();
 muz[0]=M[0]*tip[0]*s+M[4]*tip[1]*s+M[8]*tip[2]*s+M[12];muz[1]=M[1]*tip[0]*s+M[5]*tip[1]*s+M[9]*tip[2]*s+M[13];muz[2]=M[2]*tip[0]*s+M[6]*tip[1]*s+M[10]*tip[2]*s+M[14];
 if(fl&&pl.flashT>0&&w.kind==='gun'){const buff=pl.sp===2&&w.spMode==='buff';bill(BURST,muz[0],muz[1],muz[2],w.pel?0.42:0.24,pl.spin*3,buff?C.cyan:w.pel?C.sakura:C.yellow,F_UNLIT);bill(STAR,muz[0],muz[1],muz[2],0.15,pl.spin,C.white,F_UNLIT)}
@@ -272,8 +270,8 @@ mPop();curLayer=1;return true}
 const KH_I=[-0.17,1.2,0.3,0.3,0.95],KH_A=[[0,KH_I],[0.07,[-0.36,1.55,0.08,1.7,0.7]],[0.18,[0.2,1.06,0.36,-1.5,-0.35]],[0.42,[0.18,1.08,0.34,-1.4,-0.3]],[0.65,KH_I]],
 KH_B=[[0,KH_I],[0.07,[0.12,1.55,0.15,-1.5,0.7]],[0.18,[-0.32,1.06,0.36,1.5,-0.35]],[0.42,[-0.3,1.08,0.34,1.4,-0.3]],[0.65,KH_I]],
 KH_S=[[0,KH_I],[0.2,[-0.4,1.35,-0.05,2.3,0.15]],[0.32,[0.33,1.3,0.25,-2.0,0]],[0.75,[0.31,1.3,0.25,-1.9,0]],[1,KH_I]],
-HH_I=[-0.24,1.15,0.3,0.5,1.3],HH_R=[-0.18,1.8,0.15,-0.2,2.2],HH_D=[-0.04,1.02,0.42,0.05,-0.8],
-HH_S=[[0,HH_R],[0.12,HH_D],[0.45,HH_D],[0.8,HH_I]],HH_SP=[[0,HH_I],[0.3,HH_R],[0.4,[-0.2,1.88,0.12,-0.25,2.35]],[0.47,HH_D],[0.95,HH_D],[1.3,HH_I]],
+HH_I=[-0.24,1.15,0.3,0.5,1.3],HH_R=[-0.3,1.55,0.06,-0.5,2.0],HH_D=[-0.04,1.02,0.42,0.05,-0.8],
+HH_S=[[0,HH_R],[0.12,HH_D],[0.45,HH_D],[0.8,HH_I]],HH_SP=[[0,HH_I],[0.3,HH_R],[0.4,[-0.32,1.62,0.03,-0.55,2.15]],[0.47,HH_D],[0.95,HH_D],[1.3,HH_I]],
 HB_I=[-0.27,1.22,0.3],HB_T=[[0,HB_I],[0.16,[-0.33,1.78,-0.2]],[0.27,[-0.12,1.62,0.5]],[0.5,[-0.04,1.15,0.4]],[0.85,HB_I]];
 // body twist / bend for the swing (before heroGlobals)
 function wpHeroBody(o,wp){const k=WPN[wp].kind,at=o.at==null?9:o.at,ak=o.ak|0;let tw=0,bd=0;
@@ -287,12 +285,12 @@ if(k==='gun'||k==='rail'){const R=m3axis(HX,-pit),r=m3v(R,[HERO_GUN_X+0.02,-0.12
 else if(k==='katana'){const K=ak===1?KH_A:ak===2?KH_B:ak===7?KH_S:[[0,KH_I]],v=kf(K,at),v2=kf(K,at+0.03);P=[v[0],v[1]+Math.sin(now*2)*0.01,v[2]];f=dirYE(v[3],v[4]);const f2=dirYE(v2[3],v2[4]),m=[f2[0]-f[0],f2[1]-f[1],f2[2]-f[2]];
  u=Math.hypot(m[0],m[1],m[2])>0.02?[-m[0],-m[1],-m[2]]:[0,0.3,-1];pr=[-1,-0.6,0];lp=[1,-0.6,0];tr=-0.5;tl=0.5;tip=[0,0,-0.76]}
 else if(k==='hammer'){let v;if(ak===3&&o.hc!=null){v=HH_I.map((a,j)=>a+(HH_R[j]-a)*sat(at/0.2));v[1]+=Math.sin(now*40)*0.008*(o.hc||0)}else v=kf(ak===4?HH_S:ak===8?HH_SP:[[0,HH_I]],at);
- P=[v[0],v[1],v[2]];f=dirYE(v[3],v[4]);u=[0,f[2],-f[1]];/* head axis = local Y in the swing plane, striking face (-Y) leading */pr=[-1,-0.5,0];lp=[1,-0.5,0];tip=[0,0,-0.84]}
+ P=[v[0],v[1],v[2]];f=dirYE(v[3],v[4]);u=[0,-f[2],f[1]];/* head axis = local Y in the swing plane, the flared face (+Y) leading */pr=[-1,-0.5,0];lp=[1,-0.5,0];tip=[0,0,-0.84]}
 else{const th=ak===5||ak===6;P=th?kf(HB_T,at):HB_I;f=[0,0,1];u=[0,1,0];L=[0.24,1.12,0.2];lp=[1,-0.8,0.2];
  show=(!th||at<0.24||at>0.75)&&(o.bombs==null||o.bombs>0||(ak===6&&at<0.24));s=ak===6&&at<0.24?2.6:1.5;tip=[0.035,0.19,0]}
 heroArm('R',P,pr,tr);P=Hh.GT[Hh.bi.hand_R].slice();
 if(k==='gun'||k==='rail')L=[P[0]+f[0]*w.fore-u[0]*0.015,P[1]+f[1]*w.fore-u[1]*0.015,P[2]+f[2]*w.fore-u[2]*0.015];
-else if(k==='katana')L=[P[0]-f[0]*0.14,P[1]-f[1]*0.14,P[2]-f[2]*0.14];else if(k==='hammer')L=[P[0]+f[0]*0.27,P[1]+f[1]*0.27,P[2]+f[2]*0.27];
+else if(k==='katana')L=[P[0]-f[0]*0.14,P[1]-f[1]*0.14,P[2]-f[2]*0.14];else if(k==='hammer'){const d=0.27-0.37*sat((f[1]-0.3)/0.4);/* raised: the left hand drops below the right so the arm never crosses the head */L=[P[0]+f[0]*d,P[1]+f[1]*d,P[2]+f[2]*d]}
 if(L)heroArm('L',L,lp,tl);if(k==='bomb')P=[P[0],P[1]+0.07*s,P[2]+0.04];
 wpFrame(P,f,u,s);return{show,tip}}
 // inside the hero's model matrix: the weapon, and the muzzle / tip point o.gx/gy/gz
