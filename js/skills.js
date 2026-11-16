@@ -30,7 +30,7 @@ const skHas=id=>!!SKS.own[id],skClr=()=>SKS.clr.filter(v=>v).length;
 // own | prev (earlier panel of the branch missing) | tier (not enough stages cleared) | pt (not enough points) | ok
 function skState(n){if(skHas(n.id))return'own';const p=SKN.find(q=>q.b===n.b&&q.t===n.t-1);if(p&&!skHas(p.id))return'prev';if(skClr()<SKT[n.t])return'tier';return SKS.pt<n.c?'pt':'ok'}
 const skAny=()=>SKN.some(n=>skState(n)==='ok');
-var DEV=0;// 開発者用の裏技（設定画面の「超強化」ボタン、または「設定」を10回タップ）。無敵ではなく体力が桁違いに多い
+var DEV=0;// 開発者用の裏技（設定画面の「設定」を10回タップすると開発者メニューが出て、そこの「超強化」ボタンで切り替え。ONだとプレイ中に「ボスへ」ボタンも出る）。無敵ではなく体力が桁違いに多い
 let SK={},skPop=null,skMsg=null;
 // effective values for the current game (neutral in versus / demo); called from resetPlayer
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=id=>on&&skHas(id);
