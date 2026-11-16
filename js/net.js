@@ -74,7 +74,7 @@ for(const s of shots){s.vy-=s.g*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt}if(G.e
 function netMsg(m){const t=m.t;if(net.host){net.seen[m.i]=now;
  if(t==='j'){if(!net.roster.find(r=>r.id===m.i)&&net.roster.length<4&&!net.started){let s=0;while(net.roster.find(r=>r.slot===s))s++;net.roster.push({id:m.i,slot:s});syncOthers();snd('ui')}net.lobT=0;if(net.started)netSend(lobbyMsg())}
  else if(t==='x')dropPeer(m.i);else if(t==='p')onPState(m)}
-else{if(t==='l'){net.hostSeen=now;net.mode=m.m;net.stage=m.s;setRoster(m.r);const me=net.roster.find(r=>r.id===net.id);if(me)net.st='';else if(m.go)net.st='ゲーム中のため入れません';else if(net.roster.length>=4)net.st='満員です';
+else{if(t==='l'){net.hostSeen=now;if(G.state==='menu'&&G.menu==='lobby'&&!net.roster.length&&m.m!==net.mode){netLeave('この部屋は'+(m.m==='pvp'?'対人対戦':'協力プレイ')+'の部屋です');return}net.mode=m.m;net.stage=m.s;setRoster(m.r);const me=net.roster.find(r=>r.id===net.id);if(me)net.st='';else if(m.go)net.st='ゲーム中のため入れません';else if(net.roster.length>=4)net.st='満員です';
   if(!m.go&&me&&G.state!=='menu'&&G.state!=='title'&&!wipe.on){resetWorld();G.state='menu';G.menu='lobby';G.paused=false}net.started=!!m.go}
  else if(t==='go'){net.hostSeen=now;if(G.state==='menu'&&m.r.find(a=>a[0]===net.id)){net.mode=m.m;net.stage=m.s;setRoster(m.r);startWipe(startNet)}}
  else if(t==='s'){net.hostSeen=now;onSnap(m)}else if(t==='p')onPState(m);else if(t==='x'){if(m.h)netLeave('ホストが退出しました')}}}

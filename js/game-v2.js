@@ -62,21 +62,24 @@ else{ctx.fillStyle='#ecebe6';ctx.fillRect(x,y,w,h);ctx.strokeStyle=INK;ctx.lineW
  ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(cx,y+h-17,110,9,0,0,TAU);ctx.stroke()}
 ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(X,Y,W2,H2)}
 function drawMenu(dt){ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);const mn=G.menu;
-if(mn==='main'){head('モードを選ぼう');B(330,236,620,116,'オフラインで遊ぶ',()=>{G.menu='stage'},{col:'#ffd91a',size:50});B(330,392,620,116,'オンラインで遊ぶ',()=>{G.menu='online';net.err=''},{col:'#59d8ff',size:50});txt('ひとりでじっくり　全５ステージ',640,372,22,'#fff',INK,6);txt('最大４人　協力プレイ／対人対戦',640,528,22,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
+if(mn==='main'){head('モードを選ぼう');B(330,200,620,96,'ストーリー',()=>{G.menu='stage'},{col:'#ffd91a',size:46});txt('ひとりでじっくり　全５ステージ',640,316,21,'#fff',INK,6);
+ B(330,346,620,96,'対戦モード',()=>{G.menu='vs';net.err=''},{col:'#ff8a6b',size:46});txt('みんなで撃ち合い',640,462,21,'#fff',INK,6);
+ B(330,492,620,96,'協力プレイ',()=>{net.mode='coop';G.menu='online';net.err=''},{col:'#59d8ff',size:46});txt('最大４人でステージに挑む（オンライン）',640,608,21,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
  B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null;skFocus()},{col:'#ff9ad0',size:30});txt('ポイント '+SKS.pt,1090,600,20,'#fff',INK,6);
 }
 else if(mn==='skill')drawSkill();
 else if(mn==='stage'){head('ステージ選択');for(let n=0;n<STG.length;n++){const x=43+n*242,y=206,s=STG[n];btns.push({x,y,w:226,h:390,cb:()=>{G.stage=n;startWipe(startGame)}});panel(x,y,226,390);stageArt(n,x+12,y+12,202,150);
   para(x+12,y+172,124,34,10);ctx.fillStyle=s.col;ctx.fill();txt(s.sub,x+74,y+189,20,'#fff');txt(s.name,x+113,y+236,s.name.length>4?32:36,INK);txt(s.desc[0],x+113,y+280,17,INK);txt(s.desc[1],x+113,y+304,17,INK);txt('ハイスコア '+getHi(n),x+113,y+352,17,INK)}
  B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
-else if(mn==='online'){head('オンライン');B(330,236,620,116,'部屋を作る',()=>netHost(),{col:'#ffd91a',size:50});B(330,392,620,116,'部屋に入る',()=>{G.menu='join';net.input='';net.err=''},{col:'#59d8ff',size:50});txt('友だちにルームコードを伝えて、いっしょに遊ぼう（インターネット接続が必要）',640,548,21,'#fff',INK,6);if(net.err)txt(net.err,640,596,net.err.length>30?21:28,'#ff5a4d',INK,8);B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
+else if(mn==='vs'){head('対戦モード');B(330,236,620,116,'オフライン',()=>{},{col:'#c9c9d2',size:50});txt('じゅんび中',640,372,22,'#fff',INK,6);B(330,392,620,116,'オンライン',()=>{net.mode='pvp';G.menu='online';net.err=''},{col:'#59d8ff',size:50});txt('最大４人　３分間の撃ち合い',640,528,22,'#fff',INK,6);B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26})}
+else if(mn==='online'){head(net.mode==='pvp'?'対戦モード（オンライン）':'協力プレイ（オンライン）');B(330,236,620,116,'部屋を作る',()=>netHost(),{col:'#ffd91a',size:50});B(330,392,620,116,'部屋に入る',()=>{G.menu='join';net.input='';net.err=''},{col:'#59d8ff',size:50});txt('友だちにルームコードを伝えて、いっしょに遊ぼう（インターネット接続が必要）',640,548,21,'#fff',INK,6);if(net.err)txt(net.err,640,596,net.err.length>30?21:28,'#ff5a4d',INK,8);B(60,628,220,56,'もどる',()=>{G.menu=net.mode==='pvp'?'vs':'main'},{size:26})}
 else if(mn==='join'){head('ルームコード入力');for(let i=0;i<5;i++){ctx.fillStyle='#fff';ctx.fillRect(150+i*88,250,76,100);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(150+i*88,250,76,100);if(net.input[i])txt(net.input[i],188+i*88,302,64,INK)}
  txt('ホストの画面に出ている５けたの数字',368,392,22,'#fff',INK,6);if(net.err)txt(net.err,368,440,26,'#ff5a4d',INK,8);
  ['1','2','3','4','5','6','7','8','9','←','0','OK'].forEach((k,i)=>{const x=690+(i%3)*150,y=200+((i/3)|0)*104;B(x,y,134,90,k,()=>{if(k==='←')net.input=net.input.slice(0,-1);else if(k==='OK'){if(net.input.length===5)netJoin(net.input);else net.err='５けた入力してください'}else if(net.input.length<5)net.input+=k},{sk:0,size:k==='OK'?40:50,col:k==='OK'?'#ffd91a':'#fff'})});B(60,628,220,56,'もどる',()=>{G.menu='online'},{size:26})}
 else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');panel(70,206,520,400);txt('ルームコード',330,238,22,INK);txt(net.code?net.code.split('').join(' '):'・・・',330,290,74,'#e5402b',INK,6);
  for(let s=0;s<4;s++){const r=net.roster.find(q=>q.slot===s),y=340+s*62;para(100,y,460,50,10);ctx.fillStyle=r?PCSS[s]:'#d8d8e0';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('P'+(s+1),150,y+26,30,'#fff',INK,6);txt(r?(r.id===net.id?'あなた':'参加中')+(s===0?'（ホスト）':''):'― 空き ―',350,y+26,24,r?'#fff':'#8a8a99',r?INK:null,5)}
  panel(640,206,570,400);if(net.st){txt(net.st,925,400,30,INK)}
- else if(net.host){txt('あそびかた',925,238,22,INK);B(670,262,250,70,'協力プレイ',()=>{net.mode='coop';net.lobT=0},{col:net.mode==='coop'?'#ffd91a':'#fff',size:30});B(940,262,250,70,'対人対戦',()=>{net.mode='pvp';net.lobT=0},{col:net.mode==='pvp'?'#ffd91a':'#fff',size:30});
+ else if(net.host){txt('あそびかた',925,238,22,INK);txt(net.mode==='coop'?'協力プレイ':'対人対戦',925,297,44,'#e5402b',INK,6);
   txt('ステージ',925,366,22,INK);for(let n=0;n<STG.length;n++)B(668+n*106,388,100,70,STG[n].name,()=>{net.stage=n;net.lobT=0;setStage(n)},{col:net.stage===n?'#ffd91a':'#fff',size:STG[n].name.length>4?17:20});
   txt(net.mode==='coop'?'人数に合わせて敵が強くなる。倒れた仲間のそばで復活！':'３分間の撃ち合い。先に１０撃破で勝ち！',925,484,19,INK);B(700,512,460,76,net.roster.length>1?'スタート！（'+net.roster.length+'人）':'ひとりでスタート',()=>hostStart(),{col:'#ff4a3d',tc:'#fff',size:36})}
  else{txt(net.mode==='coop'?'協力プレイ':'対人対戦',925,300,50,INK);txt(STG[net.stage].name,925,372,36,'#e5402b');if(curStage!==net.stage)setStage(net.stage);if(Math.sin(now*5)>-0.5)txt('ホストの開始を待っています…',925,470,26,INK)}
