@@ -64,7 +64,7 @@ ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(X,Y,W2,H2)}
 function drawMenu(dt){ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);const mn=G.menu;
 if(mn==='main'){head('モードを選ぼう');B(330,236,620,116,'オフラインで遊ぶ',()=>{G.menu='stage'},{col:'#ffd91a',size:50});B(330,392,620,116,'オンラインで遊ぶ',()=>{G.menu='online';net.err=''},{col:'#59d8ff',size:50});txt('ひとりでじっくり　全５ステージ',640,372,22,'#fff',INK,6);txt('最大４人　協力プレイ／対人対戦',640,528,22,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
  B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null;skFocus()},{col:'#ff9ad0',size:30});txt('ポイント '+SKS.pt,1090,600,20,'#fff',INK,6);
- if(skAny()){const s=1+0.08*Math.sin(now*9);ctx.save();ctx.translate(1218,620);ctx.rotate(0.12);ctx.scale(s,s);burstPath(2,3,40,22,10,1.3,5);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,40,22,10,1.3,5);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('NEW',0,1,18,'#e5402b');ctx.restore()}}
+}
 else if(mn==='skill')drawSkill();
 else if(mn==='stage'){head('ステージ選択');for(let n=0;n<STG.length;n++){const x=43+n*242,y=206,s=STG[n];btns.push({x,y,w:226,h:390,cb:()=>{G.stage=n;startWipe(startGame)}});panel(x,y,226,390);stageArt(n,x+12,y+12,202,150);
   para(x+12,y+172,124,34,10);ctx.fillStyle=s.col;ctx.fill();txt(s.sub,x+74,y+189,20,'#fff');txt(s.name,x+113,y+236,s.name.length>4?32:36,INK);txt(s.desc[0],x+113,y+280,17,INK);txt(s.desc[1],x+113,y+304,17,INK);txt('ハイスコア '+getHi(n),x+113,y+352,17,INK)}
