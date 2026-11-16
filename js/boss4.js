@@ -4,14 +4,14 @@
 // posed here every frame: Monk_Body / Monk_Head / Monk_Head2 (phase 2 face) / Monk_Jaw・Monk_Jaw2 (open mouth, scaled by b.open)
 // / Monk_Arm_L / Monk_Arm_R / Monk_Leg_L / Monk_Leg_R, Bell (on the back), Striker (right hand), Striker_L (left hand, phase 2).
 // He never speaks: only drawn sound effects.
-// Damage depends on where the shooter stands: front 3% (ガキン！), side 30%, back 100%. Bell hits also wear the bell down
-//   (double while he is out of breath). The bell's durability at 0 or HP at half -> transformation (cutscene, both sides invincible).
+// Damage depends on where the shooter stands: front 3% (ガキン！), side 30%, back 100%. The bell on his back stops shots
+//   (no HP damage) but wears down (double while he is out of breath). The bell's durability at 0 or HP at half -> transformation (cutscene, both sides invincible).
 // Phase 1 (bell on the back): run -> stop, stomp x2 (ice), bell sound waves x3 (jump them). "stomp x2 -> waves x3 -> out of breath"
-//   happens half of the time. Out of breath (tired): he stands still and pants for a while.
+//   happens half of the time. Every bell sound-wave volley (x3 / x4) ends in tired: he stands still and pants (7 s / 5.8 s in phase 2).
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
-// Phase 2 with bell: waves x4 (always followed by tired), stomp x3, charge, run -> striker slams (right, left).
-// Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (a wall only ends the charge).
+// Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
+// Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (9 s) (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
 const MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_BIG=1.15,MK_TF=3.0;
@@ -56,7 +56,7 @@ function monkCover(x0,z0,x1,z1){const b=boss;if(!b||!b.monk||!b.bell2||b.bell2.y
 function onIce(x,z){for(const i of ices)if(Math.hypot(x-i.x,z-i.z)<i.r*Math.min(1,i.life))return true;return false}
 
 // ---------------- damage ----------------
-// a shot / beam hit the bell (local player). Clients send it to the host as damage to -id. (The HP damage is dealt separately.)
+// a shot / beam hit the bell (local player): the bell stops it (no HP damage) but wears down. Clients send it to the host as damage to -id.
 function monkBellHit(b,dmg,hx,hy,hz,quiet){dmg*=SK.atk;if(!b.bell||b.st==='drop'||b.st==='die'||b.st==='trans'||b.st==='boff')return;b.bflash=0.07;hitMark=0.1;hitCrit=false;
 if(!quiet){fxSparks(hx,hy,hz,6,7,C.gold);fxStar(hx,hy,hz,1.2,C.yellow,0.08);snd('clank');addGauge(1);if(lim('bellT',0.3))sfxAt(pick(['カァン！','ガィン！','キィン！']),hx,hy+1,hz,{size:46,st:'fire',life:0.3})}
 if(isCli()){net.dacc[-b.id]=(net.dacc[-b.id]||0)+dmg;return}monkBell(b,dmg)}
@@ -99,7 +99,7 @@ else if(b.st==='air'){const D=fast?0.52:p2?0.6:0.85,u=Math.min(1,b.stT/D);b.x=le
 else if(b.st==='land'){if(b.stT>(p2?0.18:0.3)){if(b.chain<(p2?2:1)){b.chain++;crouch()}
   else if(!p2&&b.bell&&Math.random()<0.5){b.cmb=1;ring(3)}else toStop(p2?0.5:0.9)}}
 else if(b.st==='ring'){turn(T.x,T.z,2);if(b.k<b.n&&b.stT>=0.72+b.k*0.9){b.k++;ev('mring',r1(b.x),r1(b.z))}
- if(b.stT>0.72+(b.n-1)*0.9+0.75){if(b.cmb||b.n>=4)tired(p2?1.8:3);else toStop(0.7)}}
+ if(b.stT>0.72+(b.n-1)*0.9+0.75){tired(p2?5.8:7)}}
 else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?1:-1,a=mkW(b,s*1.35,0,1.6),c=mkW(b,s*1.35,0,6.2),w=mkW(b,s*1.35,0,4.6);
    for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<1.5&&p.y<2.2)hurtT(p,22,w[0],w[2])}
    ev('mslam',r1(w[0]),r1(w[2]))}};sl(0,0.6);sl(1,1.15);if(b.stT>1.75)toStop(0.5)}
@@ -107,7 +107,7 @@ else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=M
 else if(b.st==='charge'){const ox=b.x,oz=b.z,sp=fast?23:21;b.x+=b.dx*sp*dt;b.z+=b.dz*sp*dt;collide(b,MK_R);contact(20);
  if(lim('mkdust',0.06))fxSmoke(b.x,0.3,b.z,1,1.2,C.snow,2);
  const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>toStop(fast?0.45:0.6),c=b.bell2;
- if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(5);else end()}else if(b.stT>1.05)end()}
+ if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(9);else end()}else if(b.stT>1.05)end()}
 else if(b.st==='tired'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
 else if(b.st==='stop'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}
 
@@ -123,7 +123,7 @@ const c=b.bell2;if(c){c.t+=dt;const u=Math.min(1,c.t/0.6);c.x0+=(c.x-c.x0)*Math.
  if(u>=1&&!c.landed){c.landed=true;c.x0=c.x;c.z0=c.z;fxSmoke(c.x,0.4,c.z,8,2.2,C.snow,4);fxRing(c.x,0.1,c.z,6,C.white,0.3);snd('gong');snd('boom',0.6);shake(0.5);sfxAt('ドゴォン！',c.x,3.4,c.z,{size:70,st:'boom',life:0.6})}}
 const st=b.st;
 if(st==='tired'){if(lim('mkbr'+b.id,0.32)){const m=mkW(b,0,4.75,0.75);fxSmoke(m[0],m[1],m[2],1,0.45,C.white,1.2)}
- if(cue(0,0.25)||cue(1,1.1)||cue(2,2.0)||cue(3,2.9)||cue(4,3.8)){const h=mkW(b,0,5.6,0.6);sfxAt('ハァ…ハァ…',h[0],h[1]+0.8,h[2],{size:46,st:'ink',life:0.8})}}
+ if(b.stT>0.25&&lim('mkhaa'+b.id,0.9)){const h=mkW(b,0,5.6,0.6);sfxAt('ハァ…ハァ…',h[0],h[1]+0.8,h[2],{size:46,st:'ink',life:0.8})}}
 else if(st==='trans')monkTfFx(b,cue);
 else if(st==='roar'&&cue(0,0.15)){const h=mkW(b,0,5.4,0.5);sfxAt('グオオオ！！',h[0],h[1]+1,h[2],{size:80,st:'boom',life:1.0})}
 else if(st==='swing'&&b.stT<1.15&&lim('mksw',0.1))lines(0.35,'#c20020');
