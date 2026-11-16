@@ -16,5 +16,12 @@
 | `assets/stage_inkpond.glb` | 上記を書き出したゲーム用モデル | `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `blender/boss_monk.blend` | 4面ボス「鐘の僧」（僧・鐘・撞木）の元データ | 本プロジェクトで自作。ユーザー提供の設定画（僧・鐘・撞木の3枚）を見ながら Blender の Python で形を組んだもの。画像そのものは使っていない | 自作（第三者素材なし） |
 | `assets/boss_monk.glb` | 上記を書き出したゲーム用モデル | `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `blender/weapons.blend` | 武器6種（連珠銃・散華砲・迅雷砲・祓い刀・火消しの大槌・焙烙火矢）の元データ。武器ごとに別シーン | 本プロジェクトで自作。ユーザー提供の設定画6枚を見ながら、`tools/weapons/*.py`（Blender の Python）で形を組んだもの。画像そのものは使っていない | 自作（第三者素材なし） |
+| `assets/weapon_rifle.glb` | 連珠銃（アサルト） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/weapon_shotgun.glb` | 散華砲（桜のショットガン） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/weapon_railgun.glb` | 迅雷砲（氷のレールガン） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/weapon_katana.glb` | 祓い刀 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/weapon_hammer.glb` | 火消しの大槌 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/weapon_bomb.glb` | 焙烙火矢（ボム） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 
 ステージ1・2の小物（しめ縄・絵馬掛け・散った花びら・草・提灯・陣幕・槍掛け・砲弾など）、手描き風の模様（葉・木の皮・水面）、揺れ・はためき・炎・雲の動きもすべて本プロジェクトで自作。外部からダウンロードした素材は使っていない。
