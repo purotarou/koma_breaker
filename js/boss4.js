@@ -11,7 +11,7 @@
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
 // Striker slams freeze the player hit (MK_FRZ s) and the second slam re-aims at them (b.sl2), so it always lands.
-// Every charge ends in a 1.2 s stop and then the striker slams (phase 2). Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
+// Every charge ends straight in the striker slams, no stop (phase 2; the slams make no shock wave). The hero says the bell fell once it lands. Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
 // Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (9 s) (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
@@ -49,7 +49,7 @@ function mkW(b,lx,ly,lz){const c=Math.cos(b.yaw),s=Math.sin(b.yaw),k=b.sc;return
 function monkK(b,x,z){if(b.st==='trans'||b.st==='drop'||b.st==='boff')return 0;const dx=x-b.x,dz=z-b.z,d=Math.hypot(dx,dz)||1,c=(dx*Math.sin(b.yaw)+dz*Math.cos(b.yaw))/d;return c>0.5?0.03:c>-0.5?0.3:1}
 // hit spheres [x,y,z,r,multiplier,tag]. Tag 'front' = clank (tiny damage), 'bell' = the bell on his back.
 function monkSph(b){if(b.st==='drop'&&b.stT<1.6)return[];const k=monkK(b,pl.x,pl.z),tg=k<0.1?'front':0,S=(lx,ly,lz,r,m,t)=>{const w=mkW(b,lx,ly,lz);w.push(r*b.sc,m,t||0);return w};
-const a=[S(0,5.15,0.08,0.56,2*k,tg),S(0,3.75,0,1.15,k,tg),S(0,2.1,0,1.4,k,tg)];if(b.bell&&k>0)a.push(S(0,3.6,-1.83,1.1,1,'bell'),S(0,4.9,-1.6,0.85,1,'bell'));return a}
+const a=[S(0,5.15,0.08,0.56,2*k,tg),S(0,3.75,0,1.15,k,tg),S(0,2.1,0,1.4,k,tg)];if(b.bell&&k>0)a.push(S(0,3.5,-1.95,1.2,1,'bell'),S(0,4.6,-1.95,1.05,1,'bell'),S(0,5.6,-1.95,0.8,1,'bell'));return a}
 function monkCenter(b){return[b.x,b.y+3.6*b.sc,b.z,2.6*b.sc]}
 // a point inside the fallen bell's shadow (seen from x0,z0) is covered
 function monkCover(x0,z0,x1,z1){const b=boss;if(!b||!b.monk||!b.bell2||b.bell2.y>0.3)return false;const c=b.bell2,dx=x1-x0,dz=z1-z0,l2=dx*dx+dz*dz||1,
@@ -111,10 +111,10 @@ else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?b
 else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=Math.sin(b.yaw);b.dz=Math.cos(b.yaw)}}
 else if(b.st==='charge'){const ox=b.x,oz=b.z,sp=fast?23:21;b.x+=b.dx*sp*dt;b.z+=b.dz*sp*dt;collide(b,MK_R);contact(20);
  if(lim('mkdust',0.06))fxSmoke(b.x,0.3,b.z,1,1.2,C.snow,2);
- const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>{toStop(1.2);b.nx=1},c=b.bell2;
+ const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>{b.yaw=mkFace(b,T.x,T.z);swing()},c=b.bell2;
  if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(9);else end()}else if(b.stT>1.05)end()}
 else if(b.st==='tired'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
-else if(b.st==='stop'){if(b.nx&&b.stT>b.dur-0.35)turn(T.x,T.z,8);if(b.stT>b.dur){if(b.nx){b.nx=0;swing()}else{b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}}
+else if(b.st==='stop'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}
 
 // ---------------- shared animation / cosmetics (host and clients) ----------------
 function monkAnim(b,dt){b.t+=dt;b.stT+=dt;b.flash-=dt;b.bflash-=dt;if(b.st!==b.lst){b.lst=b.st;b.cue=0}
@@ -125,7 +125,8 @@ const sp=b.y<0.2?Math.hypot(b.x-b.px,b.z-b.pz)/Math.max(dt,1e-3):0;b.px=b.x;b.pz
 if(b.wa>0.5&&Math.sin(b.wp)*Math.sin(b.wp-Math.min(sp,24)*dt*0.9)<0){fxSmoke(b.x,0.2,b.z,2,0.9,C.snow,1.5);if(b.st==='charge'||lim('mkstep',0.25))shake(0.05)}
 for(let i=ices.length-1;i>=0;i--){ices[i].life-=dt/7;if(ices[i].life<=0)ices.splice(i,1)}
 const c=b.bell2;if(c){c.t+=dt;const u=Math.min(1,c.t/0.6);c.x0+=(c.x-c.x0)*Math.min(1,dt*8);c.z0+=(c.z-c.z0)*Math.min(1,dt*8);c.y=Math.max(0,lerp(c.y0,0,u*u));c.tilt=lerp(0.15,-0.08,u);
- if(u>=1&&!c.landed){c.landed=true;c.x0=c.x;c.z0=c.z;fxSmoke(c.x,0.4,c.z,8,2.2,C.snow,4);fxRing(c.x,0.1,c.z,6,C.white,0.3);snd('gong');snd('boom',0.6);shake(0.5);sfxAt('ドゴォン！',c.x,3.4,c.z,{size:70,st:'boom',life:0.6})}}
+ if(u>=1&&!c.landed){c.landed=true;c.say=1;c.x0=c.x;c.z0=c.z;fxSmoke(c.x,0.4,c.z,8,2.2,C.snow,4);fxRing(c.x,0.1,c.z,6,C.white,0.3);snd('gong');snd('boom',0.6);shake(0.5);sfxAt('ドゴォン！',c.x,3.4,c.z,{size:70,st:'boom',life:0.6})}}
+if(c&&c.say&&!monkCine()){c.say=0;say(['鐘が','落ちた！'],0)}
 const st=b.st;
 if(st==='tired'){if(lim('mkbr'+b.id,0.32)){const m=mkW(b,0,4.75,0.75);fxSmoke(m[0],m[1],m[2],1,0.45,C.white,1.2)}
  if(b.stT>0.25&&lim('mkhaa'+b.id,0.9)){const h=mkW(b,0,5.6,0.6);sfxAt('ハァ…ハァ…',h[0],h[1]+0.8,h[2],{size:46,st:'ink',life:0.8})}}
@@ -176,7 +177,7 @@ mland(x,z,p2,intro){explode(x,0.6,z,intro?2.6:1.8,{ink:1,text:intro?'ズドォ�
 mring(x,z){snd('gong');fxRing(x,4,z,10,C.yellow,0.5);fxRing(x,0.2,z,14,C.gold,0.6);shake(0.5);sfxAt('ゴォォォン！',x,8,z,{size:96,st:'boom',life:0.8,grow:0.14});
  shocks.push({x,z,r:1.4,v:15,max:24,d:14,hit:false,mk:1},{x,z,r:-3.6,v:15,max:24,d:14,hit:false,mk:1})},
 mslam(x,z){explode(x,0.5,z,1.3,{ink:1,quiet:1});fxRing(x,0.1,z,6,C.white,0.3);fxDebris(x,0.4,z,6,7,C.snow,0.4);decals.push({x,z,r:2.6,life:5});shake(0.45);snd('boom',0.6);
- sfxAt('ドガァン！',x,2.5,z,{size:66,st:'boom',life:0.45});shocks.push({x,z,r:0.6,v:11,max:8,d:10,hit:false,mk:1})},
+ sfxAt('ドガァン！',x,2.5,z,{size:66,st:'boom',life:0.45})},
 mbreak(x,z,quiet){snd('gong');snd('boom',1);shake(1);const b=boss;if(!quiet){flash(0.7);stopT(0.18);invA=1;addText('バキィッ！',W/2,H*0.3,{size:150,st:'boom',life:1.1,rot:-0.08,grow:0.12})}
  if(b){const w=mkW(b,0,4.3,-1.8);fxDebris(w[0],w[1],w[2],18,9,C.gold,0.55);fxStar(w[0],w[1],w[2],5,C.white,0.12);explode(w[0],w[1],w[2],1.6,{quiet:1})}},
 mend(x,z){for(let i=0;i<4;i++)explode(x+rnd(-2,2),rnd(1.5,7),z+rnd(-2,2),rnd(1.6,2.4),{quiet:1,ink:1});explode(x,4,z,4.5,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.25);for(let i=0;i<18;i++)fxOrb(x+rnd(-2,2),rnd(2,7),z+rnd(-2,2))}});

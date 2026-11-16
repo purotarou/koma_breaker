@@ -82,7 +82,7 @@ resetPlayer(0,16,0);
 function shoot(){pl.ammo--;pl.cool=0.125;pl.kick+=0.03;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(0.07);snd('shot');const pw=pl.pow>0?2:1,pvp=G.mode==='pvp';
 let d=aimDir();const ox=cam.x,oy=cam.y,oz=cam.z,as=touchMode||G.demoOn;let best=as?0.1:0.035,bp=null;
 const chk=(x,y,z,bias)=>{const px=x-ox,py=y-oy,pz=z-oz,l=Math.hypot(px,py,pz)||1,a=Math.acos(clamp((px*d[0]+py*d[1]+pz*d[2])/l,-1,1))-bias;if(a<best){best=a;bp=[px/l,py/l,pz/l]}};
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[4]>1.5?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(pvp)for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(pvp)for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
 if(bp){const k=as?0.85:0.5;d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}
 let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],140),he=null,hm=1,hs=null,ho=null,htg=0;const wallT=tw;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0,tg=0;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(e.monk){if(t<tm){tm=t;mm=s[4];tg=s[5]}}else{if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}}if(tm<tw){tw=tm;he=e;hm=mm;htg=tg}}
