@@ -186,7 +186,7 @@ if(n){const s=skState(n),col=SKB[n.b].col,path=n.ln==='A'?SKB[n.b].la:n.ln==='B'
  if(s==='own')B(X+130,cy+204,220,52,'外す（-'+SKRESPEC+'）',()=>skUndo(n),{size:26,col:'#d8d8e0'});else B(X+130,cy+204,220,52,'習得する',()=>skBuy(n),{size:26,col:s==='ok'?'#ff4a3d':'#d8d8e0',tc:s==='ok'?'#fff':'#6a6f88'})}
 else{txt('光っている丸をタップして選ぼう',X+239,cy+58,23,INK);txt('同じ系統で選べる道は１本だけ',X+239,cy+106,18,INK);txt('習得すると、その先が見えてくる',X+239,cy+138,18,INK);txt('ポイントは全部で'+SKMAX+'。全部は取れない！',X+239,cy+194,20,'#e5402b','#fff',6)}
 if(skMsg&&now-skMsg.t<2.2)txt(skMsg.s,X+245,562,20,'#ff5a4d',INK,6,'center','#fff',10);else txt('初クリア＋3／2回目＋1／ボス無傷＋1／全面クリア＋4／外すと1個-1',X+245,562,15,'#fff',INK,5);
-B(X,616,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,616,230,56,'全て振り直す',()=>skAskReset(),{size:24,col:'#d8d8e0'});
+B(X,616,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,616,230,56,'全て振り直す',()=>skAskReset(),{size:24,col:'#ff4a3d',tc:'#fff'});
 if(skConf){const f=skRespecInfo();btns.length=0;ctx.fillStyle='rgba(10,12,40,.72)';ctx.fillRect(0,0,W,H);
  const x=340,y=170,w=600,h=380;panel(x,y,w,h);ctx.fillStyle='#e5402b';ctx.fillRect(x,y,w,64);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(x,y,w,64);txt('全て振り直しますか？',x+w/2,y+34,32,'#fff',INK,6);
  txt('習得したスキル '+f.k+'個を、すべて外します',x+w/2,y+98,22,INK);
