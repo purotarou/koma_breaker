@@ -27,8 +27,8 @@
 - **武器ガチャ**: `js/gacha.js`（weapons.js の後に読む）。モード選択画面の右のガチャ機のボタン（`gaMenuBtn`）→ `G.menu='gacha'`（`drawGacha`）。
   - 通貨「コマ札」と進行は localStorage の `koma_gacha`（`GA.f` 枚数、`GA.paid[ステージ]` 受け取った回数、`GA.pick` ピックアップ）。ステージクリアで `skReward` → `gaReward` が「ステージ番号×1枚」を各ステージ2回まで足す（`G.fuda`、リザルト右上のカード `gaRewardCard`）。
   - 抽選は `gaRates()`（ピックアップ `GA_PU`=40%、ほかは均等。必殺Lv3（強化待ち込み）の武器は除く）。1回=1枚、6回=5枚。結果は引いた瞬間に保存し、そのあと演出（`gaA`: 封じられたコマが割れる → 武器の絵 → 6回なら一覧）。
-  - 必殺レベル: `WS.lv[id]`（使っているLv）と `WS.up[id]`（強化待ち）。重複は `wsGive` が強化待ちを増やすだけで、設定画面の「武器の強化」タブ（`setTab=1`、`drawWpUp`）で `wpLvUp` を押して上げる。効果は `SPLV`（`wpApply` が `SK.spw`・`SK.beam` に掛ける）。
-  - 画面の絵は `assets/gacha/cut_*.webp`（元絵 `weapon_*.webp` を切り詰めて640pxにしたもの。作り直しは `python3 tools/gacha/cutout.py`、Pillow が必要）。背景は3Dのハイライト：主人公がその武器で通常攻撃→必殺を繰り返す（`gaHi`、カメラは `gaCam`、`GH` が立ち位置）。爆弾・斬撃の波・炎は weapons.js の共有リストを `own:0`（ダメージなし）で使い、`wpWorld` で動かす。
+  - 必殺レベル: `WS.lv[id]`（使っているLv）と `WS.up[id]`（強化待ち）。重複は `wsGive` が強化待ちを増やすだけで、装備画面の「詳細」の隣の「強化」（`wpUpBtn`）で `wpLvUp` を押して上げる。効果は `SPLV`（`wpApply` が `SK.spw`・`SK.beam` に掛ける）。
+  - 画面の絵は `assets/gacha/cut_*.webp`（元絵 `weapon_*.webp` を切り詰めて640pxにしたもの。作り直しは `python3 tools/gacha/cutout.py`、Pillow が必要）。右側の背景は `gaD`：まず武器が回る（`wpPreviewIn`、装備画面と同じ描き方）→ 3.5秒後にステージ1のデモプレイ（`gaDemoStart`。`G.demoOn` のまま `G.state='menu'`、タイトルのデモと同じ AI、`SET.view` を一時的に3人称にし、`tpsSide<0` で左肩カメラにして主人公を画面右に置く）。7秒までは「通常攻撃」、そこで必殺を出させて「必殺技！」の見出し、16秒で回転に戻る。ガチャ演出・設定を開いている間は止まり、ガチャを出るときは `gaDemoEnd` で元に戻す（`SET.view` も戻す）。
 - **最終ボス「白抜魔王シロヌキ」第3形態（未着手）**: 元モデルは `blender/src/komabure_chara_last_boss3.glb`（本体。14部品・テクスチャ付き）と `..._sword_right.glb` / `..._sword_left.glb`（両手の剣）。出どころ・ライセンスは未確認（`ASSETS.md`）。
   - 作業は Blender MCP を使うので**手元（Mac）のセッションで行う**（クラウドでは Blender を動かせない）。
   - 方式は未決定。案A: 鐘の僧と同じ「部品ごとに別ノード・単色の材質・コードで動かす」（`blender/boss_monk.blend` → `tools/blender_export_stage.py` → `js/boss4.js` の作り方を参考に。輪郭線・トーンになじみやすく早い）。案B: 主人公と同じ「テクスチャ＋骨（CPU スキニング）」（`js/hero.js`、スキル `add-character` の手順を参考に）。決める前にユーザーに確認する。

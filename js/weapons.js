@@ -3,7 +3,7 @@
 // Seven weapons: 妖弾銃 (the standard, box-built gun of old) + six models (blender/weapons.blend -> assets/weapon_*.glb).
 // One weapon is equipped (装備画面: main menu / lobby →「装備」, saved in localStorage koma_wpn) and used for the whole stage, versus too.
 // The six come only from the weapon gacha (gacha.js → wsGive(id), WS.own = {weaponId:1}), or all at once while the developer 超強化 switch (DEV) is on.
-// Gacha duplicates raise the 必殺 level (1-3, WS.lv / WS.up, applied in 設定 →「武器の強化」): special power and length ×SPLV (wpApply).
+// Gacha duplicates raise the 必殺 level (1-3, WS.lv / WS.up, applied with 「強化」 on the equip screen): special power and length ×SPLV (wpApply).
 // Each weapon has its own normal attack and its own special (必殺); the gauge (妖珠) is shared. Skills: damage / special power /
 // gauge work for every weapon; magazine / reload / fire rate only for the ones with ammo (wpApply scales SK after skApply).
 //  連珠銃 32発・威力24・毎秒7発・装填0.8秒・反動なし / 珠時雨: 5 s of free ammo, double rate, homing aim.
@@ -37,7 +37,7 @@ const WB_RF=4,RAIL_DM=9,RAIL_ICE=20;// bomb: seconds from its own throw until th
 const WS={eq:'gun',own:{}};
 try{const s=JSON.parse(localStorage.getItem('koma_wpn')||'null');if(s)Object.assign(WS,s)}catch(e){}
 function wsSave(){try{localStorage.setItem('koma_wpn',JSON.stringify(WS))}catch(e){}}
-// 必殺レベル 1-3: WS.lv[id] = level in use, WS.up[id] = level-ups waiting (gacha duplicates, applied by hand in 設定 →「武器の強化」)
+// 必殺レベル 1-3: WS.lv[id] = level in use, WS.up[id] = level-ups waiting (gacha duplicates, applied by hand with 「強化」 on the equip screen)
 if(!WS.lv||typeof WS.lv!=='object')WS.lv={};if(!WS.up||typeof WS.up!=='object')WS.up={};
 const SPLV=[[1,1],[1.2,1.15],[1.45,1.3]],SPLV_T=['','威力×1.2・時間×1.15','威力×1.45・時間×1.3'];// [special power, special duration] per level
 const wpLv=id=>WS.own[id]?clamp(WS.lv[id]|0||1,1,3):1,wpLvAll=id=>WS.own[id]?Math.min(3,wpLv(id)+(WS.up[id]|0)):0;
@@ -45,7 +45,7 @@ const wpLv=id=>WS.own[id]?clamp(WS.lv[id]|0||1,1,3):1,wpLvAll=id=>WS.own[id]?Mat
 function wsGive(id){if(id==='gun')return'';if(!WS.own[id]){WS.own[id]=1;WS.lv[id]=1;wsSave();return'new'}if(wpLvAll(id)>=3)return'max';WS.up[id]=(WS.up[id]|0)+1;wsSave();return'up'}
 function wpLvUp(id){if(!WS.own[id]||!((WS.up[id]|0)>0)||wpLv(id)>=3)return false;WS.lv[id]=wpLv(id)+1;WS.up[id]--;wsSave();return true}
 const wpIdx=id=>Math.max(0,WPN.findIndex(w=>w.id===id)),wpOwn=i=>i===0||!!DEV||!!WS.own[WPN[i].id],wpW=()=>WPN[pl.wp|0]||WPN[0];
-function wpCur(){if(G.demoOn)return 0;const i=wpIdx(WS.eq);return wpOwn(i)?i:0}
+function wpCur(){if(G.demoOn)return gaDemoWp!=null?gaDemoWp:0;const i=wpIdx(WS.eq);return wpOwn(i)?i:0}
 // weapon numbers on top of the skills (called at the end of skApply, pl.wp is set first in resetPlayer)
 function wpApply(s){const w=WPN[pl.wp|0];if(!w)return;if(w.ammo){s.mag=Math.max(2,Math.round(s.mag*w.mag/16));s.rel*=w.rel;s.cool*=w.cool/0.125}s.gauge*=w.g;const L=SPLV[(w.id==='gun'?1:wpLv(w.id))-1];s.spw*=L[0];s.beam*=L[1]}
 const spDur=()=>wpW().spd*SK.beam/0.8;// 必殺持続 / 極み stretch every timed special the same way
@@ -287,7 +287,7 @@ for(const f of wfires){const k=Math.min(1,f.t/0.5)*Math.min(1,(6-f.t)/0.25+0.15)
  for(let j=0;j<n;j++){const a=j/n*TAU+f.x*0.7,r=j===0?0:rr*(0.55+0.45*((j*7)%3)/2),h=(hi?2.2:1.5+((j*5)%3)*0.55)*k*(1+0.22*Math.sin(now*9+j*1.7)),tl=0.18*Math.sin(now*5+j);
   put(CONE,f.x+Math.cos(a)*r,f.y+h*0.45,f.z+Math.sin(a)*r,tl,a,-tl,h*0.42,h,h*0.42,j%3?C.orange:C.red,0,0,NF|F_FLAME);put(CONE,f.x+Math.cos(a)*r*0.9,f.y+h*0.3,f.z+Math.sin(a)*r*0.9,tl,a+1,-tl,h*0.3,h*0.62,h*0.3,C.yellow,0,0,NF|F_FLAME)}}}
 // local rail beam (after the view model / hero set muz)
-function wpDrawLate(){if(G.state!=='play'&&!(G.state==='title'&&G.demoOn))return;if(pl.rOn&&!pl.dead&&!(G.kcT>=0)&&!monkCine()&&!(tpsOn()&&tpsD<0.9&&SET.view!==2)){const d=aimDir(),AO=aimOrigin(),t=pl.rEnd||40;railBeam(muz,[AO[0]+d[0]*t,AO[1]+d[1]*t,AO[2]+d[2]*t],pl.rOn===2)}}
+function wpDrawLate(){if(G.state!=='play'&&!(G.state==='title'&&G.demoOn)&&!gaDemo())return;if(pl.rOn&&!pl.dead&&!(G.kcT>=0)&&!monkCine()&&!(tpsOn()&&tpsD<0.9&&SET.view!==2)){const d=aimDir(),AO=aimOrigin(),t=pl.rEnd||40;railBeam(muz,[AO[0]+d[0]*t,AO[1]+d[1]*t,AO[2]+d[2]*t],pl.rOn===2)}}
 // another player's rail beam (direction from their yaw / pitch)
 function wpOtherBeam(o){const cp=Math.cos(o.pitch),d=[-Math.sin(o.yaw)*cp,Math.sin(o.pitch),-Math.cos(o.yaw)*cp],t=rayWorld(o.gx,o.gy,o.gz,d[0],d[1],d[2],60);railBeam([o.gx,o.gy,o.gz],[o.gx+d[0]*t,o.gy+d[1]*t,o.gz+d[2]*t],!!(o.rb&16))}
 // ================= DRAW: first-person view model (camera space, layer 2) =================
@@ -396,24 +396,27 @@ panel(X,Y+PH+18,PW,170);const iy=Y+PH+18;para(X+16,iy-26,Math.min(PW-40,60+w.nam
 txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');txt(ok?w.type:'',X+PW-24,iy+22,18,'#555a70',null,0,'right');
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 if(ok){tag(X+18,iy+50,'通常',INK);fitTxt(w.d[0],X+92,iy+50,21,PW-110,INK);fitTxt(w.d[1],X+92,iy+80,18,PW-110,'#3a3f55');
- tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');if(w.id!=='gun'){const ul=WS.own[w.id]&&(WS.up[w.id]|0)>0&&wpLv(w.id)<3;txt('必殺Lv'+wpLv(w.id)+(ul?'（設定で強化できる）':''),X+PW-24,iy+120,18,'#e5402b',null,0,'right')}fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
+ tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');if(w.id!=='gun'){const ul=WS.own[w.id]&&(WS.up[w.id]|0)>0&&wpLv(w.id)<3;txt('必殺Lv'+wpLv(w.id)+(ul?'（「強化」で上げられる）':''),X+PW-24,iy+120,18,'#e5402b',null,0,'right')}fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
 else{txt('武器ガチャで入手できる',X+PW/2,iy+68,24,INK);txt('（モード選択の「ガチャ」から）',X+PW/2,iy+108,20,'#555a70')}
 if(eqDet&&ok)drawEqDet(w,X,Y,PW,PH+188);
 if(DEV)txt('超強化中：すべての武器が使えます',X,H-26,16,'#ffd91a',INK,5,'left');
 B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});
+wpUpBtn(w,X+PW-624,628,148,62,ok);// 必殺 level-up (gacha.js)
 B(X+PW-462,628,148,62,eqDet&&ok?'閉じる':'詳細',ok?()=>{eqDet=eqDet?0:1;snd('ui')}:null,{col:!ok?'#d8d8e0':eqDet?'#59d8ff':'#fff',size:28});
 B(X+PW-300,628,300,62,!ok?'未入手':isEq?'装備中':'装備する',()=>{if(ok&&!isEq){WS.eq=w.id;wsSave();snd('item');eqPop=now}},{col:!ok?'#d8d8e0':isEq?'#ffd91a':'#ff4a3d',tc:ok&&!isEq?'#fff':INK,size:30});
 if(now-eqPop<0.7){const u=now-eqPop,k=easeBack(sat(u/0.15));ctx.save();ctx.globalAlpha=sat((0.7-u)/0.2);ctx.translate(X+PW-150,612);ctx.rotate(-0.1);ctx.scale(k*0.7,k*0.7);burstPath(4,5,120,44,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,120,44,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('装備！',0,2,44,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
 // 3D preview inside the equip window (camera space, layer 2): a light backdrop and the weapon turning slowly
 // largest scale that keeps the centred box inside the window over every angle the preview turns through, with perspective (cached per weapon and screen)
 const WFIT={};
-function wpFit(w,mn,mx,cx,cy,hw,hh,D){const key=w.id+'|'+W+'|'+H;if(WFIT[key])return WFIT[key];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[],pts=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=16;k++)rots.push([PI/2+0.4*Math.sin(k/16*TAU),0.15]);
+function wpFit(w,mn,mx,cx,cy,hw,hh,D){const key=w.id+'|'+W+'|'+H+'|'+cx.toFixed(3)+'|'+cy.toFixed(3)+'|'+hw.toFixed(3);if(WFIT[key])return WFIT[key];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[],pts=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=16;k++)rots.push([PI/2+0.4*Math.sin(k/16*TAU),0.15]);
 for(const[ry,rx]of rots){const cyr=Math.cos(ry),syr=Math.sin(ry),cxr=Math.cos(rx),sxr=Math.sin(rx);for(let k=0;k<8;k++){const p=[(k&1?mx[0]:mn[0])-c[0],(k&2?mx[1]:mn[1])-c[1],(k&4?mx[2]:mn[2])-c[2]],y1=p[1]*cxr-p[2]*sxr,z1=p[1]*sxr+p[2]*cxr;pts.push([p[0]*cyr+z1*syr,y1,-p[0]*syr+z1*cyr])}}
 const ok=sc=>pts.every(([x,y,z])=>[z,-z].every(z=>{const d=D-sc*z;return d>0.05&&Math.abs((cx*D+sc*x)/d-cx)<=hw*0.86&&Math.abs((cy*D-0.02+sc*y)/d-cy)<=hh*0.8}));
 let lo=0,hi=8;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(ok(m))lo=m;else hi=m}
 if(!w.file||WMOD[w.id])WFIT[key]=lo;return lo}
-function wpPreview(){if(G.state!=='menu'||G.menu!=='equip')return;const i=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[i],ok=wpOwn(i);curLayer=2;mPush();M.set(CAMW);
-const tn=Math.tan(cam.fov/2),asp=W/H,D=1.3,cx=((EQ.px+EQ.pw/2)/W*2-1)*tn*asp,cy=(1-(EQ.py+EQ.ph/2)/H*2)*tn,hw=EQ.pw/W*tn*asp,hh=EQ.ph/H*tn,D2=D*1.5;
+function wpPreview(){if(G.state!=='menu'||G.menu!=='equip')return;const i=eqSel<0?wpIdx(WS.eq):eqSel;wpPreviewIn(i,EQ,wpOwn(i))}
+// weapon i turning inside the screen rectangle R {px,py,pw,ph} (also the gacha screen); ok=false draws a dark silhouette
+function wpPreviewIn(i,R,ok){const w=WPN[i];curLayer=2;mPush();M.set(CAMW);
+const tn=Math.tan(cam.fov/2),asp=W/H,D=1.3,cx=((R.px+R.pw/2)/W*2-1)*tn*asp,cy=(1-(R.py+R.ph/2)/H*2)*tn,hw=R.pw/W*tn*asp,hh=R.ph/H*tn,D2=D*1.5;
 mPush();mT(cx*D2,cy*D2,-D2);mS(hw*2*D2+0.06,hh*2*D2+0.06,1);emit(QUAD,ok?w.bg:[.78,.8,.88],0,0,F_UNLIT|F_NOCAST,0);mPop();
 mT(cx*D,cy*D-0.02,-D);const md=w.file&&WMOD[w.id],mn=md?md.mn:[-0.08,-0.19,-0.63],mx=md?md.mx:[0.08,0.12,0.12],sc=wpFit(w,mn,mx,cx,cy,hw,hh,D);
 if(w.kind==='bomb')mRY(now*0.8);else{mRY(PI/2+0.4*Math.sin(now*0.7));mRX(0.15)}mS(sc,sc,sc);mT(-(mn[0]+mx[0])/2,-(mn[1]+mx[1])/2,-(mn[2]+mx[2])/2);

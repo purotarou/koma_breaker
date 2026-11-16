@@ -5,8 +5,7 @@ const BTN0=JSON.parse(JSON.stringify(BTN));let setOpen=false;
 // SET.lay: custom button layout {key:{x,y,s}} in right-handed screen coords (mirrored when SET.lh); null = default layout
 function applySet(){const sc=SET.size,L=SET.lay;for(const k in BTN){const b0=BTN0[k],b=BTN[k],c=L&&L[k];if(c){b.x=SET.lh?W-c.x:c.x;b.y=c.y;b.r=b0.r*sc*(c.s||1)}else{const x=W-(W-b0.x)*sc;b.y=H-(H-b0.y)*sc;b.r=b0.r*sc;b.x=SET.lh?W-x:x}}touch.hx=SET.lh?W-150:150;touch.hy=560;if(touch.sid===null){touch.ox=touch.hx;touch.oy=touch.hy}if(musG)musG.gain.value=0.3*SET.bgm;try{localStorage.setItem('koma_set',JSON.stringify(SET))}catch(e){}}
 applySet();
-let setTab=0;// 0 = 基本, 1 = 武器の強化 (gacha.js drawWpUp)
-function openSet(){setOpen=true;layEdit=false;setTab=0}
+function openSet(){setOpen=true;layEdit=false}
 // dev cheat: tap the 「設定」 title 10 times -> super strong, invincible
 let devTap=0,devT=0;
 function devToggle(){DEV=DEV?0:1;skApply();if(typeof pl!=='undefined'&&!pl.dead&&G.state!=='menu')pl.hp=Math.min(pl.hp,SK.hp);if(DEV&&G.state!=='menu')pl.hp=SK.hp;snd('item');addText(DEV?'超強化 ON':'超強化 OFF',W/2,H*0.4,{size:90,st:'boom',life:1.2})}
@@ -56,8 +55,6 @@ function gearBtn(x,y){btns.push({x,y,w:62,h:62,cb:openSet});ctx.fillStyle=INK;ct
 ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.beginPath();for(let i=0;i<32;i++){const a=(i+0.5)/32*TAU,r=(i>>1)%2?15:22;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,7,0,TAU);ctx.fill();ctx.restore()}
 function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');btns.push({x:160,y:36,w:360,h:90,cb:devTapTitle});
 B(950,90,150,54,'とじる',()=>{setOpen=false},{col:'#ffd91a',size:28});
-['基本','武器の強化'].forEach((s,i)=>B(540+i*190,90,i?200:170,54,s,()=>{setTab=i},{sk:8,size:24,col:setTab===i?'#59d8ff':'#fff'}));{const n=wpUpN();if(n){ctx.beginPath();ctx.arc(930,92,16,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(String(n),930,93,18,'#fff')}}
-if(setTab===1){drawWpUp();return}
 if(devOpen)B(960,598,150,48,G.mode==='pvp'?'対戦は不可':DEV?'超強化 ON':'超強化 OFF',()=>{if(G.mode!=='pvp')devToggle()},{sk:8,size:20,col:DEV?'#ff8a2b':'#fff'});
 const rows=[['視点感度','sens',0.3,2.5,v=>'×'+v.toFixed(1)],['効果音','se',0,1,v=>String(Math.round(v*10))],['BGM','bgm',0,1,v=>String(Math.round(v*10))]];
 rows.forEach((r,i)=>{const y=156+i*72,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set=nv=>{SET[k]=clamp(Math.round(nv*10)/10,r[2],r[3]);applySet();if(k==='se')snd('hit')};txt(r[0],200,y+28,30,INK,null,0,'left');

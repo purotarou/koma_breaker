@@ -61,13 +61,13 @@ else{ctx.fillStyle='#ecebe6';ctx.fillRect(x,y,w,h);ctx.strokeStyle=INK;ctx.lineW
  ctx.fillStyle='#141218';ctx.fillRect(x,y+h-34,w,34);const cx=x+w/2;ctx.fillStyle='#d9262c';for(const r of[[cx-60,y+50,15,h-80],[cx+45,y+50,15,h-80],[cx-84,y+40,168,14],[cx-70,y+70,140,10]]){ctx.fillRect(r[0],r[1],r[2],r[3]);ctx.strokeRect(r[0],r[1],r[2],r[3])}ctx.fillStyle=INK;ctx.fillRect(cx-94,y+28,188,12);
  ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(cx,y+h-17,110,9,0,0,TAU);ctx.stroke()}
 ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(X,Y,W2,H2)}
-function drawMenu(dt){if(G.menu==='equip'){drawEquip();return}if(G.menu==='gacha'){drawGacha(dt);return}ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);gaUpBadge(W-28,30);const mn=G.menu;
+function drawMenu(dt){if(G.menu==='equip'){drawEquip();return}if(G.menu==='gacha'){drawGacha(dt);return}ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);const mn=G.menu;
 if(mn==='main'){head('モードを選ぼう');B(330,200,620,96,'ストーリー',()=>{G.menu='stage'},{col:'#ffd91a',size:46});txt('ひとりでじっくり　全５ステージ',640,316,21,'#fff',INK,6);
  B(330,346,620,96,'対戦モード',()=>{G.menu='vs';net.err=''},{col:'#ff8a6b',size:46});txt('みんなで撃ち合い',640,462,21,'#fff',INK,6);
  B(330,492,620,96,'協力プレイ',()=>{net.mode='coop';G.menu='online';net.err=''},{col:'#59d8ff',size:46});txt('最大４人でステージに挑む（オンライン）',640,608,21,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
  B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null;skFocus()},{col:'#ff9ad0',size:30});txt('ポイント '+SKS.pt,1090,600,20,'#fff',INK,6);
  B(680,624,250,64,null,()=>openEquip('main'),{col:'#ffb35a'});txt('装備',812,646,28,INK);txt(WPN[wpCur()].name,812,672,16,'#5a3010');
- gaMenuBtn(1000,232,226,262);gaPreload();
+ gaMenuBtn(1000,232,226,262);gaPreload();gaUpBadge(926,628);
 }
 else if(mn==='skill')drawSkill();
 else if(mn==='stage')drawStageSel(dt);// js/stagesel.js
@@ -125,9 +125,9 @@ cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty
 // ---- third / second-person camera (SET.view 1 / 2, toggled in the settings / the small HUD button / V key) ----
 // Over the right shoulder. Walls pull the camera in at once and it eases back out; looking up from below,
 // the ground stops it and it slides along the boom towards the hero; too close and the hero is not drawn.
-const TPS_D=3.4,TPS_SH=0.62,TPS_UP=0.3,TPS_PAD=0.3;let tpsD=TPS_D,tpsS=TPS_SH;const tpsEye=[0,0,0];
+const TPS_D=3.4,TPS_SH=0.62,TPS_UP=0.3,TPS_PAD=0.3;let tpsD=TPS_D,tpsS=TPS_SH,tpsSide=1;const tpsEye=[0,0,0];// tpsSide: shoulder scale, negative = left shoulder (gacha demo)
 const tpsHero={slot:0,x:0,y:0,z:0,yaw:0,pitch:0,wt:0,mv:0,dead:false,flash:0,fireT:0,sp:0,gx:0,gy:0,gz:0};
-function tpsOn(){return SET.view>=1&&G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()}
+function tpsOn(){return SET.view>=1&&(G.state!=='menu'||gaDemo())&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()}
 function tpsSet(v){SET.view=v;tpsD=0.2;tpsS=0;applySet();snd('ui')}
 function tpsToggle(){SET.view=((SET.view|0)+1)%3;tpsD=0.2;tpsS=0;applySet();snd('ui')}
 function tpsCam(dt){const ex=cam.x,ey=cam.y,ez=cam.z,cp=Math.cos(cam.pitch),fx=-Math.sin(cam.yaw)*cp,fy=Math.sin(cam.pitch),fz=-Math.cos(cam.yaw)*cp,rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
@@ -142,8 +142,8 @@ if(SET.view===2&&!(G.cine>0)){const D2=3.2,s=trauma*trauma,op=clamp(pl.pitch*0.4
  cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.04;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.04;cam.roll=rnd(-1,1)*s*0.05;return}
 // shoulder offset: shrinks when a wall is right beside the hero
 // (and moves further out to the side while the boom is pulled in, so the hero blocks less of the view)
-const sw=TPS_SH+0.35*sat(1-tpsD/TPS_D),sh=clamp(rayWorld(ex,ey,ez,rx,0,rz,sw+TPS_PAD)-TPS_PAD,0,sw);tpsS=sh<tpsS?sh:lerp(tpsS,sh,Math.min(1,dt*3));
-const sx=ex+rx*tpsS,sy=ey+TPS_UP,sz=ez+rz*tpsS;
+const sd=tpsSide<0?-1:1,sw=Math.abs(tpsSide)*TPS_SH+0.35*sat(1-tpsD/TPS_D),sh=clamp(rayWorld(ex,ey,ez,rx*sd,0,rz*sd,sw+TPS_PAD)-TPS_PAD,0,sw);tpsS=sh<tpsS?sh:lerp(tpsS,sh,Math.min(1,dt*3));
+const sx=ex+rx*tpsS*sd,sy=ey+TPS_UP,sz=ez+rz*tpsS*sd;
 // boom: walls / props / the ground between the shoulder and the camera pull it in
 let d=rayWorld(sx,sy,sz,-fx,-fy,-fz,TPS_D+TPS_PAD)-TPS_PAD;if(fy>0.01)d=Math.min(d,(sy-0.22)/fy);d=clamp(d,0.12,TPS_D);
 tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
@@ -154,17 +154,17 @@ function drawTpsHero(){if(!tpsOn())return;const o=tpsHero;o.slot=pl.slot||0;o.x=
 if(tpsD<0.9){const cp=Math.cos(pl.pitch);muz[0]=pl.x+Math.cos(pl.yaw)*0.3-Math.sin(pl.yaw)*cp;muz[1]=tpsEye[1]-0.2+Math.sin(pl.pitch);muz[2]=pl.z-Math.sin(pl.yaw)*0.3-Math.cos(pl.yaw)*cp;return}
 drawHero(o);muz[0]=o.gx;muz[1]=o.gy;muz[2]=o.gz;
 if(pl.sp===1){const s=0.3+pl.spT*1.2;bill(BURST,o.gx,o.gy,o.gz,s,now*20,C.cyan,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,s*0.5,-now*20,C.white,F_UNLIT|F_NOCAST)}}
-function setCamera(dt){if(gaCam()){}else if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
+function setCamera(dt){if((G.state==='menu'&&!gaDemo())||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
 else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
 cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2&&spLock()?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
 const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}
-const demo=G.state==='title'&&G.demoOn;
-if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){if(G.state==='title'){G.idle+=dt;if(G.idle>5)startWipe(demoStart)}gaUpdate(g);updateParts(g)}
-else if(!paused){const cli=isCli(),over=G.state==='over';
- if(demo){aiControl(Math.max(g,0.001));demoUpdate(g);updateItems(g)}
+const gd=gaDemoRun(),demo=(G.state==='title'&&G.demoOn)||gd,sv0=sndVol;
+if((G.state==='menu'&&!gd)||(G.state==='title'&&!G.demoOn)){if(G.state==='title'){G.idle+=dt;if(G.idle>5)startWipe(demoStart)}gaUpdate(g);updateParts(g)}
+else if(!paused){const cli=isCli(),over=G.state==='over';if(gd)sndVol=sv0*0.35;
+ if(demo){aiControl(Math.max(g,0.001));if(gd)gaDemoUpdate(g);else demoUpdate(g);updateItems(g)}
  else if(G.state==='play'){if(G.paused){inp.fire=false;inp.mx=inp.mz=0}else readInput();
   if(!cli){if(G.mode==='pvp'){G.tm-=dt;if(G.tm<=0||Math.max.apply(null,G.pk)>=10){G.state='clear';G.resT=0;musOn=0;snd('ui')}}else updateWaves(g);updateItems(g)}
   if(net.on&&net.host&&G.mode==='coop'&&pl.dead&&others.every(o=>o.dead)){G.allT+=dt;if(G.allT>1.5)gameOver()}else G.allT=0}
@@ -172,7 +172,7 @@ else if(!paused){const cli=isCli(),over=G.state==='over';
  if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0)G.kcT+=dt;if(G.kcT>=0||monkCine()){inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
  if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5),mk=boss&&boss.monk,drop=mk&&boss.st==='drop'&&boss.stT<1.9,tx=mk&&!drop?boss.x:0,tz=mk?(drop?-26:boss.z):-21,ty=mk?(drop?7:boss.y+4.5):20.6,dh=Math.hypot(pl.x-tx,pl.z-(mk?tz:-26));pl.yaw+=angDiff(Math.atan2(pl.x-tx,pl.z-tz),pl.yaw)*k;pl.pitch+=(Math.atan2(ty-1.6,dh)-pl.pitch)*k}
  updatePlayer(g);wpWorld(g);if(cli)clientInterp(g);else if(!over){updateEnemies(g);updateShots(g)}
- updateOthers(dt);if(!over){updateShocks(g);hazTick(g);pickItems(g)}updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}
+ updateOthers(dt);if(!over){updateShocks(g);hazTick(g);pickItems(g)}updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0;sndVol=sv0}
 netTick(dt);if(G.mode==='pvp'&&G.state==='play')G.kills=G.pk[pl.slot]||0;
 if(!boss)G.mood=Math.max(0,G.mood-dt*0.4);
 trauma=Math.max(0,trauma-dt*1.8);flashA=Math.max(0,flashA-dt*5);invA=Math.max(0,invA-dt*9);hurtA=Math.max(pl.hp<30&&G.state==='play'&&!pl.dead?0.3+0.12*Math.sin(now*7):0,hurtA-dt*2.2);lineA=Math.max(0,lineA-dt*3.5);

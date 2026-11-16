@@ -23,7 +23,7 @@ const dyaw=angDiff(wy,pl.yaw),dp=wp-pl.pitch,k=1-Math.exp(-dt*10);if(G.cine<=0){
 inp.fire=!!tgt&&Math.abs(dyaw)<0.09&&Math.abs(dp)<0.09;
 ai.stT-=dt;if(ai.stT<=0){ai.st=-ai.st;ai.stT=rnd(0.8,1.9)}let mx=ai.st*0.85,mz=0;const nd=tp?tp[3]:20;
 if(tgt&&tgt.type==='imp'||tgt&&tgt.type==='bru'){if(nd<7)mz=-1;else if(nd>13)mz=0.7}
-let cd=99;for(const e of enemies)if(e.type==='imp'||e.type==='bru')cd=Math.min(cd,Math.hypot(e.x-ox,e.z-oz));if(cd<5.5)mz=-1;
+let cd=99;for(const e of enemies)if(e.type==='imp'||e.type==='bru')cd=Math.min(cd,Math.hypot(e.x-ox,e.z-oz));if(cd<5.5)mz=-1;{const mk=wpW().kind;if(mk==='katana'||mk==='hammer')mz=nd>2.4?1:nd<1.4?-0.5:0}// melee weapons close in
 const sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw),wx=-sy*mz+cy*mx,wz=-cy*mz-sy*mx,nx=pl.x+wx*3,nz=pl.z+wz*3,lz0=boss?-7:-21;
 if(Math.abs(nx)>17||nz>18||nz<lz0){const cxv=-pl.x,czv=(boss?5:0)-pl.z,l=Math.hypot(cxv,czv)||1,tx=cxv/l,tz=czv/l;mx=tx*cy-tz*sy;mz=-tx*sy-tz*cy;ai.st=mx>0?1:-1;ai.stT=1}
 inp.mx=mx;inp.mz=mz;let dz_=false;
