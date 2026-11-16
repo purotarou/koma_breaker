@@ -6,8 +6,8 @@
 // He never speaks: only drawn sound effects.
 // Damage depends on where the shooter stands: front 3% (ガキン！), side 30%, back 100%. The bell on his back stops shots
 //   (no HP damage) but wears down (double while he is out of breath). The bell's durability at 0 or HP at half -> transformation (cutscene, both sides invincible).
-// Phase 1 (bell on the back): run -> stop, stomp x2 (ice), bell sound waves x3 (jump them). "stomp x2 -> waves x3 -> out of breath"
-//   happens half of the time. Every bell sound-wave volley (x3 / x4) ends in tired: he stands still and pants (7 s / 5.8 s in phase 2).
+// Phase 1 (bell on the back): run -> stop, stomp x2 (ice, no shock wave), a single bell sound wave (jump it) then a short stop.
+//   Half of the time stomp x2 is followed by waves x3. Every multi-wave volley (x3 / x4) ends in tired: he stands still and pants (7 s / 5.8 s in phase 2).
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
 // Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
@@ -89,7 +89,7 @@ if(free&&b.phase<2&&b.hp<b.mhp*0.5){monkTrans(b,0);return}
 if(b.st==='roar'){if(b.stT>1.5){b.st='idle';b.stT=0;b.cdT=0.4}return}
 if(b.st==='idle'){turn(T.x,T.z,6);if(b.stT>b.cdT){b.ti=null;const pat=p2?MK_P2:MK_P1;let m=pat[b.atk++%pat.length];if(m==='ring'&&!b.bell)m=pat[b.atk++%pat.length];
   b.stT=0;b.chain=0;b.sw=0;
-  if(m==='run'||m==='swing'){b.st='run';b.sw=m==='swing'?1:0;b.dur=(fast?rnd(0.9,1.2):p2?rnd(1.1,1.5):rnd(1.6,2.2))*(b.sw?1.8:1)}else if(m==='stomp')crouch();else if(m==='ring')ring(p2?4:3);else b.st='aim'}}
+  if(m==='run'||m==='swing'){b.st='run';b.sw=m==='swing'?1:0;b.dur=(fast?rnd(0.9,1.2):p2?rnd(1.1,1.5):rnd(1.6,2.2))*(b.sw?1.8:1)}else if(m==='stomp')crouch();else if(m==='ring')ring(p2?4:1);else b.st='aim'}}
 else if(b.st==='run'){turn(T.x,T.z,fast?6:p2?5:3);const sp=fast?12.5:p2?10.5:7.2,fx=Math.sin(b.yaw),fz=Math.cos(b.yaw);b.x+=fx*sp*dt;b.z+=fz*sp*dt;collide(b,MK_R);contact(14);
  const d=Math.hypot(T.x-b.x,T.z-b.z);
  if(b.sw&&(d<6||(b.stT>b.dur&&d<10))){b.st='swing';b.stT=0;b.k=0;b.yaw=mkFace(b,T.x,T.z)}else if(!b.sw&&d<3.4)crouch();else if(b.stT>b.dur)toStop(fast?0.45:p2?0.55:1.0)}
@@ -99,7 +99,7 @@ else if(b.st==='air'){const D=fast?0.52:p2?0.6:0.85,u=Math.min(1,b.stT/D);b.x=le
 else if(b.st==='land'){if(b.stT>(p2?0.18:0.3)){if(b.chain<(p2?2:1)){b.chain++;crouch()}
   else if(!p2&&b.bell&&Math.random()<0.5){b.cmb=1;ring(3)}else toStop(p2?0.5:0.9)}}
 else if(b.st==='ring'){turn(T.x,T.z,2);if(b.k<b.n&&b.stT>=0.72+b.k*0.9){b.k++;ev('mring',r1(b.x),r1(b.z))}
- if(b.stT>0.72+(b.n-1)*0.9+0.75){tired(p2?5.8:7)}}
+ if(b.stT>0.72+(b.n-1)*0.9+0.75){{if(b.n===1)toStop(1.2);else tired(p2?5.8:7)}}}
 else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?1:-1,a=mkW(b,s*1.35,0,1.6),c=mkW(b,s*1.35,0,6.2),w=mkW(b,s*1.35,0,4.6);
    for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<1.5&&p.y<2.2)hurtT(p,22,w[0],w[2])}
    ev('mslam',r1(w[0]),r1(w[2]))}};sl(0,0.6);sl(1,1.15);if(b.stT>1.75)toStop(0.5)}
@@ -167,7 +167,7 @@ function monkBars(){if(!monkCine())return 0;const t=boss.stT;return 58*(t<2.4?ea
 Object.assign(FXE,{
 mland(x,z,p2,intro){explode(x,0.6,z,intro?2.6:1.8,{ink:1,text:intro?'ズドォォン！！':'ドスン！'});fxRing(x,0.1,z,intro?16:11,C.white,0.4);fxSmoke(x,0.3,z,10,2.5,C.snow,6);fxDebris(x,0.4,z,8,8,C.snow,0.5);
  decals.push({x,z,r:intro?5:4,life:6});shake(intro?1:0.6);snd('boom',intro?1:0.7);
- if(!intro){shocks.push({x,z,r:3.6,v:13,max:p2?17:20,d:12,hit:false,mk:1});ices.push({x,z,r:p2?3.4:4.2,life:1})}},
+ if(!intro){if(p2)shocks.push({x,z,r:3.6,v:13,max:17,d:12,hit:false,mk:1});ices.push({x,z,r:p2?3.4:4.2,life:1})}},
 mring(x,z){snd('gong');fxRing(x,4,z,10,C.yellow,0.5);fxRing(x,0.2,z,14,C.gold,0.6);shake(0.5);sfxAt('ゴォォォン！',x,8,z,{size:96,st:'boom',life:0.8,grow:0.14});
  shocks.push({x,z,r:1.4,v:15,max:24,d:14,hit:false,mk:1},{x,z,r:-3.6,v:15,max:24,d:14,hit:false,mk:1})},
 mslam(x,z){explode(x,0.5,z,1.3,{ink:1,quiet:1});fxRing(x,0.1,z,6,C.white,0.3);fxDebris(x,0.4,z,6,7,C.snow,0.4);decals.push({x,z,r:2.6,life:5});shake(0.45);snd('boom',0.6);
