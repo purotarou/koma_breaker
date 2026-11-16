@@ -6,7 +6,7 @@
 // He never speaks: only drawn sound effects.
 // Damage depends on where the shooter stands: front 3% (ガキン！), side 30%, back 100%. The bell on his back stops shots
 //   (no HP damage) but wears down (double while he is out of breath). The bell's durability at 0 or HP at half -> transformation (cutscene, both sides invincible).
-// Phase 1 (bell on the back): run -> stop, stomp x2 (ice, no shock wave), a single bell sound wave (jump it) then a short stop.
+// Phase 1 (bell on the back): run -> stop, stomp x2 (ice; no shock wave in either phase), a single bell sound wave (jump it) then a short stop.
 //   Half of the time stomp x2 is followed by waves x3. Every multi-wave volley (x3 / x4) ends in tired: he stands still and pants (7 s / 5.8 s in phase 2).
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
@@ -167,7 +167,7 @@ function monkBars(){if(!monkCine())return 0;const t=boss.stT;return 58*(t<2.4?ea
 Object.assign(FXE,{
 mland(x,z,p2,intro){explode(x,0.6,z,intro?2.6:1.8,{ink:1,text:intro?'ズドォォン！！':'ドスン！'});fxRing(x,0.1,z,intro?16:11,C.white,0.4);fxSmoke(x,0.3,z,10,2.5,C.snow,6);fxDebris(x,0.4,z,8,8,C.snow,0.5);
  decals.push({x,z,r:intro?5:4,life:6});shake(intro?1:0.6);snd('boom',intro?1:0.7);
- if(!intro){if(p2)shocks.push({x,z,r:3.6,v:13,max:17,d:12,hit:false,mk:1});ices.push({x,z,r:p2?3.4:4.2,life:1})}},
+ if(!intro){ices.push({x,z,r:p2?3.4:4.2,life:1})}},
 mring(x,z){snd('gong');fxRing(x,4,z,10,C.yellow,0.5);fxRing(x,0.2,z,14,C.gold,0.6);shake(0.5);sfxAt('ゴォォォン！',x,8,z,{size:96,st:'boom',life:0.8,grow:0.14});
  shocks.push({x,z,r:1.4,v:15,max:24,d:14,hit:false,mk:1},{x,z,r:-3.6,v:15,max:24,d:14,hit:false,mk:1})},
 mslam(x,z){explode(x,0.5,z,1.3,{ink:1,quiet:1});fxRing(x,0.1,z,6,C.white,0.3);fxDebris(x,0.4,z,6,7,C.snow,0.4);decals.push({x,z,r:2.6,life:5});shake(0.45);snd('boom',0.6);
