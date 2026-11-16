@@ -104,8 +104,8 @@ else if(b.st==='land'){if(b.stT>(p2?0.18:0.3)){if(b.chain<(p2?2:1)){b.chain++;cr
   else if(!p2&&b.bell&&Math.random()<0.5){b.cmb=1;ring(3)}else toStop(p2?0.5:0.9)}}
 else if(b.st==='ring'){turn(T.x,T.z,2);const w0=mkW0(b);if(b.k<b.n&&b.stT>=w0+b.k*0.9){b.k++;ev('mring',r1(b.x),r1(b.z))}
  if(b.stT>w0+(b.n-1)*0.9+0.75){{if(b.n===1)toStop(1.2);else tired(p2?5.8:7)}}}
-else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?b.sl2:-1.35,a=mkW(b,s,0,1.6),c=mkW(b,s,0,6.2),w=mkW(b,s,0,4.6),co=Math.cos(b.yaw),si=Math.sin(b.yaw);
-   for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<1.5&&p.y<2.2){hurtT(p,22,w[0],w[2],MK_FRZ);
+else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?b.sl2:-1.35,a=mkW(b,s,0,1.2),c=mkW(b,s,0,6.6),w=mkW(b,s,0,4.6),co=Math.cos(b.yaw),si=Math.sin(b.yaw);
+   for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<2.5&&p.y<2.6){hurtT(p,22,w[0],w[2],MK_FRZ);
     if(!i)b.sl2=clamp(((p.x-b.x)*co-(p.z-b.z)*si)/b.sc,-2.4,2.4)}}
    ev('mslam',r1(w[0]),r1(w[2]))}};sl(0,0.6);sl(1,1.15);if(b.stT>1.75)toStop(0.5)}
 else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=Math.sin(b.yaw);b.dz=Math.cos(b.yaw)}}
@@ -226,7 +226,7 @@ if(b.st==='ring'&&b.stT<mkW0(b)&&Math.sin(b.t*(b.stT>mkW0(b)-0.4?40:14))>-0.3){p
 if(b.st==='aim'){const fx=Math.sin(b.yaw),fz=Math.cos(b.yaw),a=sat(b.stT/0.25);for(let i=1;i<8;i++){const d=MK_R+i*2.2;put(PYR,b.x+fx*d,0.14,b.z+fz*d,PI/2,b.yaw,0,1.6*a,0.8,1.0,C.red,0,0,NF)}}
 // striker slam bands: right (hits at 0.6 s), then left (1.15 s); they blink faster just before the hit
 if(b.st==='swing')for(let i=0;i<2;i++){const th=i?1.15:0.6,k=th-b.stT;if(k<0||k>0.75||(k<0.3&&Math.sin(b.t*40)<0))continue;const c=mkW(b,i?(b.sl2||1.35):-1.35,0,3.9);
- put(BOX,c[0],0.14,c[2],0,b.yaw,0,2.6,0.02,4.6*S,C.red,0,0,NF)}
+ put(BOX,c[0],0.14,c[2],0,b.yaw,0,4.6,0.02,5.4*S,C.red,0,0,NF)}
 if(b.bell2)drawFallenBell(b.bell2);drawIces()}
 function drawFallenBell(c){mPush();mT(c.x0,c.y,c.z0);mRY(c.yaw);mRX(c.tilt);mS(MK_SC,MK_SC,MK_SC);gId=nid();
 if(MONK.ready)for(const it of MONK.Bell.items)emit(it.pi,it.c,it.mat,it.gloss,it.fl,it.rim);else sph(0,1.3,0,1.8,2.6,1.8,C.gold);gId=0;
