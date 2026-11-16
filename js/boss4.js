@@ -7,12 +7,12 @@
 // Damage depends on where the shooter stands: front 3% (ガキン！), side 30%, back 100%. The bell on his back stops shots
 //   (no HP damage) but wears down (double while he is out of breath). The bell's durability at 0 or HP at half -> transformation (cutscene, both sides invincible).
 // Phase 1 (bell on the back): run -> stop, stomp x2 (ice; no shock wave in either phase), a single bell sound wave (jump it) then a short stop.
-//   Half of the time stomp x2 is followed by waves x3. Every multi-wave volley (x3 / x4) ends in tired: he stands still and pants (7 s / 5.8 s in phase 2).
+//   Half of the time stomp x2 is followed by waves x3. Every multi-wave volley (x3 / x4) ends in tired: he stands still and pants (5 s / 3.8 s in phase 2).
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
 // Striker slams freeze the player hit (MK_FRZ s) and the second slam re-aims at them (b.sl2), so it always lands.
 // Every charge ends straight in the striker slams, no stop (phase 2; the slams make no shock wave). The hero says the bell fell once it lands. Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
-// Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (9 s) (a wall only ends the charge).
+// Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (7 s) (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
 const MK_FRZ=1.0,MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_BIG=1.15,MK_TF=3.0;
@@ -31,7 +31,7 @@ for(const ni of J.scenes[J.scene||0].nodes){const o=mk(ni);if(o.name==='Boss4_Ro
 MONK.ready=!!(MONK.root&&MONK.Bell)}
 
 // ---------------- state ----------------
-function mkMonk(id){const k=1+0.8*(G.np-1),hp=(G.demoOn?2600:3400)*k,bh=2400*(1+0.6*(G.np-1));
+function mkMonk(id){const k=1+0.8*(G.np-1),hp=(G.demoOn?4200:5500)*k,bh=4000*(1+0.6*(G.np-1));
 return{id,type:'boss',monk:1,x:0,y:0,z:-42,yaw:0,t:0,st:'drop',stT:0,flash:0,bflash:0,dead:false,seed:1,mine:-9,hp,mhp:hp,phase:1,bhp:bh,bmax:bh,bell:1,tfB:0,
  atk:0,cdT:0.6,tx:0,tz:-18,ax:0,az:-42,chain:0,n:0,k:0,cmb:0,sw:0,dx:0,dz:1,dur:0,wp:0,wa:0,px:0,pz:-42,ti:null,r:MK_R,bell2:null,
  sc:MK_SC,open:0,cue:0,lst:'',yo:0,hx:0,hL:{x:0,y:0,z:0},hR:{x:0,y:0,z:0},ah:-1,mouth:0}}
@@ -103,7 +103,7 @@ else if(b.st==='air'){const D=fast?0.52:p2?0.6:0.85,u=Math.min(1,b.stT/D);b.x=le
 else if(b.st==='land'){if(b.stT>(p2?0.18:0.3)){if(b.chain<(p2?2:1)){b.chain++;crouch()}
   else if(!p2&&b.bell&&Math.random()<0.5){b.cmb=1;ring(3)}else toStop(p2?0.5:0.9)}}
 else if(b.st==='ring'){turn(T.x,T.z,2);const w0=mkW0(b);if(b.k<b.n&&b.stT>=w0+b.k*0.9){b.k++;ev('mring',r1(b.x),r1(b.z))}
- if(b.stT>w0+(b.n-1)*0.9+0.75){{if(b.n===1)toStop(1.2);else tired(p2?5.8:7)}}}
+ if(b.stT>w0+(b.n-1)*0.9+0.75){{if(b.n===1)toStop(1.2);else tired(p2?3.8:5)}}}
 else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?b.sl2:-1.35,a=mkW(b,s,0,1.2),c=mkW(b,s,0,6.6),w=mkW(b,s,0,4.6),co=Math.cos(b.yaw),si=Math.sin(b.yaw);
    for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<2.5&&p.y<2.6){hurtT(p,22,w[0],w[2],MK_FRZ);
     if(!i)b.sl2=clamp(((p.x-b.x)*co-(p.z-b.z)*si)/b.sc,-2.4,2.4)}}
@@ -112,7 +112,7 @@ else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=M
 else if(b.st==='charge'){const ox=b.x,oz=b.z,sp=fast?23:21;b.x+=b.dx*sp*dt;b.z+=b.dz*sp*dt;collide(b,MK_R);contact(20);
  if(lim('mkdust',0.06))fxSmoke(b.x,0.3,b.z,1,1.2,C.snow,2);
  const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>{b.yaw=mkFace(b,T.x,T.z);swing()},c=b.bell2;
- if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(9);else end()}else if(b.stT>1.05)end()}
+ if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(7);else end()}else if(b.stT>1.05)end()}
 else if(b.st==='tired'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
 else if(b.st==='stop'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}
 
