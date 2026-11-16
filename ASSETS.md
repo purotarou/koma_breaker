@@ -16,13 +16,14 @@
 | `assets/stage_inkpond.glb` | 上記を書き出したゲーム用モデル | `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `blender/boss_monk.blend` | 4面ボス「鐘の僧」（僧・鐘・撞木）の元データ | 本プロジェクトで自作。ユーザー提供の設定画（僧・鐘・撞木の3枚）を見ながら Blender の Python で形を組んだもの。画像そのものは使っていない | 自作（第三者素材なし） |
 | `assets/boss_monk.glb` | 上記を書き出したゲーム用モデル | `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
-| `blender/weapons.blend` | 武器6種（連珠銃・散華砲・迅雷砲・祓い刀・火消しの大槌・焙烙火矢）の元データ。武器ごとに別シーン | 本プロジェクトで自作。ユーザー提供の設定画6枚を見ながら、`tools/weapons/*.py`（Blender の Python）で形を組んだもの。画像そのものは使っていない | 自作（第三者素材なし） |
+| `blender/weapons.blend` | 武器6種（連珠銃・散華砲・氷魄砲・祓い刀・火消しの大槌・焙烙火矢）の元データ。武器ごとに別シーン | 本プロジェクトで自作。ユーザー提供の設定画6枚を見ながら、`tools/weapons/*.py`（Blender の Python）で形を組んだもの。画像そのものは使っていない | 自作（第三者素材なし） |
 | `assets/weapon_rifle.glb` | 連珠銃（アサルト） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_shotgun.glb` | 散華砲（桜のショットガン） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
-| `assets/weapon_railgun.glb` | 迅雷砲（氷のレールガン） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/weapon_railgun.glb` | 氷魄砲（氷のレールガン） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_katana.glb` | 祓い刀 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_hammer.glb` | 火消しの大槌 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_bomb.glb` | 焙烙火矢（ボム） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `assets/gacha/weapon_*.webp`（6枚） | 武器ガチャ用のサムネ画像（武器6種の設定画。対応表は `GACHA_WEAPONS.md`） | ユーザー提供の画像（生成方法・ライセンスは未確認。公開前に確認する） | **未確認** |
 | `blender/src/komabure_chara_kakeru.glb` | 主人公カケルの元モデル（Tripo の出力そのまま。12部品に分割済み、テクスチャ付き） | ユーザーが Tripo AI で生成（2026-11-16、**有料プラン**で生成） | Tripo の公式ヘルプ（https://www.tripo3d.ai/help/privacy-policy/can-i-use-models-commercially ）によると、有料プランで生成したモデルは商用利用・改変・配布ができる。表記義務の記載は見当たらない。ただし利用規約の原文そのものは未確認（公式ヘルプとブログの記述に基づく）。無料プランはモデルの権利の扱いが異なるので、無料で作ったモデルは使わない |
 | `blender/hero_kakeru.blend` | 主人公カケルのゲーム用元データ | 上記を Blender に取り込み、穴のない1つの形に作り直して減面（約8,000三角面）・新しい UV に元のテクスチャを焼き付け・16本の骨を入れたもの | 上記と同じ（Tripo 有料プランの生成物） |
 | `blender/hero_kakeru_tex.png` | 主人公カケルのテクスチャ（1024px） | 上記の元モデルのテクスチャを焼き付け直し、上着のテカリを塗り直したもの | 上記と同じ（Tripo 有料プランの生成物） |
