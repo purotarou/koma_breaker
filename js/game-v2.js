@@ -1,6 +1,6 @@
 'use strict';
 // ================= GAME FLOW (v2) =================
-function resetWorld(){enemies.length=0;ices.length=0;templeDoor.t=templeDoor.target=0;G.kcP=null;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
+function resetWorld(){enemies.length=0;ices.length=0;templeDoor.t=templeDoor.target=0;G.kcP=null;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.bHurt=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
 function beginGame(){setStage(G.stage);resetWorld();pl.slot=net.on?net.slot:0;const pvp=G.mode==='pvp',sp=pvp?PSPAWN[pl.slot]:SPAWN[pl.slot];resetPlayer(sp[0],sp[1],pvp?Math.atan2(sp[0],sp[1]+2):0);
 for(const o of others){const s=pvp?PSPAWN[o.slot]:SPAWN[o.slot];o.x=o.nx=s[0];o.z=o.nz=s[1];o.dead=false;o.hp=100;o.y=o.ny=0}
 Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0,rew:null});

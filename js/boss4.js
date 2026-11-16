@@ -58,7 +58,7 @@ function onIce(x,z){for(const i of ices)if(Math.hypot(x-i.x,z-i.z)<i.r*Math.min(
 
 // ---------------- damage ----------------
 // a shot / beam hit the bell (local player): the bell stops it (no HP damage) but wears down. Clients send it to the host as damage to -id.
-function monkBellHit(b,dmg,hx,hy,hz,quiet){dmg*=SK.atk;if(!b.bell||b.st==='drop'||b.st==='die'||b.st==='trans'||b.st==='boff')return;b.bflash=0.07;hitMark=0.1;hitCrit=false;
+function monkBellHit(b,dmg,hx,hy,hz,quiet){dmg*=skAtk();if(!b.bell||b.st==='drop'||b.st==='die'||b.st==='trans'||b.st==='boff')return;b.bflash=0.07;hitMark=0.1;hitCrit=false;
 if(!quiet){fxSparks(hx,hy,hz,6,7,C.gold);fxStar(hx,hy,hz,1.2,C.yellow,0.08);snd('clank');addGauge(1);if(lim('bellT',0.3))sfxAt(pick(['カァン！','ガィン！','キィン！']),hx,hy+1,hz,{size:46,st:'fire',life:0.3})}
 if(isCli()){net.dacc[-b.id]=(net.dacc[-b.id]||0)+dmg;return}monkBell(b,dmg)}
 function monkClank(b,hx,hy,hz){fxSparks(hx,hy,hz,4,6,C.white);snd('clank');if(lim('clankT',0.5))sfxAt('ガキン！',hx,hy+1,hz,{size:40,st:'ink',life:0.3})}
