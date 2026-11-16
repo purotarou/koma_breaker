@@ -129,9 +129,14 @@ function tpsSet(v){SET.view=v;tpsD=0.2;tpsS=0;applySet();snd('ui')}
 function tpsToggle(){SET.view=((SET.view|0)+1)%3;tpsD=0.2;tpsS=0;applySet();snd('ui')}
 function tpsCam(dt){const ex=cam.x,ey=cam.y,ez=cam.z,cp=Math.cos(cam.pitch),fx=-Math.sin(cam.yaw)*cp,fy=Math.sin(cam.pitch),fz=-Math.cos(cam.yaw)*cp,rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
 tpsEye[0]=ex;tpsEye[1]=ey;tpsEye[2]=ez;
-// second person (SET.view=2): the camera stands in front of the hero and looks back at them; aiming is still by pl.yaw / pl.pitch
-if(SET.view===2){const D2=3.2;let d=rayWorld(ex,ey,ez,fx,fy,fz,D2+TPS_PAD)-TPS_PAD;d=clamp(d,0.12,D2);tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
- const cx=ex+fx*tpsD,cy=ey+fy*tpsD,cz=ez+fz*tpsD,tx=ex,ty=ey-0.15,tz=ez,dx=tx-cx,dy=ty-cy,dz=tz-cz;cam.x=cx;cam.y=Math.max(0.2,cy);cam.z=cz;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(ty-cam.y,Math.hypot(dx,dz));cam.roll=0;return}
+// second person (SET.view=2): the camera stands in front of the hero and looks back at them; aiming is still by pl.yaw / pl.pitch.
+// The orbit uses pl.yaw / a damped pl.pitch (not cam.*, which carries recoil and shake: those would swing the camera 3 m away),
+// so looking down does not drop the camera under the hero and looking up does not put it overhead. Shake is added to the view angles.
+// During the boss intro (G.cine) it falls back to the over-the-shoulder camera so the boss stays in shot.
+if(SET.view===2&&!(G.cine>0)){const D2=3.2,s=trauma*trauma,op=clamp(pl.pitch*0.45,-0.35,0.55),oc=Math.cos(op),gx=-Math.sin(pl.yaw)*oc,gy=Math.sin(op),gz=-Math.cos(pl.yaw)*oc;
+ let d=rayWorld(ex,ey,ez,gx,gy,gz,D2+TPS_PAD)-TPS_PAD;if(gy<-0.01)d=Math.min(d,(ey-0.4)/-gy);d=clamp(d,0.12,D2);tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
+ const cx=ex+gx*tpsD,cy=Math.max(0.3,ey+gy*tpsD),cz=ez+gz*tpsD,dx=ex-cx,dy=ey-0.15-cy,dz=ez-cz;cam.x=cx;cam.y=cy;cam.z=cz;
+ cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.04;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.04;cam.roll=rnd(-1,1)*s*0.05;return}
 // shoulder offset: shrinks when a wall is right beside the hero
 // (and moves further out to the side while the boom is pulled in, so the hero blocks less of the view)
 const sw=TPS_SH+0.35*sat(1-tpsD/TPS_D),sh=clamp(rayWorld(ex,ey,ez,rx,0,rz,sw+TPS_PAD)-TPS_PAD,0,sw);tpsS=sh<tpsS?sh:lerp(tpsS,sh,Math.min(1,dt*3));
