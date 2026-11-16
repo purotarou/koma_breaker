@@ -272,8 +272,8 @@ mPop();curLayer=1;return true}
 const KH_I=[-0.17,1.2,0.3,0.3,0.95],KH_A=[[0,KH_I],[0.07,[-0.36,1.55,0.08,1.7,0.7]],[0.18,[0.2,1.06,0.36,-1.5,-0.35]],[0.42,[0.18,1.08,0.34,-1.4,-0.3]],[0.65,KH_I]],
 KH_B=[[0,KH_I],[0.07,[0.12,1.55,0.15,-1.5,0.7]],[0.18,[-0.32,1.06,0.36,1.5,-0.35]],[0.42,[-0.3,1.08,0.34,1.4,-0.3]],[0.65,KH_I]],
 KH_S=[[0,KH_I],[0.2,[-0.4,1.35,-0.05,2.3,0.15]],[0.32,[0.33,1.3,0.25,-2.0,0]],[0.75,[0.31,1.3,0.25,-1.9,0]],[1,KH_I]],
-HH_I=[-0.2,1.18,0.28,0.35,1.95],HH_R=[-0.1,1.72,0.12,0.15,2.45],HH_D=[-0.04,1.02,0.42,0.05,-0.8],
-HH_S=[[0,HH_R],[0.12,HH_D],[0.45,HH_D],[0.8,HH_I]],HH_SP=[[0,HH_I],[0.3,HH_R],[0.4,[-0.08,1.8,0.08,0.1,2.6]],[0.47,HH_D],[0.95,HH_D],[1.3,HH_I]],
+HH_I=[-0.24,1.15,0.3,0.5,1.3],HH_R=[-0.18,1.8,0.15,-0.2,2.2],HH_D=[-0.04,1.02,0.42,0.05,-0.8],
+HH_S=[[0,HH_R],[0.12,HH_D],[0.45,HH_D],[0.8,HH_I]],HH_SP=[[0,HH_I],[0.3,HH_R],[0.4,[-0.2,1.88,0.12,-0.25,2.35]],[0.47,HH_D],[0.95,HH_D],[1.3,HH_I]],
 HB_I=[-0.27,1.22,0.3],HB_T=[[0,HB_I],[0.16,[-0.33,1.78,-0.2]],[0.27,[-0.12,1.62,0.5]],[0.5,[-0.04,1.15,0.4]],[0.85,HB_I]];
 // body twist / bend for the swing (before heroGlobals)
 function wpHeroBody(o,wp){const k=WPN[wp].kind,at=o.at==null?9:o.at,ak=o.ak|0;let tw=0,bd=0;
@@ -343,15 +343,17 @@ B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});
 B(X+PW-300,628,300,62,!ok?'未入手':isEq?'装備中':'装備する',()=>{if(ok&&!isEq){WS.eq=w.id;wsSave();snd('item');eqPop=now}},{col:!ok?'#d8d8e0':isEq?'#ffd91a':'#ff4a3d',tc:ok&&!isEq?'#fff':INK,size:30});
 if(now-eqPop<0.7){const u=now-eqPop,k=easeBack(sat(u/0.15));ctx.save();ctx.globalAlpha=sat((0.7-u)/0.2);ctx.translate(X+PW-150,612);ctx.rotate(-0.1);ctx.scale(k*0.7,k*0.7);burstPath(4,5,120,44,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,120,44,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('装備！',0,2,44,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
 // 3D preview inside the equip window (camera space, layer 2): a light backdrop and the weapon turning slowly
-// largest half-extents on screen (x, y) of the centred box over every angle the preview turns through (cached per weapon)
+// largest scale that keeps the centred box inside the window over every angle the preview turns through, with perspective (cached per weapon and screen)
 const WFIT={};
-function wpFit(w,mn,mx){if(WFIT[w.id])return WFIT[w.id];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=8;k++)rots.push([PI/2+0.4*Math.sin(k/8*TAU),0.15]);
-let X=0.01,Y=0.01;for(const[ry,rx]of rots){const cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);for(let k=0;k<8;k++){const p=[(k&1?mx[0]:mn[0])-c[0],(k&2?mx[1]:mn[1])-c[1],(k&4?mx[2]:mn[2])-c[2]],y1=p[1]*cx-p[2]*sx,z1=p[1]*sx+p[2]*cx,x2=p[0]*cy+z1*sy;X=Math.max(X,Math.abs(x2));Y=Math.max(Y,Math.abs(y1))}}
-if(w.file&&WMOD[w.id])WFIT[w.id]=[X,Y];return[X,Y]}
+function wpFit(w,mn,mx,cx,cy,hw,hh,D){const key=w.id+'|'+W+'|'+H;if(WFIT[key])return WFIT[key];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[],pts=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=16;k++)rots.push([PI/2+0.4*Math.sin(k/16*TAU),0.15]);
+for(const[ry,rx]of rots){const cyr=Math.cos(ry),syr=Math.sin(ry),cxr=Math.cos(rx),sxr=Math.sin(rx);for(let k=0;k<8;k++){const p=[(k&1?mx[0]:mn[0])-c[0],(k&2?mx[1]:mn[1])-c[1],(k&4?mx[2]:mn[2])-c[2]],y1=p[1]*cxr-p[2]*sxr,z1=p[1]*sxr+p[2]*cxr;pts.push([p[0]*cyr+z1*syr,y1,-p[0]*syr+z1*cyr])}}
+const ok=sc=>pts.every(([x,y,z])=>[z,-z].every(z=>{const d=D-sc*z;return d>0.05&&Math.abs((cx*D+sc*x)/d-cx)<=hw*0.86&&Math.abs((cy*D-0.02+sc*y)/d-cy)<=hh*0.8}));
+let lo=0,hi=8;for(let k=0;k<30;k++){const m=(lo+hi)/2;if(ok(m))lo=m;else hi=m}
+if(!w.file||WMOD[w.id])WFIT[key]=lo;return lo}
 function wpPreview(){if(G.state!=='menu'||G.menu!=='equip')return;const i=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[i],ok=wpOwn(i);curLayer=2;mPush();M.set(CAMW);
 const tn=Math.tan(cam.fov/2),asp=W/H,D=1.3,cx=((EQ.px+EQ.pw/2)/W*2-1)*tn*asp,cy=(1-(EQ.py+EQ.ph/2)/H*2)*tn,hw=EQ.pw/W*tn*asp,hh=EQ.ph/H*tn,D2=D*1.5;
 mPush();mT(cx*D2,cy*D2,-D2);mS(hw*2*D2+0.06,hh*2*D2+0.06,1);emit(QUAD,ok?w.bg:[.78,.8,.88],0,0,F_UNLIT|F_NOCAST,0);mPop();
-mT(cx*D,cy*D-0.02,-D);const md=w.file&&WMOD[w.id],mn=md?md.mn:[-0.08,-0.19,-0.63],mx=md?md.mx:[0.08,0.12,0.12],ex=wpFit(w,mn,mx),sc=Math.min(hw*D*0.86/ex[0],hh*D*0.8/ex[1]);
+mT(cx*D,cy*D-0.02,-D);const md=w.file&&WMOD[w.id],mn=md?md.mn:[-0.08,-0.19,-0.63],mx=md?md.mx:[0.08,0.12,0.12],sc=wpFit(w,mn,mx,cx,cy,hw,hh,D);
 if(w.kind==='bomb')mRY(now*0.8);else{mRY(PI/2+0.4*Math.sin(now*0.7));mRX(0.15)}mS(sc,sc,sc);mT(-(mn[0]+mx[0])/2,-(mn[1]+mx[1])/2,-(mn[2]+mx[2])/2);
 if(md)wpModel(i,ok?null:C.inkD);else if(!w.file){if(ok)drawYoGun(0,1);else{mPush();drawYoGun(0,0);mPop()}}
 mPop();curLayer=1}
