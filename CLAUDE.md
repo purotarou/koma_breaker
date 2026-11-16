@@ -24,6 +24,10 @@
   - ゲーム側は `js/weapons.js`（性能表 `WPN`、通常攻撃・必殺、1人称の持ち方 `wpView`、主人公の持ち方と振り `wpHeroBody` / `wpHeroArms`、装備画面 `drawEquip` と立体プレビュー `wpPreview`）。妖弾銃は今まで通りコードの箱の銃。装備は1つだけで、メインメニュー／ロビーの「装備」から選ぶ（localStorage の `koma_wpn`）。6種は今後実装するガチャで排出（所持は `WS.own[武器ID]`、ガチャは `wsGive(id)` で付与。ステージクリアでは手に入らない）、開発者メニューの「超強化」(DEV) が ON の間は全部選べる。対戦でも装備した武器を使う。
   - 弾数・装填・連射の数値は `skApply()` の最後で `wpApply()` が SK に掛ける（弾を使う武器だけ）。必殺の長さは `spDur()`。主人公の動作は `pl.ak`（1・2=刀の斬り、3=大槌の溜め、4=振り下ろし、5=投げ、6=大玉の投げ、7=一閃、8=駒砕き）と `pl.at`（経過秒）で、通信では `pl.an`（動作の通し番号）と一緒に送り、他の人の画面で同じ振りを再生する。爆弾・斬撃の波・大槌の衝撃は `net.q.wx` の見た目だけのイベント、凍結・怯み・ボスの鈍化は `net.q.ef` でホストに送る。
   - `?hero=1&wp=N&act=1` で、武器 N（`WPN` の番号）を持った主人公4人が攻撃を繰り返す（持ち方の確認用）。
+- **最終ボス「白抜魔王シロヌキ」第3形態（未着手）**: 元モデルは `blender/src/komabure_chara_last_boss3.glb`（本体。14部品・テクスチャ付き）と `..._sword_right.glb` / `..._sword_left.glb`（両手の剣）。出どころ・ライセンスは未確認（`ASSETS.md`）。
+  - 作業は Blender MCP を使うので**手元（Mac）のセッションで行う**（クラウドでは Blender を動かせない）。
+  - 方式は未決定。案A: 鐘の僧と同じ「部品ごとに別ノード・単色の材質・コードで動かす」（`blender/boss_monk.blend` → `tools/blender_export_stage.py` → `js/boss4.js` の作り方を参考に。輪郭線・トーンになじみやすく早い）。案B: 主人公と同じ「テクスチャ＋骨（CPU スキニング）」（`js/hero.js`、スキル `add-character` の手順を参考に）。決める前にユーザーに確認する。
+  - 5面の最終ボスは今は旧魔王の代役（`players.js` の `spawnBoss`、`G.stage>=4`）。第1・第2形態のモデルはまだ無い。STORY.md 5 の「5面の3段階（案）」が設計の元。
 - **新しい操作キャラを入れるときは先にスキル `add-character`（`.claude/skills/add-character/SKILL.md`）を読む**（手順・つまずき・確認の仕方・複数キャラにするときの注意）。
 - 主人公カケル: Tripo で生成した `blender/src/komabure_chara_kakeru.glb` → `blender/hero_kakeru.blend` → `tools/blender_export_hero.py` で `assets/hero_kakeru.glb`（+ `.glb.js`）。**主人公だけはテクスチャと骨（スキニング）を使う**（ほかのモデルは今まで通り単色・骨なし）。
   - .blend の中身: `KK_Source`（Tripo の12部品をつないだもの。焼き付けの元、非表示）、`KK_Hero`（厚み付け＋ボクセル再構成で穴のない1つの形にして約8,000三角面に減面。UV は新しく作り、顔の部分を大きめに取ってある）、`KK_Rig`（16本の骨: hips / spine / chest / head、upperarm・forearm・hand、thigh・shin・foot の左右。自動の重み付け）。身長2.0、前が -Y、キャラの右が -X。
