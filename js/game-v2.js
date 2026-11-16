@@ -37,7 +37,7 @@ function tEnd(e){e.preventDefault();for(const t of e.changedTouches){const id=t.
 for(const el of[stageEl]){el.addEventListener('touchstart',tStart,{passive:false});el.addEventListener('touchmove',tMove,{passive:false});el.addEventListener('touchend',tEnd,{passive:false});el.addEventListener('touchcancel',tEnd,{passive:false})}
 document.addEventListener('gesturestart',e=>e.preventDefault());
 uic.addEventListener('mousedown',e=>{if(touchMode)return;const p=evPos(e);if(layEdit){layDown(p,'m');return}if(skTouch('d',p,'m')){audioInit();return}if(G.state!=='play'||G.paused){tap(p);return}audioInit();if(hitBtn(p))return;if(document.pointerLockElement!==uic){try{uic.requestPointerLock()}catch(er){}}if(e.button===0)mouseFire=true;else if(e.button===2)inp.special=true});
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Escape'&&setOpen){if(layEdit){layEdit=false;layDrag=null;applySet()}else setOpen=false;return}if(G.state==='title'){if(e.code==='Enter'||e.code==='Space')tap(null)}else if(G.state==='play'){if(e.code==='Space')inp.jump=true;if(e.code==='ShiftLeft'||e.code==='ShiftRight')inp.dash=true;if(e.code==='KeyE'||e.code==='KeyQ')inp.special=true;if(e.code==='KeyR')inp.reload=true;if(e.code==='KeyP'||e.code==='Escape')G.paused=!G.paused}
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Escape'&&setOpen){if(layEdit){layEdit=false;layDrag=null;applySet()}else setOpen=false;return}if(G.state==='title'){if(e.code==='Enter'||e.code==='Space')tap(null)}else if(G.state==='play'){if(e.code==='Space')inp.jump=true;if(e.code==='ShiftLeft'||e.code==='ShiftRight')inp.dash=true;if(e.code==='KeyE'||e.code==='KeyQ')inp.special=true;if(e.code==='KeyR')inp.reload=true;if(e.code==='KeyV')tpsToggle();if(e.code==='KeyP'||e.code==='Escape')G.paused=!G.paused}
 else if(G.state==='menu'&&G.menu==='join'){if(/^Digit\d$/.test(e.code)&&net.input.length<5)net.input+=e.code[5];if(e.code==='Backspace')net.input=net.input.slice(0,-1)}if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault()});
 function readInput(){let mx=touch.dx,mz=-touch.dy;if(keys.KeyW||keys.ArrowUp)mz+=1;if(keys.KeyS||keys.ArrowDown)mz-=1;if(keys.KeyD||keys.ArrowRight)mx+=1;if(keys.KeyA||keys.ArrowLeft)mx-=1;inp.mx=clamp(mx,-1,1);inp.mz=clamp(mz,-1,1);inp.fire=mouseFire||touch.fid!==null}
 // ================= UI (v2) =================
@@ -83,7 +83,7 @@ else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');pane
  B(60,628,220,56,'退出する',()=>netLeave(),{size:26})}}
 function drawTags(){for(const o of others){const p=project(o.x,o.y+(o.dead?1.2:2.35),o.z);if(!p||p.w>80)continue;const s=clamp(16/p.w,0.55,1.1);ctx.save();ctx.translate(p.x,p.y);ctx.scale(s,s);para(-36,-16,64,30,8);ctx.fillStyle=PCSS[o.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('P'+(o.slot+1),0,0,22,'#fff',INK,5);
 if(G.mode!=='pvp'){ctx.fillStyle=INK;ctx.fillRect(-34,18,68,10);ctx.fillStyle=o.hp>40?'#35d06a':'#ff3b30';ctx.fillRect(-32,20,64*sat(o.hp/100),6);if(o.dead&&Math.sin(now*8)>-0.3)txt('ダウン！',0,-40,26,'#ff3b30',INK,6,'center','#fff',10)}ctx.restore()}}
-function drawHUD2(){B(30,108,46,40,'II',()=>{G.paused=!G.paused},{sk:0,size:22});if(DEV&&G.mode!=='pvp'&&!isCli()&&G.wave<WAVESET[G.stage].length-1)B(30,158,130,40,'ボスへ',devSkipBoss,{sk:0,size:22,col:'#ff8a2b'});
+function drawHUD2(){B(30,108,46,40,'II',()=>{G.paused=!G.paused},{sk:0,size:22});B(84,108,62,40,SET.view===1?'3人称':'1人称',tpsToggle,{sk:0,size:17,col:SET.view===1?'#ffd91a':'#fff'});if(DEV&&G.mode!=='pvp'&&!isCli()&&G.wave<WAVESET[G.stage].length-1)B(30,158,130,40,'ボスへ',devSkipBoss,{sk:0,size:22,col:'#ff8a2b'});
 if(pl.pow>0){ctx.save();ctx.translate(160,128);const s=1+0.06*Math.sin(now*12);ctx.scale(s,s);burstPath(0,0,66,24,10,1.3,2);ctx.fillStyle='#ff8a2b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('攻撃×2',0,1,22,'#fff',INK,5);ctx.restore();ctx.fillStyle=INK;ctx.fillRect(236,120,104,14);ctx.fillStyle='#ffd91a';ctx.fillRect(238,122,100*sat(pl.pow/SK.pow),10)}
 if(G.mode==='pvp'){const t=Math.max(0,G.tm)|0;txt(((t/60)|0)+':'+String(t%60).padStart(2,'0'),W/2,44,40,t<20?'#ff3b30':'#fff',INK,8);const rs=net.roster.slice().sort((a,b)=>a.slot-b.slot);rs.forEach((r,i)=>{const x=W/2-rs.length*62+i*124+12;para(x,70,104,36,10);ctx.fillStyle=PCSS[r.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=r.id===net.id?6:3;ctx.stroke();txt('P'+(r.slot+1)+'  '+G.pk[r.slot],x+56,89,22,'#fff',INK,5)})}
 if(pl.dead&&net.on){ctx.fillStyle='rgba(22,18,31,.45)';ctx.fillRect(0,250,W,150);if(G.mode==='pvp'){txt('やられた！',W/2,300,64,'#ff3b30',INK,12,'center','#fff',20);txt('復活まで '+Math.max(0,Math.ceil(pl.respT)),W/2,364,30,'#fff',INK,6)}
@@ -119,10 +119,33 @@ let GDT=0;
 // boss defeat camera: cut away from the player, start a little above the boss and drift in while circling
 function killCam(dt){if(boss&&boss.monk)G.kcP=[boss.x,boss.y,boss.z,boss.yaw];const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
 cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty-cam.y,dz=tz-cam.z;cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.03;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.03;cam.roll=lerp(-0.06,0.02,u)+rnd(-1,1)*s*0.03;cam.fov=lerp(64,54,u)*PI/180}
+// ---- third-person camera (SET.view=1, toggled in the settings / the small HUD button / V key) ----
+// Over the right shoulder. Walls pull the camera in at once and it eases back out; looking up from below,
+// the ground stops it and it slides along the boom towards the hero; too close and the hero is not drawn.
+const TPS_D=3.4,TPS_SH=0.62,TPS_UP=0.3,TPS_PAD=0.3;let tpsD=TPS_D,tpsS=TPS_SH;const tpsEye=[0,0,0];
+const tpsHero={slot:0,x:0,y:0,z:0,yaw:0,pitch:0,wt:0,mv:0,dead:false,flash:0,fireT:0,sp:0,gx:0,gy:0,gz:0};
+function tpsOn(){return SET.view===1&&G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()}
+function tpsToggle(){SET.view=SET.view===1?0:1;tpsD=0.2;tpsS=0;applySet();snd('ui')}
+function tpsCam(dt){const ex=cam.x,ey=cam.y,ez=cam.z,cp=Math.cos(cam.pitch),fx=-Math.sin(cam.yaw)*cp,fy=Math.sin(cam.pitch),fz=-Math.cos(cam.yaw)*cp,rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
+tpsEye[0]=ex;tpsEye[1]=ey;tpsEye[2]=ez;
+// shoulder offset: shrinks when a wall is right beside the hero
+// (and moves further out to the side while the boom is pulled in, so the hero blocks less of the view)
+const sw=TPS_SH+0.35*sat(1-tpsD/TPS_D),sh=clamp(rayWorld(ex,ey,ez,rx,0,rz,sw+TPS_PAD)-TPS_PAD,0,sw);tpsS=sh<tpsS?sh:lerp(tpsS,sh,Math.min(1,dt*3));
+const sx=ex+rx*tpsS,sy=ey+TPS_UP,sz=ez+rz*tpsS;
+// boom: walls / props / the ground between the shoulder and the camera pull it in
+let d=rayWorld(sx,sy,sz,-fx,-fy,-fz,TPS_D+TPS_PAD)-TPS_PAD;if(fy>0.01)d=Math.min(d,(sy-0.22)/fy);d=clamp(d,0.12,TPS_D);
+tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
+cam.x=sx-fx*tpsD;cam.y=sy-fy*tpsD;cam.z=sz-fz*tpsD;cam.roll*=0.5}
+// ray origin for shooting: on the camera ray, level with the hero (so it goes through the crosshair but never hits what is behind the hero)
+function aimOrigin(){if(!tpsOn())return[cam.x,cam.y,cam.z];const d=aimDir(),t=Math.max(0,(tpsEye[0]-cam.x)*d[0]+(tpsEye[1]-cam.y)*d[1]+(tpsEye[2]-cam.z)*d[2]);return[cam.x+d[0]*t,cam.y+d[1]*t,cam.z+d[2]*t]}
+function drawTpsHero(){if(!tpsOn())return;const o=tpsHero;o.slot=pl.slot||0;o.x=pl.x;o.y=pl.y||0;o.z=pl.z;o.yaw=pl.yaw;o.pitch=pl.pitch;o.dead=pl.dead;o.mv=pl.moving;o.wt+=GDT;o.fireT=pl.flashT;o.sp=pl.sp===2?1:0;o.flash=hurtA>0.5?1:0;
+if(tpsD<0.9){const cp=Math.cos(pl.pitch);muz[0]=pl.x+Math.cos(pl.yaw)*0.3-Math.sin(pl.yaw)*cp;muz[1]=tpsEye[1]-0.2+Math.sin(pl.pitch);muz[2]=pl.z-Math.sin(pl.yaw)*0.3-Math.cos(pl.yaw)*cp;return}
+drawHero(o);muz[0]=o.gx;muz[1]=o.gy;muz[2]=o.gz;
+if(pl.sp===1){const s=0.3+pl.spT*1.2;bill(BURST,o.gx,o.gy,o.gz,s,now*20,C.cyan,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,s*0.5,-now*20,C.white,F_UNLIT|F_NOCAST)}}
 function setCamera(dt){if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
 else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
-cam.fov=lerp(cam.fov,(80+(pl.dashT>0?14:0)+(pl.sp===2?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));monkCam()}camUpdate()}
+cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
 const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}

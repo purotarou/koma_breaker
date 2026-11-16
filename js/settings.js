@@ -1,6 +1,6 @@
 'use strict';
 // ================= SETTINGS / RESULT (v3) =================
-const SET={sens:1,se:0.8,bgm:0.8,size:1,lh:0,inv:1};try{Object.assign(SET,JSON.parse(localStorage.getItem('koma_set')||'{}'))}catch(e){}
+const SET={sens:1,se:0.8,bgm:0.8,size:1,lh:0,inv:1,view:0};try{Object.assign(SET,JSON.parse(localStorage.getItem('koma_set')||'{}'))}catch(e){}
 const BTN0=JSON.parse(JSON.stringify(BTN));let setOpen=false;
 // SET.lay: custom button layout {key:{x,y,s}} in right-handed screen coords (mirrored when SET.lh); null = default layout
 function applySet(){const sc=SET.size,L=SET.lay;for(const k in BTN){const b0=BTN0[k],b=BTN[k],c=L&&L[k];if(c){b.x=SET.lh?W-c.x:c.x;b.y=c.y;b.r=b0.r*sc*(c.s||1)}else{const x=W-(W-b0.x)*sc;b.y=H-(H-b0.y)*sc;b.r=b0.r*sc;b.x=SET.lh?W-x:x}}touch.hx=SET.lh?W-150:150;touch.hy=560;if(touch.sid===null){touch.ox=touch.hx;touch.oy=touch.hy}if(musG)musG.gain.value=0.3*SET.bgm;try{localStorage.setItem('koma_set',JSON.stringify(SET))}catch(e){}}
@@ -40,14 +40,15 @@ ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.be
 function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');btns.push({x:160,y:36,w:360,h:90,cb:devTapTitle});
 B(950,90,150,54,'とじる',()=>{setOpen=false},{col:'#ffd91a',size:28});if(devOpen)B(640,90,280,54,G.mode==='pvp'?'超強化（対戦は不可）':DEV?'超強化 ON':'超強化 OFF',()=>{if(G.mode!=='pvp')devToggle()},{sk:8,size:24,col:DEV?'#ff8a2b':'#fff'});
 const rows=[['視点感度','sens',0.3,2.5,v=>'×'+v.toFixed(1)],['効果音','se',0,1,v=>String(Math.round(v*10))],['BGM','bgm',0,1,v=>String(Math.round(v*10))]];
-rows.forEach((r,i)=>{const y=160+i*78,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set=nv=>{SET[k]=clamp(Math.round(nv*10)/10,r[2],r[3]);applySet();if(k==='se')snd('hit')};txt(r[0],200,y+28,30,INK,null,0,'left');
+rows.forEach((r,i)=>{const y=156+i*72,k=r[1],v=SET[k],u=(v-r[2])/(r[3]-r[2]),set=nv=>{SET[k]=clamp(Math.round(nv*10)/10,r[2],r[3]);applySet();if(k==='se')snd('hit')};txt(r[0],200,y+28,30,INK,null,0,'left');
  B(440,y+2,66,54,'－',()=>set(SET[k]-0.1),{sk:0,size:36});btns.push({x:526,y,w:330,h:58,cb:p=>set(r[2]+sat((p.x-532)/318)*(r[3]-r[2]))});
  ctx.fillStyle=INK;ctx.fillRect(526,y+16,330,26);ctx.fillStyle='#fff';ctx.fillRect(530,y+20,322,18);ctx.fillStyle='#ffd91a';ctx.fillRect(530,y+20,322*u,18);ctx.fillStyle=INK;ctx.beginPath();ctx.arc(530+322*u,y+29,15,0,TAU);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(530+322*u,y+29,9,0,TAU);ctx.fill();
  B(876,y+2,66,54,'＋',()=>set(SET[k]+0.1),{sk:0,size:36});txt(r[4](v),1040,y+30,32,INK)});
 const tog=(y,label,opts,cur,cb)=>{txt(label,200,y+28,30,INK,null,0,'left');opts.forEach((o,i)=>B(440+i*170,y+2,156,54,o,()=>cb(i),{sk:8,size:24,col:cur===i?'#ffd91a':'#fff'}))};
-tog(400,'ボタンの大きさ',['小','中','大'],[0.85,1,1.15].indexOf(SET.size),i=>{SET.size=[0.85,1,1.15][i];applySet()});
-tog(478,'ボタン配置',['右手で撃つ','左手で撃つ'],SET.lh,i=>{SET.lh=i;applySet()});
-tog(556,'視点の上下',['通常','反転'],SET.inv>0?0:1,i=>{SET.inv=i?-1:1;applySet()});
+tog(372,'ボタンの大きさ',['小','中','大'],[0.85,1,1.15].indexOf(SET.size),i=>{SET.size=[0.85,1,1.15][i];applySet()});
+tog(442,'ボタン配置',['右手で撃つ','左手で撃つ'],SET.lh,i=>{SET.lh=i;applySet()});
+tog(512,'視点の上下',['通常','反転'],SET.inv>0?0:1,i=>{SET.inv=i?-1:1;applySet()});
+tog(582,'視点',['1人称','3人称'],SET.view===1?1:0,i=>{if((SET.view===1?1:0)!==i)tpsToggle()});
 B(960,592,150,50,'全画面',()=>toggleFS(),{size:24});
 B(960,386,150,50,'自由に配置',()=>{layEdit=true;layDrag=null},{sk:8,size:22,col:'#59d8ff'});const px=960,py=478,pw=150,ph=84;ctx.fillStyle='#cfe6ff';ctx.fillRect(px,py,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(px,py,pw,ph);
 for(const k in BTN){const b=BTN[k];ctx.beginPath();ctx.arc(px+b.x/W*pw,py+b.y/H*ph,Math.max(3,b.r/W*pw),0,TAU);ctx.fillStyle=k==='fire'?'#ff4a3d':'#fff';ctx.fill();ctx.lineWidth=1.5;ctx.stroke()}

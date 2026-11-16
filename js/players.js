@@ -80,7 +80,7 @@ function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)re
 function resetPlayer(x,z,yaw){skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,reload:0,cool:0,gauge:SK.g0,spX:0,spF:0,dq:0,dqT:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0})}
 resetPlayer(0,16,0);
 function shoot(){pl.ammo--;pl.cool=0.125*SK.cool;pl.kick+=0.03;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(0.07);snd('shot');const pw=pl.pow>0?2:1,pvp=G.mode==='pvp';
-let d=aimDir();const ox=cam.x,oy=cam.y,oz=cam.z,as=touchMode||G.demoOn;let best=as?0.1:0.035,bp=null;
+let d=aimDir();const AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],as=touchMode||G.demoOn;let best=as?0.1:0.035,bp=null;
 const chk=(x,y,z,bias)=>{const px=x-ox,py=y-oy,pz=z-oz,l=Math.hypot(px,py,pz)||1,a=Math.acos(clamp((px*d[0]+py*d[1]+pz*d[2])/l,-1,1))-bias;if(a<best){best=a;bp=[px/l,py/l,pz/l]}};
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(pvp)for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
 if(bp){const k=as?0.85:0.5;d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}
@@ -98,7 +98,7 @@ if(SK.pierce&&he&&!he.monk&&he.type!=='boss'){let e2=null,t2=wallT,m2=1;for(cons
  if(e2){const x=ox+d[0]*t2,y=oy+d[1]*t2,z=oz+d[2]*t2;fxTracer(hx,hy,hz,x,y,z,C.white,0.07);damage(e2,20*cr(m2)*pw,m2>1.5,x,y,z)}}}
 function pvHit(o,dmg,crit,hx,hy,hz){o.flash=0.08;hitMark=0.12;hitCrit=crit;fxStar(hx,hy,hz,crit?1.5:1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,3,5,PCOL[o.slot],0.1);snd(crit?'crit':'hit');pl.gauge=Math.min(100,pl.gauge+4);
 if(lim('hitT',0.22))sideText(crit?'キィン！':pick(['バキッ！','ガッ！','ドカッ！']),o,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+dmg}
-function beamDamage(dt){const d=aimDir(),ox=cam.x,oy=cam.y-0.2,oz=cam.z,pw=(pl.pow>0?1.6:1)*SK.spw;
+function beamDamage(dt){const d=aimDir(),AO=aimOrigin(),ox=AO[0],oy=AO[1]-0.2,oz=AO[2],pw=(pl.pow>0?1.6:1)*SK.spw;
 const near=(x,y,z,r)=>{const px=x-ox,py=y-oy,pz=z-oz,t=px*d[0]+py*d[1]+pz*d[2];return t>0&&Math.sqrt(Math.max(0,px*px+py*py+pz*pz-t*t))<r};
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(near(s[0],s[1],s[2],s[3]+2)){if(e.monk){const k=monkK(e,pl.x,pl.z);if(k>=1&&e.bell)monkBellHit(e,1400*dt*pw*0.5,s[0],s[1],s[2],true);else if(k>0)damage(e,1400*dt*pw*0.8*k,false,s[0],s[1],s[2],true)}else damage(e,1400*dt*pw*(e.type==='boss'?0.8:1),false,s[0],s[1],s[2],true);break}}
 for(const s of shots)if(near(s.x,s.y,s.z,2.5)){popShot(s);if(isCli())net.q.ps.push(s.id)}
@@ -200,7 +200,7 @@ mPush();mT(0,1.3,0.12);mRX(-o.pitch);put(BOX,0.3,0,0.3,0,0,0,0.17,0.17,0.62,c);p
 o.gx=M[0]*0.22+M[4]*0.1+M[8]*1.4+M[12];o.gy=M[1]*0.22+M[5]*0.1+M[9]*1.4+M[13];o.gz=M[2]*0.22+M[6]*0.1+M[10]*1.4+M[14];mPop();gTint=0;mPop()}
 function drawHeroFx(o){if(o.fireT>0){bill(BURST,o.gx,o.gy,o.gz,0.7,now*30,C.yellow,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,0.36,0,C.white,F_UNLIT|F_NOCAST)}
 if(o.sp){const cp=Math.cos(o.pitch),dx=-Math.sin(o.yaw)*cp,dy=Math.sin(o.pitch),dz=-Math.cos(o.yaw)*cp;mPush();mT(o.gx+dx*45,o.gy+dy*45,o.gz+dz*45);orient(dx,dy,dz);mRX(PI/2);mS(1.3,90,1.3);emit(CYL,C.white,0,0,F_UNLIT|F_NOCAST,0);mPop();bill(BURST,o.gx,o.gy,o.gz,2.4,now*25,C.cyan,F_UNLIT|F_NOCAST)}}
-function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawHeroTest();
+function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawTpsHero();drawHeroTest();
 for(const it of items){const y=1.05+Math.sin(it.t*3)*0.15,col=[C.heart,C.orange,C.cyan][it.k],rs=1.7+Math.sin(it.t*5)*0.15,sc=Math.min(1,it.t*4);put(RING,it.x,0.12,it.z,0,0,0,rs,1,rs,col,0,0,NF);
 mPush();mT(it.x,y,it.z);mRY(it.t*2.2);mS(sc,sc,sc);if(it.k===0){sph(-0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);sph(0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);put(CONE,0,-0.2,0,PI,0,0,0.7,0.56,0.34,C.heart,0,1)}
 else if(it.k===1){put(SPIKE,0,0,0,it.t*3,0,0,0.9,0.9,0.9,C.orange,0,0,F_UNLIT);put(SPIKE,0,0,0,0,it.t*4,0.6,0.55,0.55,0.55,C.yellow,0,0,F_UNLIT)}
