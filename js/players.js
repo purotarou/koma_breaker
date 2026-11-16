@@ -71,11 +71,13 @@ function allP(){const a=[];if(!pl.dead)a.push(pl);for(const o of others)if(!o.de
 function pickT(x,z){let b=pl,bd=1e9;for(const p of allP()){const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}return b}
 function pickR(){const a=allP();return a.length?a[(Math.random()*a.length)|0]:pl}
 function bossT(b){let p=null;if(b.ti!=null)p=allP().find(q=>q.slot===b.ti);if(!p){p=pickR();b.ti=p.slot}return p}
-function hurtT(p,d,x,z){if(p===pl)hurtPlayer(d,x,z);else net.hq.push([p.slot,d,r1(x),r1(z)])}
+function hurtT(p,d,x,z,fz){if(p===pl){const h=pl.hp;hurtPlayer(d,x,z);if(fz&&pl.hp<h)plFreeze(fz)}else net.hq.push(fz?[p.slot,d,r1(x),r1(z),fz]:[p.slot,d,r1(x),r1(z)])}
+// frozen solid (bell monk's striker): can't move, jump or dash for t seconds
+function plFreeze(t){pl.frz=t;pl.vx=pl.vz=0;pl.dashT=0;snd('clank');shake(0.3);addText('カチーン！',W/2,H*0.4,{size:100,st:'cyan',life:0.7})}
 function areaHurt(x,z,r,d,jump){for(const p of allP())if(Math.hypot(p.x-x,p.z-z)<r&&!(jump&&p.y>0.7))hurtT(p,d,x,z)}
 function eCenter(e){if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
 function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)return;const f=H/2/Math.tan(cam.fov/2),er=Math.min(280,c[3]*f/p.w),size=o.size||44,w=size*0.9*str.length;sideFlip=-sideFlip;let x=p.x+sideFlip*(er+w/2+20);if(x<w/2+50||x>W-w/2-50)x=p.x-sideFlip*(er+w/2+20);addText(str,x,p.y-er*0.5-rnd(0,24),o)}
-function resetPlayer(x,z,yaw){skApply();Object.assign(pl,{x,z,yaw,pitch:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,reload:0,cool:0,gauge:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0})}
+function resetPlayer(x,z,yaw){skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,reload:0,cool:0,gauge:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0})}
 resetPlayer(0,16,0);
 function shoot(){pl.ammo--;pl.cool=0.125;pl.kick+=0.03;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(0.07);snd('shot');const pw=pl.pow>0?2:1,pvp=G.mode==='pvp';
 let d=aimDir();const ox=cam.x,oy=cam.y,oz=cam.z,as=touchMode||G.demoOn;let best=as?0.1:0.035,bp=null;
@@ -105,6 +107,7 @@ if(pl.dead){pl.deadT+=RDT;inp.lx=inp.ly=0;inp.jump=inp.dash=inp.special=inp.relo
   if(pl.revT>2.5||(pl.respT<=0&&any)){pl.dead=false;pl.hp=50;pl.inv=2.5;pl.revT=0;snd('item');addText('カイフク！',W/2,H*0.4,{size:90,st:'cyan',life:0.8})}}}return}
 const cine=G.cine>0;if(!cine){pl.yaw-=inp.lx*(pl.sp?0.4:1);pl.pitch=clamp(pl.pitch-inp.ly*(pl.sp?0.4:1),-1.25,1.25)}inp.lx=inp.ly=0;
 const sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw);let wx=-sy*inp.mz+cy*inp.mx,wz=-cy*inp.mz-sy*inp.mx;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl}
+if(pl.frz>0){pl.frz-=dt;wx=wz=0;pl.vx=pl.vz=0;inp.jump=inp.dash=false}
 const icy=pl.y<=0&&ices.length&&onIce(pl.x,pl.z),spd=pl.sp?2.5:6.6*SK.spd,k=1-Math.exp(-(pl.y>0?5:icy?1.3:12)*dt);pl.vx+=(wx*spd-pl.vx)*k;pl.vz+=(wz*spd-pl.vz)*k;
 if(inp.dash&&pl.dashCd<=0&&!cine){let dx=wx,dz=wz;if(wl<0.2){dx=sy;dz=cy}const l=Math.hypot(dx,dz)||1;pl.ddx=dx/l;pl.ddz=dz/l;pl.dashT=0.18;pl.dashCd=0.7*SK.dash;pl.inv=Math.max(pl.inv,0.34);lines(0.85,'#fff');snd('dash');addText(pick(['シュバッ','ザッ！','シュッ']),W/2+rnd(-220,220),H*0.74,{size:62,st:'cyan',life:0.4})}
 inp.dash=false;if(pl.dashT>0){pl.dashT-=dt;pl.x+=pl.ddx*24*dt;pl.z+=pl.ddz*24*dt;if(icy){pl.vx=pl.ddx*15;pl.vz=pl.ddz*15;if(lim('slip',0.8))addText('ツルッ！',W/2+rnd(-160,160),H*0.7,{size:58,st:'cyan',life:0.45})}}

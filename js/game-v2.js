@@ -105,6 +105,7 @@ if(boss&&boss.st==='rise'){ctx.globalAlpha=0.8;focusLines(W/2,H*0.4,380,56,INK,(
 if(pl.dashT>0){ctx.globalAlpha=0.7;focusLines(W/2,H/2,330,50,INK,((now*30)|0)+90);ctx.globalAlpha=1}
 const kc=play&&(G.kcT>=0||monkCine());if(play&&!kc)drawTags();drawTexts();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
 if(kc){const k=G.kcT>=0?easeOut(sat(G.kcT/0.25))*58:monkBars();ctx.fillStyle=INK;ctx.fillRect(0,0,W,k);ctx.fillRect(0,H-k,W,k)}
+if(play&&pl.frz>0&&!pl.dead){const a=sat(pl.frz/0.25);ctx.fillStyle='rgba(150,215,255,'+(0.32*a)+')';ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(225,245,255,'+(0.9*a)+')';ctx.lineWidth=26;ctx.strokeRect(13,13,W-26,H-26)}
 if(play&&!kc){drawHUD();drawHUD2();drawTouch();if(!hasTouch&&G.time<8&&G.mode!=='pvp')txt('WASD：移動　マウス：視点／射撃　SPACE：ジャンプ　SHIFT：回避　E：必殺　R：装填',W/2,610,20,'#fff',INK,6)}
 for(let i=balloons.length-1;i>=0;i--){const b=balloons[i];b.t+=dt;if(b.t>b.life)balloons.splice(i,1);else if(play)drawBalloon(b)}
 if(demo&&G.endT>1.2){const u=easeBack(sat((G.endT-1.2)/0.3));ctx.save();ctx.translate(W/2,H*0.42);ctx.rotate(-0.06);ctx.scale(u,u);txt('撃破！！',0,0,150,'#ffd91a',INK,20,'center','#fff',36);ctx.restore()}

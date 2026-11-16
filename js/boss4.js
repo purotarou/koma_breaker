@@ -10,11 +10,12 @@
 //   Half of the time stomp x2 is followed by waves x3. Every multi-wave volley (x3 / x4) ends in tired: he stands still and pants (7 s / 5.8 s in phase 2).
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
-// Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
+// Striker slams freeze the player hit (MK_FRZ s) and the second slam re-aims at them (b.sl2), so it always lands.
+// Every charge ends in a 1.2 s stop and then the striker slams (phase 2). Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
 // Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (9 s) (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
-const MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_BIG=1.15,MK_TF=3.0;
+const MK_FRZ=1.0,MK_SC=1.3,MK_R=2.2,MK_BELL_R=1.5,MK_BIG=1.15,MK_TF=3.0;
 const ices=[];
 const MONK={ready:false,root:null,navy:[0.14,0.16,0.33]},MK_RED=[1,0.12,0.08];
 loadGlbBuf('assets/boss_monk.glb').then(monkLoad)
@@ -67,16 +68,19 @@ function monkBell(b,dmg){if(!b.bell||b.dead||b.st==='die'||b.st==='drop'||b.st==
 function monkDrop(b,quiet){b.bell=0;b.bhp=0;const fx=Math.sin(b.yaw),fz=Math.cos(b.yaw),x=clamp(b.x-fx*3.4,-BX+2,BX-2),z=clamp(b.z-fz*3.4,BZ0+2,BZ1-2);
 b.bell2=mkBell2(b,x,z,b.yaw);ev('mbreak',r1(x),r1(z),quiet?1:0)}
 function mkBell2(b,x,z,yaw){const w=mkW(b,0,2.85,-1.95);return{x,z,yaw,t:0,x0:w[0],z0:w[2],y0:w[1],y:w[1],tilt:0.15,landed:false}}
-function monkTrans(b,fall){b.st='trans';b.stT=0;b.y=0;b.tfB=fall?1:0;b.hp=Math.max(b.hp,b.mhp*0.45);b.cmb=0;b.sw=0;b.ti=null;shocks.length=0}
+function monkTrans(b,fall){b.st='trans';b.stT=0;b.y=0;b.tfB=fall?1:0;b.hp=Math.max(b.hp,b.mhp*0.45);b.cmb=0;b.sw=0;b.nx=0;b.ti=null;shocks.length=0}
 
 // ---------------- host update ----------------
-const MK_P1=['run','stomp','run','ring'],MK_P2=['run','swing','stomp','ring','aim','run','swing','stomp','aim'];
+const MK_P1=['run','stomp','run','ring'],MK_P2=['run','aim','stomp','ring','swing','run','aim','stomp','swing','aim'];
+// phase 1 telegraphs (stomp ring, bell wind-up) last 1 s longer than phase 2's
+const mkW0=b=>b.phase>1?0.72:1.72;
 function updMonk(b,dt){monkAnim(b,dt);G.mood=Math.min(1,G.mood+dt*0.5);const p2=b.phase>1,fast=p2&&!b.bell,T=bossT(b);
 const turn=(x,z,k)=>{b.yaw+=angDiff(mkFace(b,x,z),b.yaw)*Math.min(1,dt*k)};
 const toStop=d=>{b.st='stop';b.stT=0;b.dur=d};
 const tired=d=>{b.st='tired';b.stT=0;b.dur=d;b.cmb=0};
 const crouch=()=>{b.st='crouch';b.stT=0;let tx=T.x+(T.vx||0)*0.35,tz=T.z+(T.vz||0)*0.35;const o={x:tx,z:tz};collide(o,MK_R);b.tx=o.x;b.tz=o.z};
 const ring=n=>{b.st='ring';b.stT=0;b.n=n;b.k=0};
+const swing=()=>{b.st='swing';b.stT=0;b.k=0;b.sl2=1.35};
 const contact=d=>{for(const p of allP())if(Math.hypot(p.x-b.x,p.z-b.z)<MK_R+0.7&&p.y<2.6&&lim('mkc'+p.slot,0.7))hurtT(p,d,b.x,b.z)};
 if(b.st==='drop'){const u=(b.stT-1.0)/0.9;if(u<0)return;const k=Math.min(1,u);b.x=0;b.z=lerp(-42,-18,k);b.y=lerp(16,0,k)+Math.sin(k*PI)*8;b.yaw=0;
  if(u>=1){b.y=0;b.st='roar';b.stT=0;ev('mland',0,-18,0,1)}return}
@@ -92,24 +96,25 @@ if(b.st==='idle'){turn(T.x,T.z,6);if(b.stT>b.cdT){b.ti=null;const pat=p2?MK_P2:M
   if(m==='run'||m==='swing'){b.st='run';b.sw=m==='swing'?1:0;b.dur=(fast?rnd(0.9,1.2):p2?rnd(1.1,1.5):rnd(1.6,2.2))*(b.sw?1.8:1)}else if(m==='stomp')crouch();else if(m==='ring')ring(p2?4:1);else b.st='aim'}}
 else if(b.st==='run'){turn(T.x,T.z,fast?6:p2?5:3);const sp=fast?12.5:p2?10.5:7.2,fx=Math.sin(b.yaw),fz=Math.cos(b.yaw);b.x+=fx*sp*dt;b.z+=fz*sp*dt;collide(b,MK_R);contact(14);
  const d=Math.hypot(T.x-b.x,T.z-b.z);
- if(b.sw&&(d<6||(b.stT>b.dur&&d<10))){b.st='swing';b.stT=0;b.k=0;b.yaw=mkFace(b,T.x,T.z)}else if(!b.sw&&d<3.4)crouch();else if(b.stT>b.dur)toStop(fast?0.45:p2?0.55:1.0)}
-else if(b.st==='crouch'){turn(b.tx,b.tz,8);if(b.stT>(fast?0.26:p2?0.32:0.55)){b.st='air';b.stT=0;b.ax=b.x;b.az=b.z}}
+ if(b.sw&&(d<6||(b.stT>b.dur&&d<10))){swing();b.yaw=mkFace(b,T.x,T.z)}else if(!b.sw&&d<3.4)crouch();else if(b.stT>b.dur)toStop(fast?0.45:p2?0.55:1.0)}
+else if(b.st==='crouch'){turn(b.tx,b.tz,8);if(b.stT>(fast?0.26:p2?0.32:1.55)){b.st='air';b.stT=0;b.ax=b.x;b.az=b.z}}
 else if(b.st==='air'){const D=fast?0.52:p2?0.6:0.85,u=Math.min(1,b.stT/D);b.x=lerp(b.ax,b.tx,u);b.z=lerp(b.az,b.tz,u);b.y=Math.sin(u*PI)*(p2?6:7.5);
  if(u>=1){b.y=0;b.st='land';b.stT=0;ev('mland',r1(b.x),r1(b.z),p2?1:0,0);areaHurt(b.x,b.z,3.6,20)}}
 else if(b.st==='land'){if(b.stT>(p2?0.18:0.3)){if(b.chain<(p2?2:1)){b.chain++;crouch()}
   else if(!p2&&b.bell&&Math.random()<0.5){b.cmb=1;ring(3)}else toStop(p2?0.5:0.9)}}
-else if(b.st==='ring'){turn(T.x,T.z,2);if(b.k<b.n&&b.stT>=0.72+b.k*0.9){b.k++;ev('mring',r1(b.x),r1(b.z))}
- if(b.stT>0.72+(b.n-1)*0.9+0.75){{if(b.n===1)toStop(1.2);else tired(p2?5.8:7)}}}
-else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?1:-1,a=mkW(b,s*1.35,0,1.6),c=mkW(b,s*1.35,0,6.2),w=mkW(b,s*1.35,0,4.6);
-   for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<1.5&&p.y<2.2)hurtT(p,22,w[0],w[2])}
+else if(b.st==='ring'){turn(T.x,T.z,2);const w0=mkW0(b);if(b.k<b.n&&b.stT>=w0+b.k*0.9){b.k++;ev('mring',r1(b.x),r1(b.z))}
+ if(b.stT>w0+(b.n-1)*0.9+0.75){{if(b.n===1)toStop(1.2);else tired(p2?5.8:7)}}}
+else if(b.st==='swing'){const sl=(i,t)=>{if(b.k===i&&b.stT>=t){b.k++;const s=i?b.sl2:-1.35,a=mkW(b,s,0,1.6),c=mkW(b,s,0,6.2),w=mkW(b,s,0,4.6),co=Math.cos(b.yaw),si=Math.sin(b.yaw);
+   for(const p of allP()){const ex=c[0]-a[0],ez=c[2]-a[2],l2=ex*ex+ez*ez,q=clamp(((p.x-a[0])*ex+(p.z-a[2])*ez)/l2,0,1);if(Math.hypot(p.x-a[0]-ex*q,p.z-a[2]-ez*q)<1.5&&p.y<2.2){hurtT(p,22,w[0],w[2],MK_FRZ);
+    if(!i)b.sl2=clamp(((p.x-b.x)*co-(p.z-b.z)*si)/b.sc,-2.4,2.4)}}
    ev('mslam',r1(w[0]),r1(w[2]))}};sl(0,0.6);sl(1,1.15);if(b.stT>1.75)toStop(0.5)}
 else if(b.st==='aim'){turn(T.x,T.z,7);if(b.stT>0.5){b.st='charge';b.stT=0;b.dx=Math.sin(b.yaw);b.dz=Math.cos(b.yaw)}}
 else if(b.st==='charge'){const ox=b.x,oz=b.z,sp=fast?23:21;b.x+=b.dx*sp*dt;b.z+=b.dz*sp*dt;collide(b,MK_R);contact(20);
  if(lim('mkdust',0.06))fxSmoke(b.x,0.3,b.z,1,1.2,C.snow,2);
- const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>toStop(fast?0.45:0.6),c=b.bell2;
+ const moved=Math.hypot(b.x-ox,b.z-oz);const end=()=>{toStop(1.2);b.nx=1},c=b.bell2;
  if(moved<sp*dt*0.5&&b.stT>0.1){ev('smash',r1(b.x+b.dx*2),r1(b.z+b.dz*2));if(c&&Math.hypot(c.x-b.x,c.z-b.z)<MK_R+MK_BELL_R+0.8)tired(9);else end()}else if(b.stT>1.05)end()}
 else if(b.st==='tired'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=0.2}}
-else if(b.st==='stop'){if(b.stT>b.dur){b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}
+else if(b.st==='stop'){if(b.nx&&b.stT>b.dur-0.35)turn(T.x,T.z,8);if(b.stT>b.dur){if(b.nx){b.nx=0;swing()}else{b.st='idle';b.stT=0;b.cdT=fast?0.1:p2?0.15:0.35}}}}
 
 // ---------------- shared animation / cosmetics (host and clients) ----------------
 function monkAnim(b,dt){b.t+=dt;b.stT+=dt;b.flash-=dt;b.bflash-=dt;if(b.st!==b.lst){b.lst=b.st;b.cue=0}
@@ -191,14 +196,14 @@ function monkPose(b){const P=MK_POSE,t=b.t,u=b.stT,p2=b.phase>1,s=Math.sin(b.wp)
 let lL=s*0.55,lR=-s*0.55,aL=[-s*0.45,0,0.06],aR=[s*0.45,0,-0.06],bd=[0,0,0],hd=[0,0,0],bob=Math.abs(Math.sin(b.wp))*0.12*b.wa,lean=0.14*Math.min(1,b.wa),sy=1;
 if(p2){aL=[-0.45-s*0.3,0,0.3];aR=[-0.45+s*0.3,0,-0.3]}
 const st=b.st;
-if(st==='crouch'){const k=sat(u/0.22);sy=1-0.2*k;bob=-0.5*k;lean=0.3*k;aL=[0.8*k,0,0.3*k];aR=[0.8*k,0,-0.3*k]}
+if(st==='crouch'){const k=sat(u/0.22),sh=u>0.3?Math.sin(t*38)*0.03:0;sy=1-0.2*k;bob=-0.5*k;lean=0.3*k;aL=[0.8*k,0,0.3*k];aR=[0.8*k,0,-0.3*k];hd=[0.1*k,0,sh];bd=[0,0,sh]}
 else if(st==='air'||st==='drop'){sy=1.05;lL=-0.7;lR=0.3;aL=[-2.6,0,0.25];aR=[-2.6,0,-0.25];lean=-0.05;bob=0}
 else if(st==='land'){const k=1-sat(u/0.3);sy=1-0.18*k;bob=-0.35*k;aL=[-0.6,0,0.9*k+0.2];aR=[-0.6,0,-0.9*k-0.2]}
 else if(st==='stop'){bob=Math.sin(t*9)*0.06-0.05;lean=0.22;hd=[0.2,0,0];aL=[0.1,0,0.14];aR=[0.1,0,-0.14];if(p2){aL=[-0.2,0,0.3];aR=[-0.2,0,-0.3]}}
-else if(st==='ring'){const k=easeOut(sat(u/0.6)),l=Math.max(0,u-0.6)%0.9,h=u<0.6?0:l<0.12?l/0.12:1-sat((l-0.12)/0.5);aR=[lerp(-0.2,-2.9,k)-h*1.1,0,-0.2];lean=-0.12*h;hd=[-0.25*h,0,0]}
+else if(st==='ring'){const w=mkW0(b)-0.12,k=easeOut(sat(u/w)),l=Math.max(0,u-w)%0.9,h=u<w?0:l<0.12?l/0.12:1-sat((l-0.12)/0.5);aR=[lerp(-0.2,-2.9,k)-h*1.1,0,-0.2];lean=-0.12*h;hd=[-0.25*h,0,0]}
 else if(st==='tired'){const br=Math.sin(t*6);hd=[0.5+br*0.06,0,0];lean=0.34+br*0.03;bob=-0.18+br*0.05;sy=0.97;aL=[0.2,0,0.1];aR=[0.2,0,-0.1]}
 else if(st==='swing'){const sw=(t0)=>{const k=u-t0;return k<0?lerp(-0.45,-2.8,sat((u-(t0-0.55))/0.4)):k<0.1?lerp(-2.8,-0.75,k/0.1):lerp(-0.75,-0.45,sat((k-0.25)/0.4))};
- aR=[sw(0.6),0,-0.25];aL=[sw(1.15),0,0.25];lean=0.12;bd=[0,u<0.85?-0.18:0.18,0]}
+ aR=[sw(0.6),0,-0.25];aL=[sw(1.15),0,0.25];lean=0.12;bd=[0,u<0.85?-0.18:0.18*(b.sl2||1.35)/1.35,0]}
 else if(st==='boff'){const sh=Math.sin(t*34)*0.08;hd=[-0.45,0,sh];aL=[-0.3,0,1.0+sh];aR=[-0.3,0,-1.0-sh];lean=-0.1}
 else if(st==='trans'){if(u<1.1){const sh=u>0.4?Math.sin(t*44)*0.03:0;hd=[0.1,0,sh];aL=[0.1,0,0.25];aR=[0.1,0,-0.25];bd=[0,0,sh]}
  else if(u<1.5){const sh=Math.sin(t*50)*0.05;hd=[0.02,0,sh];aL=[0.15,0,0.3];aR=[0.15,0,-0.3];bd=[0,0,sh*0.5]}
@@ -216,9 +221,10 @@ if(MONK.ready)mkNode(MONK.root,b,l2);else{cyl(0,2,0,1.6,2,1.6,C.white);cyl(0,3.7
 gTint=0;mPop();
 const NF=F_UNLIT|F_NOCAST;
 if(b.st==='crouch'||b.st==='air'||(b.st==='drop'&&b.stT<1.9)){const s=7.4+Math.sin(b.t*20)*0.5,tx=b.st==='drop'?0:b.tx,tz=b.st==='drop'?-18:b.tz;put(RING,tx,0.13,tz,0,0,0,s,1,s,C.red,0,0,NF);put(RING,tx,0.13,tz,0,0,0,s*0.5,1,s*0.5,C.red,0,0,NF)}
+if(b.st==='ring'&&b.stT<mkW0(b)&&Math.sin(b.t*(b.stT>mkW0(b)-0.4?40:14))>-0.3){put(RING,b.x,0.13,b.z,0,0,0,10,1,10,C.red,0,0,NF);put(RING,b.x,0.13,b.z,0,0,0,5.5,1,5.5,C.red,0,0,NF)}
 if(b.st==='aim'){const fx=Math.sin(b.yaw),fz=Math.cos(b.yaw),a=sat(b.stT/0.25);for(let i=1;i<8;i++){const d=MK_R+i*2.2;put(PYR,b.x+fx*d,0.14,b.z+fz*d,PI/2,b.yaw,0,1.6*a,0.8,1.0,C.red,0,0,NF)}}
 // striker slam bands: right (hits at 0.6 s), then left (1.15 s); they blink faster just before the hit
-if(b.st==='swing')for(let i=0;i<2;i++){const th=i?1.15:0.6,k=th-b.stT;if(k<0||k>0.75||(k<0.3&&Math.sin(b.t*40)<0))continue;const c=mkW(b,(i?1:-1)*1.35,0,3.9);
+if(b.st==='swing')for(let i=0;i<2;i++){const th=i?1.15:0.6,k=th-b.stT;if(k<0||k>0.75||(k<0.3&&Math.sin(b.t*40)<0))continue;const c=mkW(b,i?(b.sl2||1.35):-1.35,0,3.9);
  put(BOX,c[0],0.14,c[2],0,b.yaw,0,2.6,0.02,4.6*S,C.red,0,0,NF)}
 if(b.bell2)drawFallenBell(b.bell2);drawIces()}
 function drawFallenBell(c){mPush();mT(c.x0,c.y,c.z0);mRY(c.yaw);mRX(c.tilt);mS(MK_SC,MK_SC,MK_SC);gId=nid();
