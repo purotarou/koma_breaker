@@ -77,25 +77,35 @@ function plFreeze(t){if(SK.steady)t*=0.5;pl.frz=t;pl.vx=pl.vz=0;pl.dashT=0;snd('
 function areaHurt(x,z,r,d,jump){for(const p of allP())if(Math.hypot(p.x-x,p.z-z)<r&&!(jump&&p.y>0.7))hurtT(p,d,x,z)}
 function eCenter(e){if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
 function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)return;const f=H/2/Math.tan(cam.fov/2),er=Math.min(280,c[3]*f/p.w),size=o.size||44,w=size*0.9*str.length;sideFlip=-sideFlip;let x=p.x+sideFlip*(er+w/2+20);if(x<w/2+50||x>W-w/2-50)x=p.x-sideFlip*(er+w/2+20);addText(str,x,p.y-er*0.5-rnd(0,24),o)}
-function resetPlayer(x,z,yaw){skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,reload:0,cool:0,gauge:SK.g0,spX:0,spF:0,dq:0,dqT:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0})}
+function resetPlayer(x,z,yaw){pl.wp=typeof wpCur==='function'?wpCur():0;skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,reload:0,cool:0,gauge:SK.g0,spX:0,spF:0,dq:0,dqT:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0,heat:0,ovh:0,rOn:0,rt:0,rEnd:0,bombs:3,bombT:0,hon:0,hc:0,slamT:0,slamC:0,kkT:0,lgT:0,lgV:0,lgx:0,lgz:0,lgP:0,ak:0,at:9,slN:0,cutT:0,crackT:0})}
 resetPlayer(0,16,0);
-function shoot(){pl.ammo--;pl.cool=0.125*SK.cool;pl.kick+=0.03;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(0.07);snd('shot');const pw=pl.pow>0?2:1,pvp=G.mode==='pvp';
-let d=aimDir();const AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],as=touchMode||G.demoOn;let best=as?0.1:0.035,bp=null;
+// aim assist: pull d towards the nearest target within cone (rad) by k (enemy parts, enemy shots, versus players)
+function aimAssist(d,cone,k){const AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2];let best=cone,bp=null;
 const chk=(x,y,z,bias)=>{const px=x-ox,py=y-oy,pz=z-oz,l=Math.hypot(px,py,pz)||1,a=Math.acos(clamp((px*d[0]+py*d[1]+pz*d[2])/l,-1,1))-bias;if(a<best){best=a;bp=[px/l,py/l,pz/l]}};
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(pvp)for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
-if(bp){const k=as?0.85:0.5;d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}
-let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],140),he=null,hm=1,hs=null,ho=null,htg=0;const wallT=tw;
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(G.mode==='pvp')for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
+if(bp){d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}return d}
+// one hitscan ray: the first thing hit (wall / enemy part / the monk's bell or the fallen bell / an enemy shot / a versus player)
+function rayHit(ox,oy,oz,d,maxT){let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],maxT),he=null,hm=1,hs=null,ho=null,htg=0;const wallT=tw;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0,tg=0,tb=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(e.monk){if(s[5]==='bell'){if(t<tb)tb=t}if(t<tm){tm=t;mm=s[4];tg=s[5]}}else{if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}}if(e.monk&&tg!=='bell'&&tb<tm+1.6){tm=tb;tg='bell';mm=1}if(tm<tw){tw=tm;he=e;hm=mm;htg=tg}}
 if(boss&&boss.monk&&boss.bell2&&boss.bell2.y<0.3){const c=boss.bell2,t=raySph(ox,oy,oz,d,c.x,1.6,c.z,MK_BELL_R+0.2);if(t>0&&t<tw){tw=t;he=null;htg='cover'}}
 for(const s of shots){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.35);if(t>0&&t<tw){tw=t;he=null;hs=s}}
-if(pvp)for(const o of others){if(o.dead)continue;const t1=raySph(ox,oy,oz,d,o.x,o.y+0.85,o.z,0.6),t2=raySph(ox,oy,oz,d,o.x,o.y+1.62,o.z,0.34),t=t1>0&&t2>0?Math.min(t1,t2):Math.max(t1,t2);if(t>0&&t<tw){tw=t;he=null;hs=null;ho=o;hm=t2>0?2:1}}
-const hx=ox+d[0]*tw,hy=oy+d[1]*tw,hz=oz+d[2]*tw;fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,pw>1?C.orange:C.white,pw>1?0.11:0.07);if(net.on)net.q.f.push([r1(hx),r1(hy),r1(hz)]);
-addText(pick(['ドン！','ダン！','バン！']),W*0.73+rnd(-40,60),H*0.62+rnd(-40,30),{size:pw>1?52:40,st:pw>1?'boom':'fire',life:0.2,grow:0.12});
-const cr=m=>SK.crush&&m<1?m+(1-m)*0.5:m;if(he&&htg==='bell')monkBellHit(he,20*pw,hx,hy,hz);else if(he&&htg==='front'){monkClank(he,hx,hy,hz);if(hm>0)damage(he,20*cr(hm)*pw,false,hx,hy,hz,true)}else if(he)damage(he,20*cr(hm)*pw,hm>1.5,hx,hy,hz);else if(htg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(ho)pvHit(ho,(hm>1.5?32:16)*pw,hm>1.5,hx,hy,hz);else if(hs){popShot(hs);if(isCli())net.q.ps.push(hs.id)}
-else if(tw<140&&tw===wallT){fxStar(hx,hy,hz,0.7,C.white,0.08);fxSparks(hx,hy,hz,4,5,C.yellow)}
+if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const t1=raySph(ox,oy,oz,d,o.x,o.y+0.85,o.z,0.6),t2=raySph(ox,oy,oz,d,o.x,o.y+1.62,o.z,0.34),t=t1>0&&t2>0?Math.min(t1,t2):Math.max(t1,t2);if(t>0&&t<tw){tw=t;he=null;hs=null;ho=o;hm=t2>0?2:1}}
+return{t:tw,wallT,e:he,m:hm,s:hs,o:ho,tg:htg}}
+// what a ray hit takes: dmg on a body part (weak point / 破砕 / the monk's front and bell as before); pv = scale against versus players
+function rayApply(h,dmg,hx,hy,hz,quiet,pv,maxT){const cr=m=>SK.crush&&m<1?m+(1-m)*0.5:m;
+if(h.e&&h.tg==='bell')monkBellHit(h.e,dmg,hx,hy,hz,quiet);else if(h.e&&h.tg==='front'){monkClank(h.e,hx,hy,hz);if(h.m>0)damage(h.e,dmg*cr(h.m),false,hx,hy,hz,true)}else if(h.e)damage(h.e,dmg*cr(h.m),h.m>1.5,hx,hy,hz,quiet);
+else if(h.tg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(h.o)pvHit(h.o,(h.m>1.5?32:16)*pv,h.m>1.5,hx,hy,hz);else if(h.s){popShot(h.s);if(isCli())net.q.ps.push(h.s.id)}
+else if(!quiet&&h.t<maxT&&h.t===h.wallT){fxStar(hx,hy,hz,0.7,C.white,0.08);fxSparks(hx,hy,hz,4,5,C.yellow)}}
+// one shot of the equipped gun (妖弾銃 / 連珠銃; 散華砲 goes to shotgunFire in weapons.js). During 珠時雨 no ammo is used, the rate doubles and the aim homes in.
+function shoot(){const w=wpW(),buff=pl.sp===2&&w.spMode==='buff';if(!buff)pl.ammo--;pl.cool=0.125*SK.cool*(buff?0.5:1);pl.kick+=w.kick;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(w.shk);snd(w.snd);
+if(w.pel){shotgunFire(w,0);return}
+const pw=pl.pow>0?2:1,dm=w.dmg*pw,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),buff?0.3:as?0.1:0.035,buff?1:as?0.85:0.5),h=rayHit(ox,oy,oz,d,140),tw=h.t;
+const hx=ox+d[0]*tw,hy=oy+d[1]*tw,hz=oz+d[2]*tw;fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,buff?C.cyan:pw>1?C.orange:C.white,pw>1||buff?0.11:0.07);if(net.on)net.q.f.push([r1(hx),r1(hy),r1(hz)]);
+if(w.id!=='rifle'||lim('rft',0.13))addText(pick(w.id==='rifle'?['ダダッ','タタン！','ダッ']:['ドン！','ダン！','バン！']),W*0.73+rnd(-40,60),H*0.62+rnd(-40,30),{size:pw>1?52:w.id==='rifle'?36:40,st:pw>1?'boom':buff?'cyan':'fire',life:0.2,grow:0.12});
+rayApply(h,dm,hx,hy,hz,false,dm/20,140);
 // 貫通弾: the shot goes on through the first (small) enemy and also hits the next one in line
-if(SK.pierce&&he&&!he.monk&&he.type!=='boss'){let e2=null,t2=wallT,m2=1;for(const e of enemies){if(e===he||e.dead||e.st==='spawn'||e.type==='boss')continue;for(const q of spheres(e)){const t=raySph(ox,oy,oz,d,q[0],q[1],q[2],q[3]);if(t>tw&&t<t2){t2=t;e2=e;m2=q[4]}}}
- if(e2){const x=ox+d[0]*t2,y=oy+d[1]*t2,z=oz+d[2]*t2;fxTracer(hx,hy,hz,x,y,z,C.white,0.07);damage(e2,20*cr(m2)*pw,m2>1.5,x,y,z)}}}
+const he=h.e;if(SK.pierce&&he&&!he.monk&&he.type!=='boss'){let e2=null,t2=h.wallT,m2=1;for(const e of enemies){if(e===he||e.dead||e.st==='spawn'||e.type==='boss')continue;for(const q of spheres(e)){const t=raySph(ox,oy,oz,d,q[0],q[1],q[2],q[3]);if(t>tw&&t<t2){t2=t;e2=e;m2=q[4]}}}
+ if(e2){const x=ox+d[0]*t2,y=oy+d[1]*t2,z=oz+d[2]*t2,cr=m=>SK.crush&&m<1?m+(1-m)*0.5:m;fxTracer(hx,hy,hz,x,y,z,C.white,0.07);damage(e2,dm*cr(m2),m2>1.5,x,y,z)}}}
 function pvHit(o,dmg,crit,hx,hy,hz){o.flash=0.08;hitMark=0.12;hitCrit=crit;fxStar(hx,hy,hz,crit?1.5:1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,3,5,PCOL[o.slot],0.1);snd(crit?'crit':'hit');pl.gauge=Math.min(100,pl.gauge+4);
 if(lim('hitT',0.22))sideText(crit?'キィン！':pick(['バキッ！','ガッ！','ドカッ！']),o,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+dmg}
 function beamDamage(dt){const d=aimDir(),AO=aimOrigin(),ox=AO[0],oy=AO[1]-0.2,oz=AO[2],pw=(pl.pow>0?1.6:1)*SK.spw;
@@ -109,13 +119,13 @@ if(!pl.dead&&G.state==='play'){if(SK.regen&&pl.hp<SK.hp)pl.hp=Math.min(SK.hp,pl.
 if(pl.dead){pl.deadT+=RDT;inp.lx=inp.ly=0;inp.jump=inp.dash=inp.special=inp.reload=false;pl.y=Math.max(0,pl.y-dt*6);
  if(net.on&&G.state==='play'){pl.respT-=RDT;if(G.mode==='pvp'){if(pl.respT<=0)respawn()}else{let near=false,any=false;for(const o of others)if(!o.dead){any=true;if(Math.hypot(o.x-pl.x,o.z-pl.z)<2.8)near=true}pl.revT=near?pl.revT+RDT:Math.max(0,pl.revT-RDT);
   if(pl.revT>2.5||(pl.respT<=0&&any)){pl.dead=false;pl.hp=50;pl.inv=2.5;pl.revT=0;snd('item');addText('カイフク！',W/2,H*0.4,{size:90,st:'cyan',life:0.8})}}}return}
-const cine=G.cine>0;if(!cine){pl.yaw-=inp.lx*(pl.sp?0.4:1);pl.pitch=clamp(pl.pitch-inp.ly*(pl.sp?0.4:1),-1.25,1.25)}inp.lx=inp.ly=0;
+const cine=G.cine>0;if(!cine){const sl=spLock()?0.4:1;pl.yaw-=inp.lx*sl;pl.pitch=clamp(pl.pitch-inp.ly*sl,-1.25,1.25)}inp.lx=inp.ly=0;
 const sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw);let wx=-sy*inp.mz+cy*inp.mx,wz=-cy*inp.mz-sy*inp.mx;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl}
 if(pl.frz>0){pl.frz-=dt;wx=wz=0;pl.vx=pl.vz=0;inp.jump=inp.dash=false}
-const icy=pl.y<=0&&ices.length&&onIce(pl.x,pl.z),spd=pl.sp?2.5:6.6*SK.spd,k=1-Math.exp(-(pl.y>0?(SK.airc?10:5):icy?1.3:12)*dt);pl.vx+=(wx*spd-pl.vx)*k;pl.vz+=(wz*spd-pl.vz)*k;
+const icy=pl.y<=0&&ices.length&&onIce(pl.x,pl.z),spd=spLock()?2.5:6.6*SK.spd*(pl.hon?0.6:1),k=1-Math.exp(-(pl.y>0?(SK.airc?10:5):icy?1.3:12)*dt);pl.vx+=(wx*spd-pl.vx)*k;pl.vz+=(wz*spd-pl.vz)*k;
 if(inp.dash&&pl.dashCd<=0&&!cine){let dx=wx,dz=wz;if(wl<0.2){dx=sy;dz=cy}const l=Math.hypot(dx,dz)||1;pl.ddx=dx/l;pl.ddz=dz/l;pl.dashT=0.18;if(SK.dash2&&!pl.dq){pl.dq=1;pl.dqT=1.2;pl.dashCd=0.22}else{pl.dq=0;pl.dashCd=0.7*SK.dash}pl.inv=Math.max(pl.inv,SK.dinv);lines(0.85,'#fff');snd('dash');addText(pick(['シュバッ','ザッ！','シュッ']),W/2+rnd(-220,220),H*0.74,{size:62,st:'cyan',life:0.4})}
 inp.dash=false;if(pl.dashT>0){pl.dashT-=dt;pl.x+=pl.ddx*24*SK.ddist*dt;pl.z+=pl.ddz*24*SK.ddist*dt;if(icy){pl.vx=pl.ddx*15;pl.vz=pl.ddz*15;if(lim('slip',0.8))addText('ツルッ！',W/2+rnd(-160,160),H*0.7,{size:58,st:'cyan',life:0.45})}}
-if(inp.jump&&!cine){if(pl.y<=0.001){pl.vy=8.4*SK.jump;pl.aj=0;snd('jump');addText('タンッ',W*0.3+rnd(-60,60),H*0.78,{size:54,st:'cyan',life:0.35})}
+wpLunge(dt);if(inp.jump&&!cine){if(pl.y<=0.001){pl.vy=8.4*SK.jump;pl.aj=0;snd('jump');addText('タンッ',W*0.3+rnd(-60,60),H*0.78,{size:54,st:'cyan',life:0.35})}
  else if(SK.dj&&!pl.aj){pl.aj=1;pl.vy=11*SK.jump;snd('jump');fxRing(pl.x,pl.y,pl.z,1.8,C.white,0.2);fxStar(pl.x,pl.y+0.2,pl.z,1.2,C.white,0.1);addText('タタンッ',W*0.3+rnd(-60,60),H*0.74,{size:60,st:'cyan',life:0.4})}}inp.jump=false;
 if(pl.y>0||pl.vy>0){pl.vy-=22*SK.grav*dt;pl.y+=pl.vy*dt;if(pl.y<=0){pl.y=0;pl.aj=0;if(pl.vy<-4){pl.land=1;fxSmoke(pl.x,0.2,pl.z,4,0.5,C.smoke,2.5);fxRing(pl.x,0.1,pl.z,2.6,C.white,0.2);snd('land');shake(0.12)}pl.vy=0}}
 pl.x+=pl.vx*dt;pl.z+=pl.vz*dt;collide(pl,0.5);if(boss){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.5:7.5,dx=pl.x-cx,dz=pl.z-cz,d=Math.hypot(dx,dz)||1;if(d<R&&!(mk&&(boss.y>2||boss.st==='drop'))){pl.x=cx+dx/d*R;pl.z=cz+dz/d*R}}
@@ -123,16 +133,16 @@ pl.moving=lerp(pl.moving,pl.y>0?0:Math.min(1,Math.hypot(pl.vx,pl.vz)/5),k);pl.bo
 pl.dashCd-=dt;pl.inv-=dt;pl.cool-=dt;pl.flashT-=dt;pl.kick*=Math.exp(-10*dt);pl.rec*=Math.exp(-14*dt);pl.tilt*=Math.exp(-6*dt);
 if(pl.reload>0){pl.reload-=dt;if(pl.reload<=0)pl.ammo=SK.mag}if(inp.reload&&!pl.sp)startReload();inp.reload=false;
 if(inp.special&&spReady()&&!pl.sp&&!cine){pl.sp=1;pl.spT=0;if(pl.spX>0){pl.spX=0;pl.spF=1}else{pl.gauge=SK.gKeep;pl.spF=0}cutSp=0.6;snd('charge');if(!net.on){slowT=0.55;slowK=0.3}}inp.special=false;
-if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1}}
-else if(pl.sp===2){pl.spT+=dt;trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt);if(pl.spT>SK.beam){pl.sp=0;if(SK.gAfter)pl.gauge=Math.min(100,pl.gauge+SK.gAfter);if(SK.spCost)pl.hp=Math.max(1,pl.hp-SK.spCost);if(SK.again&&!pl.spF){pl.spX=5;addText('もう一発！',W/2,H*0.2,{size:70,st:'fire',life:0.8})}pl.spF=0}}
-if(inp.fire&&pl.cool<=0&&pl.reload<=0&&!pl.sp&&!cine){if(pl.ammo>0)shoot();else startReload()}
+if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;wpSpStart()}}
+else if(pl.sp===2){pl.spT+=dt;wpSpTick(dt);if(pl.spT>spDur()){pl.sp=0;if(SK.gAfter)pl.gauge=Math.min(100,pl.gauge+SK.gAfter);if(SK.spCost)pl.hp=Math.max(1,pl.hp-SK.spCost);if(SK.again&&!pl.spF){pl.spX=5;addText('もう一発！',W/2,H*0.2,{size:70,st:'fire',life:0.8})}pl.spF=0}}
+wpUpdate(dt,cine);
 pl.gunDip=lerp(pl.gunDip,pl.reload>0?1:0,1-Math.exp(-14*dt))}
-function hurtPlayer(d,x,z,by){if(pl.inv>0||pl.dead||G.cine>0||monkCine()||G.state==='clear'||G.state==='menu')return;if(SK.spinv&&(pl.sp===1||pl.sp===2&&pl.spT<SK.beam*0.5))return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
+function hurtPlayer(d,x,z,by){if(pl.inv>0||pl.dead||G.cine>0||monkCine()||G.state==='clear'||G.state==='menu')return;if(SK.spinv&&(pl.sp===1||pl.sp===2&&pl.spT<spDur()*0.5))return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
 d*=SK.def*(SK.fud&&pl.hp<SK.hp*0.5?0.9:1);pl.hp-=d;G.dmg+=d;if(boss)G.bHurt=1;pl.inv=by==null?0.45:0.1;hurtA=1;const st=SK.steady?0.5:1;shake(0.5*st);snd('hurt');stopT(0.04*st);lines(0.6,'#c20020');pl.tilt=(Math.random()<.5?-1:1)*0.09*st;pl.lastBy=by==null?-1:by;
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
 if(pl.hp<=0&&SK.rev&&!pl.revU){pl.revU=1;pl.hp=Math.round(SK.hp*SK.revH);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
 else if(pl.hp<=0){pl.hp=0;pl.dead=true;pl.deadT=0;pl.revT=0;pl.sp=0;if(!net.on)gameOver();else if(G.mode==='pvp'){pl.respT=3;if(net.host)pvTally(pl.lastBy,net.slot);else net.q.kb.push(pl.lastBy)}else pl.respT=15}}
-function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;dmg*=skAtk()*(crit?SK.crit:1);if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
+function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;if(e.frz>0)dmg*=1.5;dmg*=skAtk()*(crit?SK.crit:1);if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
 if(!quiet){fxStar(hx,hy,hz,crit?1.6:1.1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,4,5,C.ink,0.13);addGauge(crit?3:2);snd(crit?'crit':'hit');stopT(0.012);
 if(lim('hitT',0.24))sideText(crit?pick(['キィン！','ズキュン！']):pick(['バキッ！','ガッ！','ドカッ！','ズガッ！']),e,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});
 if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*7;e.kz=(e.z-pl.z)/d*7}}
@@ -196,11 +206,11 @@ for(const d of[-1,1]){put(CYL,d*0.17,0.44,0,d*wk*0.7,0,0,0.25,0.88,0.25,C.navy);
 box(0,1.14,0,0.64,0.68,0.38,c);box(0,0.84,0,0.66,0.1,0.4,C.inkD);box(0,1.2,0.2,0.2,0.5,0.04,C.white);box(0,1.45,0,0.52,0.13,0.44,C.white);put(BOX,0.12,1.42,-0.38,0.5+wk*0.3,0,0,0.16,0.08,0.6,C.white);
 sph(0,1.72,0,0.46,0.48,0.46,C.skinH);sph(0,1.82,-0.06,0.52,0.4,0.5,C.inkD);for(let i=0;i<3;i++)put(CONE,(i-1)*0.16,2.0,0.1,0.9,0,-(i-1)*0.4,0.18,0.34,0.18,C.inkD);
 for(const d of[-1,1])box(d*0.1,1.72,0.21,0.07,0.1,0.05,C.inkD);box(0,1.9,0.16,0.5,0.07,0.2,c);
-mPush();mT(0,1.3,0.12);mRX(-o.pitch);put(BOX,0.3,0,0.3,0,0,0,0.17,0.17,0.62,c);put(BOX,-0.24,0,0.3,0,0.5,0,0.17,0.17,0.56,c);box(0.22,0.06,0.78,0.1,0.16,0.5,C.gunM);put(CYL,0.22,0.1,1.1,PI/2,0,0,0.08,0.3,0.08,C.gunD);put(CONE,0.22,0.1,1.3,PI/2,0,0,0.1,0.14,0.1,C.gold);
+mPush();mT(0,1.3,0.12);mRX(-o.pitch);put(BOX,0.3,0,0.3,0,0,0,0.17,0.17,0.62,c);put(BOX,-0.24,0,0.3,0,0.5,0,0.17,0.17,0.56,c);if(wpReady(o.wp|0)){mPush();mT(0.22,0.06,0.5);mRY(PI);mS(1.2,1.2,1.2);wpModel(o.wp|0);mPop()}else{box(0.22,0.06,0.78,0.1,0.16,0.5,C.gunM);put(CYL,0.22,0.1,1.1,PI/2,0,0,0.08,0.3,0.08,C.gunD);put(CONE,0.22,0.1,1.3,PI/2,0,0,0.1,0.14,0.1,C.gold)}
 o.gx=M[0]*0.22+M[4]*0.1+M[8]*1.4+M[12];o.gy=M[1]*0.22+M[5]*0.1+M[9]*1.4+M[13];o.gz=M[2]*0.22+M[6]*0.1+M[10]*1.4+M[14];mPop();gTint=0;mPop()}
 function drawHeroFx(o){if(o.fireT>0){bill(BURST,o.gx,o.gy,o.gz,0.7,now*30,C.yellow,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,0.36,0,C.white,F_UNLIT|F_NOCAST)}
-if(o.sp){const cp=Math.cos(o.pitch),dx=-Math.sin(o.yaw)*cp,dy=Math.sin(o.pitch),dz=-Math.cos(o.yaw)*cp;mPush();mT(o.gx+dx*45,o.gy+dy*45,o.gz+dz*45);orient(dx,dy,dz);mRX(PI/2);mS(1.3,90,1.3);emit(CYL,C.white,0,0,F_UNLIT|F_NOCAST,0);mPop();bill(BURST,o.gx,o.gy,o.gz,2.4,now*25,C.cyan,F_UNLIT|F_NOCAST)}}
-function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawTpsHero();drawHeroTest();
+if(o.sp){const cp=Math.cos(o.pitch),dx=-Math.sin(o.yaw)*cp,dy=Math.sin(o.pitch),dz=-Math.cos(o.yaw)*cp;mPush();mT(o.gx+dx*45,o.gy+dy*45,o.gz+dz*45);orient(dx,dy,dz);mRX(PI/2);mS(1.3,90,1.3);emit(CYL,C.white,0,0,F_UNLIT|F_NOCAST,0);mPop();bill(BURST,o.gx,o.gy,o.gz,2.4,now*25,C.cyan,F_UNLIT|F_NOCAST)}if(o.rb)wpOtherBeam(o)}
+function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawTpsHero();drawHeroTest();drawWpWorld();
 for(const it of items){const y=1.05+Math.sin(it.t*3)*0.15,col=[C.heart,C.orange,C.cyan][it.k],rs=1.7+Math.sin(it.t*5)*0.15,sc=Math.min(1,it.t*4);put(RING,it.x,0.12,it.z,0,0,0,rs,1,rs,col,0,0,NF);
 mPush();mT(it.x,y,it.z);mRY(it.t*2.2);mS(sc,sc,sc);if(it.k===0){sph(-0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);sph(0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);put(CONE,0,-0.2,0,PI,0,0,0.7,0.56,0.34,C.heart,0,1)}
 else if(it.k===1){put(SPIKE,0,0,0,it.t*3,0,0,0.9,0.9,0.9,C.orange,0,0,F_UNLIT);put(SPIKE,0,0,0,0,it.t*4,0.6,0.55,0.55,0.55,C.yellow,0,0,F_UNLIT)}

@@ -76,23 +76,27 @@ hRot('thigh_L',HX,tL-air*0.2);hRot('shin_L',HX,kL+air*0.6);hRot('foot_L',HX,-(tL
 // hips sway with the stride, body leans in a little when running, chest turns back against the hips and follows part of the aim pitch
 hRot('hips',HY,0.16*s*mv);hRot('hips',HX,0.07*mv);hRot('spine',HY,-0.1*s*mv);hRot('chest',HY,-0.08*s*mv);
 hRot('chest',HX,-pit*0.3+0.018*Math.sin(now*2.3));hRot('head',HX,-pit*0.45);
-const bob=-0.035*mv+0.06*mv*Math.abs(c)*(1-air);
+const bob=-0.035*mv+0.06*mv*Math.abs(c)*(1-air),wp=typeof wpReady==='function'&&wpReady(o.wp|0)?o.wp|0:0;if(wp)wpHeroBody(o,wp);// weapon swings twist / bend the body (weapons.js)
 heroGlobals(bob);
 // arms: both hands on the gun, solved in the aim frame (pitch about the pivot); elbows drop down and out
 const R=m3axis(HX,-pit),A=[HERO_AIM[0],HERO_AIM[1]+bob,HERO_AIM[2]],at=p=>{const r=m3v(R,p);return[A[0]+r[0],A[1]+r[1],A[2]+r[2]]};
-heroArm('R',at([HERO_GUN_X+0.02,-0.14,0.06]),[-1,-0.35,-0.1],-1.2);
-heroArm('L',at([HERO_GUN_X+0.08,-0.11,0.24]),[0.6,-0.8,0.0],1.3);
+let wfr=null;if(wp)wfr=wpHeroArms(o,wp,A,pit);// equipped weapon: its own arm pose (weapons.js)
+else{heroArm('R',at([HERO_GUN_X+0.02,-0.14,0.06]),[-1,-0.35,-0.1],-1.2);
+heroArm('L',at([HERO_GUN_X+0.08,-0.11,0.24]),[0.6,-0.8,0.0],1.3)}
 const pi=heroSkin();
 mPush();mT(o.x,o.y,o.z);mRY(o.yaw+PI);if(o.dead){mT(0,0.3,0);mRX(-1.45)}gTint=o.flash>0?1:0;
 gId=nid();emit(pi[0],C.white,10,0,0,0);emit(pi[1],PCOL[o.slot],11,0,0,0);
 // gun (aim frame): body, grip under the right hand, barrel and a gold muzzle
-mPush();mT(A[0],A[1],A[2]);mRX(-pit);const gx=HERO_GUN_X,gy=-0.06;
+if(wfr)wpHeroDraw(o,wp,wfr);else{mPush();mT(A[0],A[1],A[2]);mRX(-pit);const gx=HERO_GUN_X,gy=-0.06;
 box(gx,gy,0.3,0.09,0.13,0.5,C.gunM);box(gx,gy-0.1,0.15,0.07,0.16,0.08,C.gunD);box(gx,gy-0.09,0.36,0.07,0.12,0.06,C.gunD);
 put(CYL,gx,gy+0.01,0.66,PI/2,0,0,0.07,0.26,0.07,C.gunD);put(CONE,gx,gy+0.01,0.84,PI/2,0,0,0.09,0.12,0.09,C.gold);
-const mz=[gx,gy+0.01,0.92];o.gx=M[0]*mz[0]+M[4]*mz[1]+M[8]*mz[2]+M[12];o.gy=M[1]*mz[0]+M[5]*mz[1]+M[9]*mz[2]+M[13];o.gz=M[2]*mz[0]+M[6]*mz[1]+M[10]*mz[2]+M[14];mPop();
+const mz=[gx,gy+0.01,0.92];o.gx=M[0]*mz[0]+M[4]*mz[1]+M[8]*mz[2]+M[12];o.gy=M[1]*mz[0]+M[5]*mz[1]+M[9]*mz[2]+M[13];o.gz=M[2]*mz[0]+M[6]*mz[1]+M[10]*mz[2]+M[14];mPop()}
 gId=0;gTint=0;mPop()}
 // ---- ?hero=1: test line-up in front of the camera ----
-const HERO_TEST=new URLSearchParams(location.search).get('hero')==='1'?[0,1,2,3].map(s=>({slot:s,x:0,y:0,z:0,yaw:0,pitch:0,wt:0,mv:0,dead:false,flash:0,fireT:0,sp:0})):null;
+// &wp=N holds weapon N (WPN index, weapons.js), &act=1 loops its attack
+const HERO_Q=new URLSearchParams(location.search),HERO_TEST=HERO_Q.get('hero')==='1'?[0,1,2,3].map(s=>({slot:s,x:0,y:0,z:0,yaw:0,pitch:0,wt:0,mv:0,dead:false,flash:0,fireT:0,sp:0,wp:+(HERO_Q.get('wp')||0),ak:0,at:9})):null;
 function drawHeroTest(){if(!HERO_TEST)return;const fx=-Math.sin(cam.yaw),fz=-Math.cos(cam.yaw),rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
 HERO_TEST.forEach((o,i)=>{const s=(i-1.5)*1.9;o.x=cam.x+fx*5.2+rx*s;o.z=cam.z+fz*5.2+rz*s;o.y=0;
- o.yaw=cam.yaw+PI+[0,PI/2,PI,0.5][i];if(i===3){o.wt+=GDT;o.mv=1}drawHero(o)})}
+ o.yaw=cam.yaw+PI+[0,PI/2,PI,0.5][i];if(i===3){o.wt+=GDT;o.mv=1}
+ if(HERO_Q.get('act')==='1'&&WPN[o.wp]){const k=WPN[o.wp].kind,c=(now+i*0.35)%1.6;o.ak=k==='katana'?(((now+i*0.35)/1.6|0)%2?2:1):k==='hammer'?(c<0.7?3:4):k==='bomb'?5:0;o.at=k==='hammer'&&c>=0.7?c-0.7:c;o.hc=1;o.fireT=(k==='gun'||k==='rail')&&c%0.2<0.05?0.05:0}
+ drawHero(o)})}

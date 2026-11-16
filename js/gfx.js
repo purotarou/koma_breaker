@@ -226,17 +226,17 @@ gl.bindVertexArray(null);prims.push(p);return prims.length-1}
 const BOX=addPrim(mkBox()),SPH=addPrim(mkSph(10,16)),CYL=addPrim(mkCyl(16)),CONE=addPrim(mkCone(16,false,0,0.5)),PYR=addPrim(mkCone(4,true,PI/4,0.7071)),PRISM=addPrim(mkPrism()),
 STAR=addPrim(mkStar(10,0.24,0.5,0,1)),BURST=addPrim(mkStar(14,0.2,0.5,0.45,7)),RING=addPrim(mkRing(28,0.4)),QUAD=addPrim(mkQuad()),SPIKE=addPrim(mkSph(6,10,(i,j)=>(i===0||i===6)?0.5:((i+j)%2===0?0.5:0.27)));
 const F_UNLIT=1,F_NOEDGE=2,F_NOCAST=4,F_SWAY=8,F_CLOTH=16,F_DRIFT=32,F_FLAME=64;
-let curLayer=1,idS=0,idD=0,gTint=0,gId=0;
+let curLayer=1,idS=0,idD=0,gTint=0,gId=0,gIce=0;// gIce: frozen enemies (weapons.js) are drawn icy pale blue
 function nid(){return curLayer===0?(1+(idS=(idS+1)%110)):(112+(idD=(idD+1)%140))}
 function emit(pi,c,mat,gloss,fl,rim){const b=prims[pi].b[curLayer];if(b.n>=b.cap){const nd=new Float32Array(b.cap*2*FL);nd.set(b.d);b.d=nd;b.cap*=2}
-const d=b.d,o=b.n*FL;d.set(M,o);let r=c[0],g=c[1],bl=c[2];if(gTint>0){r+=(1-r)*gTint;g+=(1-g)*gTint;bl+=(1-bl)*gTint;if(gTint>0.5)fl|=1}
+const d=b.d,o=b.n*FL;d.set(M,o);let r=c[0],g=c[1],bl=c[2];if(gTint>0){r+=(1-r)*gTint;g+=(1-g)*gTint;bl+=(1-bl)*gTint;if(gTint>0.5)fl|=1}if(gIce>0){r=r*0.4+0.55;g=g*0.4+0.8;bl=bl*0.3+0.7}
 d[o+16]=r;d[o+17]=g;d[o+18]=bl;d[o+19]=mat;d[o+20]=gId||nid();d[o+21]=gloss;d[o+22]=fl;d[o+23]=rim;b.n++;b.dirty=true}
 function put(pi,x,y,z,rx,ry,rz,sx,sy,sz,c,mat,gloss,fl,rim){mPush();mT(x,y,z);if(ry)mRY(ry);if(rx)mRX(rx);if(rz)mRZ(rz);mS(sx,sy,sz);emit(pi,c,mat||0,gloss||0,fl||0,rim||0);mPop()}
 const box=(x,y,z,sx,sy,sz,c,mat,gloss,fl,rim)=>put(BOX,x,y,z,0,0,0,sx,sy,sz,c,mat,gloss,fl,rim);
 const sph=(x,y,z,sx,sy,sz,c,mat,gloss,fl,rim)=>put(SPH,x,y,z,0,0,0,sx,sy,sz,c,mat,gloss,fl,rim);
 const cyl=(x,y,z,sx,sy,sz,c,mat,gloss,fl,rim)=>put(CYL,x,y,z,0,0,0,sx,sy,sz,c,mat,gloss,fl,rim);
 function flushLayer(l){for(const p of prims){const b=p.b[l];if(!b.n)continue;gl.bindVertexArray(b.vao);if(b.dirty){gl.bindBuffer(gl.ARRAY_BUFFER,b.buf);gl.bufferData(gl.ARRAY_BUFFER,b.d.subarray(0,b.n*FL),l===0?gl.STATIC_DRAW:gl.DYNAMIC_DRAW);b.dirty=false}if(p.ib)gl.drawElementsInstanced(gl.TRIANGLES,p.count,gl.UNSIGNED_SHORT,0,b.n);else gl.drawArraysInstanced(gl.TRIANGLES,0,p.count,b.n)}}
-function beginDynamic(){for(const p of prims){p.b[1].n=0;p.b[2].n=0}idD=0;curLayer=1;mReset();gTint=0;gId=0}
+function beginDynamic(){for(const p of prims){p.b[1].n=0;p.b[2].n=0}idD=0;curLayer=1;mReset();gTint=0;gId=0;gIce=0}
 // ---- camera ----
 const cam={x:0,y:1.62,z:16,yaw:0,pitch:0,roll:0,fov:80*PI/180};
 const VIEW=m4(),PROJ=m4(),VP=m4(),CAMW=m4(),LV=m4(),LP=m4(),LVP=m4();

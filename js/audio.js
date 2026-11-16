@@ -27,6 +27,12 @@ case'item':tone('triangle',880,1320,0.1,0.25*v);tone('triangle',1320,1760,0.14,0
 case'heart':tone('sine',62,40,0.22,0.9*v);tone('sine',55,36,0.26,0.75*v,0.28);break;
 case'gong':tone('sine',196,192,2.4,0.55*v);tone('sine',392,386,1.6,0.25*v);tone('triangle',523,515,1.1,0.12*v);tone('sine',98,96,2.6,0.4*v);noise(0.25,0.35*v,'bandpass',2600,900);break;
 case'clank':tone('triangle',1800,1500,0.09,0.18*v);tone('square',900,700,0.05,0.1*v);break;
+case'rshot':noise(0.1,0.4*v,'lowpass',7000,800);tone('square',300,80,0.06,0.18*v);tone('sine',150,50,0.1,0.3*v);break;
+case'sgun':noise(0.35,0.8*v,'lowpass',4000,200);tone('sine',90,30,0.3,0.7*v);tone('square',200,40,0.12,0.25*v);break;
+case'slash':noise(0.14,0.45*v,'highpass',1500,6000);tone('triangle',1400,500,0.1,0.12*v);break;
+case'whoosh':noise(0.22,0.35*v,'bandpass',500,2000);break;
+case'zap':tone('sawtooth',1800,600,0.05,0.07*v);noise(0.04,0.12*v,'highpass',3000,8000);break;
+case'freeze':tone('triangle',2400,3200,0.25,0.18*v);tone('sine',1600,1200,0.4,0.15*v);noise(0.3,0.2*v,'highpass',4000,9000);break;
 case'orb':tone('triangle',1200,1800,0.05,0.08*v);break;}}
 const MEL=[74,0,0,74,0,75,74,0,70,0,69,0,67,0,69,0,70,0,0,70,0,69,67,0,63,0,62,0,0,0,62,63,67,0,0,67,0,69,70,0,74,0,75,0,74,0,70,0,69,0,70,69,67,0,63,0,62,0,0,0,62,0,74,0],BAS=[38,34,31,33];
 const mf=m=>440*Math.pow(2,(m-69)/12);

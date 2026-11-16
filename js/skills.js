@@ -71,7 +71,7 @@ if(h('3t1'))s.gauge*=1.15;if(h('3t2'))s.spw*=1.05;
 if(h('3A3'))s.gReg=0.3;if(h('3A4'))s.gKeep=10;if(h('3A5'))s.gKill=2;if(h('3A6'))s.g0=100;
 if(h('3B3'))s.beam*=1.15;if(h('3B4'))s.spinv=1;if(h('3B5'))s.gAfter=25;if(h('3B6'))s.again=1;
 if(h('3C3')){s.gauge*=1.3;s.heal*=0.5}if(h('3C4')){s.spw*=1.2;s.spCost=10}
-SK=s;if(DEV&&G.mode!=='pvp')Object.assign(SK,{atk:20,rel:0.15,mag:40,cool:0.7,hp:99999,heal:3,def:1,rev:1,dash:0.2,dj:1,gauge:3,spinv:1,spd:1.3,crit:2,beam:2,regen:2})}
+SK=s;if(DEV&&G.mode!=='pvp')Object.assign(SK,{atk:20,rel:0.15,mag:40,cool:0.7,hp:99999,heal:3,def:1,rev:1,dash:0.2,dj:1,gauge:3,spinv:1,spd:1.3,crit:2,beam:2,regen:2});if(typeof wpApply==='function')wpApply(SK)}// weapon numbers (weapons.js)
 skApply();
 function addGauge(v){pl.gauge=Math.min(100,pl.gauge+v*SK.gauge)}
 // damage multiplier from skills that depend on the moment (air time, low HP); crits are separate
@@ -88,8 +88,9 @@ function skRespecInfo(){let sp=0,k=0;for(const n of SKN)if(skHas(n.id)){sp+=n.c0
 function skAskReset(){if(!skRespecInfo().k){skMsg={s:'習得したスキルがありません',t:now};return}skConf=true}
 function skReset(){let r=0,k=0;for(const n of SKN)if(skHas(n.id)){r+=n.c0-SKRESPEC;k++}if(!k)return;SKS.pt+=r;SKS.own={};SKS.last=null;skSave();skMsg={s:'振り直し：'+k+'個外して'+r+'ポイント戻りました（1個につき'+SKRESPEC+'ポイント）',t:now}}
 // points at the end of a game (solo / co-op, once per game)
+// all five cleared → the six weapons too (WS / wsSave in weapons.js)
 function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;let p=0;const i=G.stage;
-if(cl){if(!SKS.clr[i]){SKS.clr[i]=1;p+=3;if(skClr()===5)p+=4}else if(!SKS.c2[i]){SKS.c2[i]=1;p+=1}if(!G.bHurt&&!SKS.nd[i]){SKS.nd[i]=1;p+=1}}
+if(cl){if(!SKS.clr[i]){SKS.clr[i]=1;p+=3;if(skClr()===5){p+=4;if(!WS.got){WS.got=1;wsSave();G.newW=1}}}else if(!SKS.c2[i]){SKS.c2[i]=1;p+=1}if(!G.bHurt&&!SKS.nd[i]){SKS.nd[i]=1;p+=1}}
 SKS.pt+=p;G.rew=p;skSave()}
 // ---- skill tree screen: a manga panel with the cross (pan / zoom) ----
 // The cross is drawn in "world" coords around SKC and shown through a view (SKVR) that can be dragged, pinched and wheel-zoomed.

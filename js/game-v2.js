@@ -1,10 +1,10 @@
 'use strict';
 // ================= GAME FLOW (v2) =================
-function resetWorld(){enemies.length=0;ices.length=0;templeDoor.t=templeDoor.target=0;G.kcP=null;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.bHurt=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[]}
+function resetWorld(){enemies.length=0;ices.length=0;templeDoor.t=templeDoor.target=0;G.kcP=null;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.bHurt=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[];wpReset()}
 function beginGame(){setStage(G.stage);resetWorld();pl.slot=net.on?net.slot:0;const pvp=G.mode==='pvp',sp=pvp?PSPAWN[pl.slot]:SPAWN[pl.slot];resetPlayer(sp[0],sp[1],pvp?Math.atan2(sp[0],sp[1]+2):0);
 for(const o of others){const s=pvp?PSPAWN[o.slot]:SPAWN[o.slot];o.x=o.nx=s[0];o.z=o.nz=s[1];o.dead=false;o.hp=100;o.y=o.ny=0}
-Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0,rew:null});
-net.evseq=0;net.evDone=0;net.dacc={};net.pvAcc={};net.q={f:[],pk:[],kb:[],ps:[]};sndVol=1;musOn=1;snd('ui');eidN=0;
+Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0,rew:null,newW:0});
+net.evseq=0;net.evDone=0;net.dacc={};net.pvAcc={};net.q={f:[],pk:[],kb:[],ps:[],wx:[],ef:[]};sndVol=1;musOn=1;snd('ui');eidN=0;
 if(pvp){G.banner={ch:'対戦',name:'10撃破で勝利！'};G.bannerT=0;pl.inv=2}else if(!net.on)say(['ここが…','漫画の中!?'],0);else{G.banner={ch:'協力',name:'力を合わせて倒せ！'};G.bannerT=0}}
 function startGame(){G.mode='solo';beginGame()}
 function spawnGroup(g){for(const k in g){const n=Math.round(g[k]*(1+0.5*(G.np-1)));for(let i=0;i<n;i++)spawnNear(k)}}
@@ -61,11 +61,12 @@ else{ctx.fillStyle='#ecebe6';ctx.fillRect(x,y,w,h);ctx.strokeStyle=INK;ctx.lineW
  ctx.fillStyle='#141218';ctx.fillRect(x,y+h-34,w,34);const cx=x+w/2;ctx.fillStyle='#d9262c';for(const r of[[cx-60,y+50,15,h-80],[cx+45,y+50,15,h-80],[cx-84,y+40,168,14],[cx-70,y+70,140,10]]){ctx.fillRect(r[0],r[1],r[2],r[3]);ctx.strokeRect(r[0],r[1],r[2],r[3])}ctx.fillStyle=INK;ctx.fillRect(cx-94,y+28,188,12);
  ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(cx,y+h-17,110,9,0,0,TAU);ctx.stroke()}
 ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(X,Y,W2,H2)}
-function drawMenu(dt){ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);const mn=G.menu;
+function drawMenu(dt){if(G.menu==='equip'){drawEquip();return}ctx.fillStyle='rgba(22,18,31,.5)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.16)',7);drawLogo(250,70,0.34);gearBtn(W-86,24);const mn=G.menu;
 if(mn==='main'){head('モードを選ぼう');B(330,200,620,96,'ストーリー',()=>{G.menu='stage'},{col:'#ffd91a',size:46});txt('ひとりでじっくり　全５ステージ',640,316,21,'#fff',INK,6);
  B(330,346,620,96,'対戦モード',()=>{G.menu='vs';net.err=''},{col:'#ff8a6b',size:46});txt('みんなで撃ち合い',640,462,21,'#fff',INK,6);
  B(330,492,620,96,'協力プレイ',()=>{net.mode='coop';G.menu='online';net.err=''},{col:'#59d8ff',size:46});txt('最大４人でステージに挑む（オンライン）',640,608,21,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
  B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null;skFocus()},{col:'#ff9ad0',size:30});txt('ポイント '+SKS.pt,1090,600,20,'#fff',INK,6);
+ B(680,624,250,64,null,()=>openEquip('main'),{col:'#ffb35a'});txt('装備',812,646,28,INK);txt(WPN[wpCur()].name,812,672,16,'#5a3010');
 }
 else if(mn==='skill')drawSkill();
 else if(mn==='stage'){head('ステージ選択');for(let n=0;n<STG.length;n++){const x=43+n*242,y=206,s=STG[n];btns.push({x,y,w:226,h:390,cb:()=>{G.stage=n;startWipe(startGame)}});panel(x,y,226,390);stageArt(n,x+12,y+12,202,150);
@@ -83,7 +84,7 @@ else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');pane
   txt('ステージ',925,366,22,INK);for(let n=0;n<STG.length;n++)B(668+n*106,388,100,70,STG[n].name,()=>{net.stage=n;net.lobT=0;setStage(n)},{col:net.stage===n?'#ffd91a':'#fff',size:STG[n].name.length>4?17:20});
   txt(net.mode==='coop'?'人数に合わせて敵が強くなる。倒れた仲間のそばで復活！':'３分間の撃ち合い。先に１０撃破で勝ち！',925,484,19,INK);B(700,512,460,76,net.roster.length>1?'スタート！（'+net.roster.length+'人）':'ひとりでスタート',()=>hostStart(),{col:'#ff4a3d',tc:'#fff',size:36})}
  else{txt(net.mode==='coop'?'協力プレイ':'対人対戦',925,300,50,INK);txt(STG[net.stage].name,925,372,36,'#e5402b');if(curStage!==net.stage)setStage(net.stage);if(Math.sin(now*5)>-0.5)txt('ホストの開始を待っています…',925,470,26,INK)}
- B(60,628,220,56,'退出する',()=>netLeave(),{size:26})}}
+ B(60,628,220,56,'退出する',()=>netLeave(),{size:26});B(300,628,300,56,'装備：'+WPN[wpCur()].name,()=>openEquip('lobby'),{size:20,col:'#ffb35a'})}}
 function drawTags(){for(const o of others){const p=project(o.x,o.y+(o.dead?1.2:2.35),o.z);if(!p||p.w>80)continue;const s=clamp(16/p.w,0.55,1.1);ctx.save();ctx.translate(p.x,p.y);ctx.scale(s,s);para(-36,-16,64,30,8);ctx.fillStyle=PCSS[o.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('P'+(o.slot+1),0,0,22,'#fff',INK,5);
 if(G.mode!=='pvp'){ctx.fillStyle=INK;ctx.fillRect(-34,18,68,10);ctx.fillStyle=o.hp>40?'#35d06a':'#ff3b30';ctx.fillRect(-32,20,64*sat(o.hp/100),6);if(o.dead&&Math.sin(now*8)>-0.3)txt('ダウン！',0,-40,26,'#ff3b30',INK,6,'center','#fff',10)}ctx.restore()}}
 function drawHUD2(){B(30,108,46,40,'II',()=>{G.paused=!G.paused},{sk:0,size:22});B(84,108,62,40,['1人称','3人称','2人称'][SET.view|0],tpsToggle,{sk:0,size:17,col:SET.view?'#ffd91a':'#fff'});if(DEV&&G.mode!=='pvp'&&!isCli()&&G.wave<WAVESET[G.stage].length-1)B(30,158,130,40,'ボスへ',devSkipBoss,{sk:0,size:22,col:'#ff8a2b'});
@@ -106,7 +107,7 @@ function drawUI(dt){ctx.clearRect(0,0,W,H);btns=[];const play=G.state==='play',d
 if(lineA>0.03){ctx.globalAlpha=Math.min(1,lineA*1.3);focusLines(lineCx,lineCy,300+(1-lineA)*200,64,lineCol,((now*24)|0));ctx.globalAlpha=1}
 if(boss&&boss.st==='rise'){ctx.globalAlpha=0.8;focusLines(W/2,H*0.4,380,56,INK,((now*20)|0)+50);ctx.globalAlpha=1}
 if(pl.dashT>0){ctx.globalAlpha=0.7;focusLines(W/2,H/2,330,50,INK,((now*30)|0)+90);ctx.globalAlpha=1}
-const kc=play&&(G.kcT>=0||monkCine());if(play&&!kc)drawTags();drawTexts();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
+const kc=play&&(G.kcT>=0||monkCine());if(play&&!kc)drawTags();drawTexts();wpOverlay();if(cutSp>0)drawCutSp();if(cutBoss>0)drawCutBoss();if(play||demo)drawBanner();
 if(kc){const k=G.kcT>=0?easeOut(sat(G.kcT/0.25))*58:monkBars();ctx.fillStyle=INK;ctx.fillRect(0,0,W,k);ctx.fillRect(0,H-k,W,k)}
 if(play&&pl.frz>0&&!pl.dead){const a=sat(pl.frz/0.25);ctx.fillStyle='rgba(150,215,255,'+(0.32*a)+')';ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(225,245,255,'+(0.9*a)+')';ctx.lineWidth=26;ctx.strokeRect(13,13,W-26,H-26)}
 if(play&&!kc){drawHUD();drawHUD2();drawTouch();if(!hasTouch&&G.time<8&&G.mode!=='pvp')txt('WASD：移動　マウス：視点／射撃　SPACE：ジャンプ　SHIFT：回避　E：必殺　R：装填',W/2,610,20,'#fff',INK,6)}
@@ -150,14 +151,14 @@ tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
 cam.x=sx-fx*tpsD;cam.y=sy-fy*tpsD;cam.z=sz-fz*tpsD;cam.roll*=0.5}
 // ray origin for shooting: on the camera ray, level with the hero (so it goes through the crosshair but never hits what is behind the hero)
 function aimOrigin(){if(!tpsOn())return[cam.x,cam.y,cam.z];if(SET.view===2)return[tpsEye[0],tpsEye[1],tpsEye[2]];const d=aimDir(),t=Math.max(0,(tpsEye[0]-cam.x)*d[0]+(tpsEye[1]-cam.y)*d[1]+(tpsEye[2]-cam.z)*d[2]);return[cam.x+d[0]*t,cam.y+d[1]*t,cam.z+d[2]*t]}
-function drawTpsHero(){if(!tpsOn())return;const o=tpsHero;o.slot=pl.slot||0;o.x=pl.x;o.y=pl.y||0;o.z=pl.z;o.yaw=pl.yaw;o.pitch=pl.pitch;o.dead=pl.dead;o.mv=pl.moving;o.wt+=GDT;o.fireT=pl.flashT;o.sp=pl.sp===2?1:0;o.flash=hurtA>0.5?1:0;
+function drawTpsHero(){if(!tpsOn())return;const o=tpsHero;o.slot=pl.slot||0;o.x=pl.x;o.y=pl.y||0;o.z=pl.z;o.yaw=pl.yaw;o.pitch=pl.pitch;o.dead=pl.dead;o.mv=pl.moving;o.wt+=GDT;o.fireT=pl.flashT;o.sp=pl.sp===2&&!pl.wp?1:0;o.wp=pl.wp|0;o.ak=pl.ak;o.at=pl.at;o.hc=pl.hon?pl.hc:null;o.bombs=pl.bombs;o.flash=hurtA>0.5?1:0;
 if(tpsD<0.9){const cp=Math.cos(pl.pitch);muz[0]=pl.x+Math.cos(pl.yaw)*0.3-Math.sin(pl.yaw)*cp;muz[1]=tpsEye[1]-0.2+Math.sin(pl.pitch);muz[2]=pl.z-Math.sin(pl.yaw)*0.3-Math.cos(pl.yaw)*cp;return}
 drawHero(o);muz[0]=o.gx;muz[1]=o.gy;muz[2]=o.gz;
 if(pl.sp===1){const s=0.3+pl.spT*1.2;bill(BURST,o.gx,o.gy,o.gz,s,now*20,C.cyan,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,s*0.5,-now*20,C.white,F_UNLIT|F_NOCAST)}}
 function setCamera(dt){if(G.state==='menu'||(G.state==='title'&&!G.demoOn)){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17;cam.y=5+Math.sin(now*0.2)*1.5;const dx=-cam.x,dy=4.5-cam.y,dz=-9-cam.z;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(dy,Math.hypot(dx,dz));cam.roll=0;cam.fov=70*PI/180}
 else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
-cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}camUpdate()}
+cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2&&spLock()?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
 const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}
@@ -171,7 +172,7 @@ else if(!paused){const cli=isCli(),over=G.state==='over';
  else{inp.fire=false;inp.mx=inp.mz=0}
  if(boss&&boss.st==='die'&&!(G.kcT>=0))G.kcT=0;if(G.kcT>=0)G.kcT+=dt;if(G.kcT>=0||monkCine()){inp.fire=false;inp.mx=inp.mz=0;inp.lx=inp.ly=0;inp.special=inp.jump=inp.dash=false}
  if(G.cine>0){G.cine-=dt;const k=Math.min(1,dt*5),mk=boss&&boss.monk,drop=mk&&boss.st==='drop'&&boss.stT<1.9,tx=mk&&!drop?boss.x:0,tz=mk?(drop?-26:boss.z):-21,ty=mk?(drop?7:boss.y+4.5):20.6,dh=Math.hypot(pl.x-tx,pl.z-(mk?tz:-26));pl.yaw+=angDiff(Math.atan2(pl.x-tx,pl.z-tz),pl.yaw)*k;pl.pitch+=(Math.atan2(ty-1.6,dh)-pl.pitch)*k}
- updatePlayer(g);if(cli)clientInterp(g);else if(!over){updateEnemies(g);updateShots(g)}
+ updatePlayer(g);wpWorld(g);if(cli)clientInterp(g);else if(!over){updateEnemies(g);updateShots(g)}
  updateOthers(dt);if(!over){updateShocks(g);pickItems(g)}updateParts(g);G.comboT-=dt;if(G.comboT<=0)G.combo=0}
 netTick(dt);if(G.mode==='pvp'&&G.state==='play')G.kills=G.pk[pl.slot]||0;
 if(!boss)G.mood=Math.max(0,G.mood-dt*0.4);

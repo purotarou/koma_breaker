@@ -1,0 +1,352 @@
+'use strict';
+// ================= WEAPONS 武器 (STORY.md「武器と必殺技」) =================
+// Seven weapons: 妖弾銃 (the standard, box-built gun of old) + six models (blender/weapons.blend -> assets/weapon_*.glb).
+// One weapon is equipped (装備画面: main menu / lobby →「装備」, saved in localStorage koma_wpn) and used for the whole stage, versus too.
+// The six come together once all five stages are cleared (SKS.clr, WS.got), or at once while the developer 超強化 switch (DEV) is on.
+// Each weapon has its own normal attack and its own special (必殺); the gauge (妖珠) is shared. Skills: damage / special power /
+// gauge work for every weapon; magazine / reload / fire rate only for the ones with ammo (wpApply scales SK after skApply).
+//  連珠銃 32発・威力24・毎秒7発・装填0.8秒・反動なし / 珠時雨: 5 s of free ammo, double rate, homing aim.
+//  散華砲 8 pellets in a fan (closer = stronger), staggers 鎧鬼, gauge x1.5 / 大散華: 36 pellets through walls and enemies.
+//  氷魄砲 hold = piercing beam, heat gauge, overheat → forced cooling / 妖光・氷牢: 8 s ice beam, frozen 3 s (x1.5 damage), bosses slowed.
+//  祓い刀 no ammo, lunge slash, cuts enemy ink shots / 一閃・天断ち: a huge flying slash (reaches the boss).
+//  火消しの大槌 hold to charge, release = slam + shock ring in front (wider when charged), staggers 鎧鬼 / 駒砕き: leap + slam, the screen
+//    cracks into manga panels, everything within 16 m is hit.
+//  焙烙火矢 throw (3 held, +1 every 4 s), explodes on enemies / bosses / ground, gauge x1.5 / 大玉花火: giant bomb, the fire burns 6 s
+//    (on the boss if it hit the boss). Never hurts the thrower or friends.
+// Network: damage is still self-reported (damage() → net.dacc). The player message also carries the weapon index, an action counter
+// + kind (others replay the swing / throw pose and slash trails), the hammer charge and rail-beam bits. Small visual-only events
+// (net.q.wx: bombs, the sword wave, hammer slams) are replayed by the others; freeze / stun / slow go to the host (net.q.ef), which runs the enemies.
+const WPN=[
+{id:'gun',name:'妖弾銃',type:'標準',kind:'gun',btn:'撃',file:null,col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:20,cool:0.125,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.045,-0.63],
+ d:['16発の連射銃。撃ち切ったら装填','いちばん扱いやすい標準の武器'],s:'正面に太い光線を一直線に放つ'},
+{id:'rifle',name:'連珠銃',type:'アサルト',kind:'gun',btn:'撃',file:'weapon_rifle',col:'#3f6fd8',bg:[.84,.88,1],ammo:1,mag:32,dmg:24,cool:1/7,rel:0.8,kick:0.006,shk:0.03,snd:'rshot',g:1,sp:'珠時雨',spd:5,spMode:'buff',muz:[0,0.03,-0.6],fore:0.27,
+ d:['32発・威力24の速射銃','妖弾銃の上位版。反動がなく装填も速い'],s:'数秒間、弾が減らずに連射２倍。弾が敵を追う'},
+{id:'shotgun',name:'散華砲',type:'ショットガン',kind:'gun',btn:'撃',file:'weapon_shotgun',col:'#ff7aa8',bg:[1,.9,.93],ammo:1,mag:6,dmg:15,pel:8,cool:0.72,rel:1.5,kick:0.09,shk:0.22,snd:'sgun',g:1.5,sp:'大散華',spd:0.5,spMode:'once',muz:[0,0.055,-0.56],fore:0.3,
+ d:['扇状に散弾を撃つ。近いほど強い','鎧鬼をのけぞらせる。必殺ゲージが早くたまる'],s:'超広範囲の散弾。全弾が壁も敵も貫通する'},
+{id:'rail',name:'氷魄砲',type:'レールガン',kind:'rail',btn:'撃',file:'weapon_railgun',col:'#5fd0ff',bg:[.85,.96,1],ammo:0,g:1,sp:'妖光・氷牢',spd:8,spMode:'mode',muz:[0,0.05,-0.87],fore:0.33,
+ d:['長押しで、敵をつらぬく光線を連射','熱がたまりきると、しばらく冷却'],s:'８秒間、凍結光線を出しっぱなし。凍った敵は被ダメ1.5倍'},
+{id:'katana',name:'祓い刀',type:'刀',kind:'katana',btn:'斬',file:'weapon_katana',col:'#2f6fd8',bg:[.88,.92,1],ammo:0,g:1,sp:'一閃・天断ち',spd:0.6,spMode:'once',
+ d:['弾切れなし。踏み込んで斬る','敵の墨弾も斬って消せる'],s:'画面を横切る巨大な斬撃。ボスにも届く'},
+{id:'hammer',name:'火消しの大槌',type:'大槌',kind:'hammer',btn:'叩',file:'weapon_hammer',col:'#f4b82e',bg:[1,.95,.82],ammo:0,g:1,sp:'駒砕き',spd:1.0,spMode:'once',
+ d:['振り下ろして正面に衝撃波','長押しで溜めると範囲が広がる。鎧鬼を怯ませる'],s:'画面がコマ割りに割れ、広い範囲の敵を打ち砕く'},
+{id:'bomb',name:'焙烙火矢',type:'焙烙玉',kind:'bomb',btn:'投',file:'weapon_bomb',col:'#ff6a3d',bg:[1,.9,.84],ammo:0,g:1.5,sp:'大玉花火',spd:0.6,spMode:'once',
+ d:['投げて爆発。３個まで持ち、時間で補充','ボスにも当たる。必殺ゲージが早くたまる'],s:'特大の爆発のあと、炎が約６秒燃え残る'}];
+const WB_RF=4;// seconds per bomb refill
+// ---- ownership / equip (localStorage koma_wpn: {eq: weapon id, got: 1 once the six were obtained}) ----
+const WS={eq:'gun',got:0};
+try{const s=JSON.parse(localStorage.getItem('koma_wpn')||'null');if(s)Object.assign(WS,s)}catch(e){}
+function wsSave(){try{localStorage.setItem('koma_wpn',JSON.stringify(WS))}catch(e){}}
+if(!WS.got&&skClr()>=5){WS.got=1;wsSave()}// a save that already cleared everything gets them at start-up
+const wpIdx=id=>Math.max(0,WPN.findIndex(w=>w.id===id)),wpOwn=i=>i===0||!!DEV||!!WS.got,wpW=()=>WPN[pl.wp|0]||WPN[0];
+function wpCur(){if(G.demoOn)return 0;const i=wpIdx(WS.eq);return wpOwn(i)?i:0}
+// weapon numbers on top of the skills (called at the end of skApply, pl.wp is set first in resetPlayer)
+function wpApply(s){const w=WPN[pl.wp|0];if(!w)return;if(w.ammo){s.mag=Math.max(2,Math.round(s.mag*w.mag/16));s.rel*=w.rel;s.cool*=w.cool/0.125}s.gauge*=w.g}
+const spDur=()=>wpW().spd*SK.beam/0.8;// 必殺持続 / 極み stretch every timed special the same way
+const spLock=()=>pl.sp===1||(pl.sp===2&&wpW().spMode==='beam');// slow turning / walking while charging or firing the dragon beam
+function wpAct(k){pl.ak=k;pl.at=0;pl.an=((pl.an|0)+1)%250}
+function wxPush(a){if(net.on)(net.q.wx||(net.q.wx=[])).push(a)}
+// ---- models ----
+const WMOD={},WTMP=m4(),WF=m4();
+for(const w of WPN)if(w.file)loadGlbBuf('assets/'+w.file+'.glb').then(b=>wpLoad(w,b)).catch(e=>console.warn('[weapon] assets/'+w.file+'.glb failed to load:',e));
+function wpLoad(w,buf){const g=glbParse(buf),J=g.j,geo=new Map(),items=[],mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+const primOf=p=>{const key=p.attributes.POSITION+'/'+p.attributes.NORMAL+'/'+p.indices;if(geo.has(key))return geo.get(key);
+ const P=glbAcc(g,p.attributes.POSITION).v,N=glbAcc(g,p.attributes.NORMAL).v,I=glbAcc(g,p.indices).v,mb=new MB(),v=k=>[P[k*3],P[k*3+1],P[k*3+2]],n=k=>[N[k*3],N[k*3+1],N[k*3+2]];
+ for(let t=0;t<I.length;t+=3)mb.tri(v(I[t]),v(I[t+1]),v(I[t+2]),n(I[t]),n(I[t+1]),n(I[t+2]));const pi=addPrim(mb);geo.set(key,pi);return pi};
+const walk=(ni,par)=>{const n=J.nodes[ni],m=m4mul(m4(),par,glbNodeMat(n));
+ if(n.mesh!==undefined)for(const p of J.meshes[n.mesh].primitives){const ma=(J.materials||[])[p.material]||{},x=ma.extras||{},bc=(ma.pbrMetallicRoughness||{}).baseColorFactor||[1,1,1,1],a=J.accessors[p.attributes.POSITION];
+  items.push({pi:primOf(p),m,c:[bc[0],bc[1],bc[2]],mat:x.kb_mat|0,gloss:+x.kb_gloss||0,fl:x.kb_flags|0,rim:+x.kb_rim||0});
+  if(a.min&&a.max)for(let k=0;k<8;k++){const q=[k&1?a.max[0]:a.min[0],k&2?a.max[1]:a.min[1],k&4?a.max[2]:a.min[2]];for(let c=0;c<3;c++){const v=m[c]*q[0]+m[4+c]*q[1]+m[8+c]*q[2]+m[12+c];if(v<mn[c])mn[c]=v;if(v>mx[c])mx[c]=v}}}
+ for(const c of n.children||[])walk(c,m)};
+const I4=m4();I4[0]=I4[5]=I4[10]=I4[15]=1;for(const ni of J.scenes[J.scene||0].nodes)walk(ni,I4);
+WMOD[w.id]={items,mn,mx}}
+const wpReady=i=>!!(WPN[i]&&WPN[i].file&&WMOD[WPN[i].id]);
+function mApply(A){M.set(m4mul(WTMP,M,A))}
+// emit weapon i under the current matrix (each part its own outline ID); col = flat silhouette colour (locked weapons)
+function wpModel(i,col){const md=WMOD[WPN[i].id];if(!md)return;for(const it of md.items){mPush();mApply(it.m);if(col)emit(it.pi,col,0,0,F_UNLIT,0);else emit(it.pi,it.c,it.mat,it.gloss,it.fl,it.rim);mPop()}}
+// the standard gun (box-built), muzzle at -Z
+function drawYoGun(spin,lit){box(0,0.02,-0.1,0.075,0.11,0.34,C.gunM,0,.6);put(CYL,0,0.045,-0.36,PI/2,0,0,0.06,0.26,0.06,C.gunD,0,.8);box(0,0.085,-0.16,0.03,0.02,0.36,C.gunD);
+put(CONE,0,0.045,-0.55,-PI/2,0,0,0.085,0.16,0.085,C.gold,0,1);put(CYL,0,0.045,-0.47,PI/2,0,0,0.09,0.03,0.09,C.gold);
+put(CYL,0,0.02,-0.02,PI/2,0,spin,0.13,0.1,0.13,C.gunD,0,.7);put(CYL,0,0.02,-0.02,PI/2,0,0,0.136,0.025,0.136,C.red);
+sph(0,0.105,0.05,0.07,0.07,0.07,lit?C.cyan:C.cyanD,0,1,lit?F_UNLIT:0);box(0,0.105,-0.27,0.015,0.03,0.03,C.gold);box(0,0.1,0.1,0.02,0.05,0.04,C.gunD);put(BOX,0,-0.1,0.07,0.35,0,0,0.06,0.18,0.085,C.wood)}
+// weapon frame: grip P, tip direction f, up hint u, scale s -> WF (local -Z = f, local +Y ≈ u)
+function wpFrame(P,f,u,s){f=v3n(f);const d=u[0]*f[0]+u[1]*f[1]+u[2]*f[2],y=v3n([u[0]-f[0]*d,u[1]-f[1]*d,u[2]-f[2]*d]),z=[-f[0],-f[1],-f[2]],x=[y[1]*z[2]-y[2]*z[1],y[2]*z[0]-y[0]*z[2],y[0]*z[1]-y[1]*z[0]];
+WF.set([x[0]*s,x[1]*s,x[2]*s,0,y[0]*s,y[1]*s,y[2]*s,0,z[0]*s,z[1]*s,z[2]*s,0,P[0],P[1],P[2],1])}
+// keyframes [[t, value | [values]], ...] with smoothstep easing
+function kf(K,t){const n=K.length;if(t<=K[0][0])return K[0][1];for(let i=1;i<n;i++)if(t<K[i][0]){const a=K[i-1],b=K[i],u=(t-a[0])/(b[0]-a[0]),s=u*u*(3-2*u);
+ return typeof a[1]==='number'?a[1]+(b[1]-a[1])*s:a[1].map((v,j)=>v+(b[1][j]-v)*s)}return K[n-1][1]}
+// direction from yaw θ (0 = the hero's front +Z, + = towards the hero's right -X) and elevation e
+const dirYE=(th,e)=>[-Math.sin(th)*Math.cos(e),Math.sin(e),Math.cos(th)*Math.cos(e)];
+// slash crescent (flat, around -Z, ends taper): sword trails and the 一閃 wave
+function mkArc(A,n){const m=new MB(),U=[0,1,0],D=[0,-1,0],p=(a,r)=>[Math.sin(a)*r,0,-Math.cos(a)*r];
+for(let i=0;i<n;i++){const a0=-A+2*A*i/n,a1=-A+2*A*(i+1)/n,w0=Math.sin(PI*i/n),w1=Math.sin(PI*(i+1)/n),o0=p(a0,0.5),o1=p(a1,0.5),i0=p(a0,0.5-0.2*w0),i1=p(a1,0.5-0.2*w1);m.quad(o0,o1,i1,i0,U,U,U,U);m.quad(o0,i0,i1,o1,D,D,D,D)}return m}
+const SLASH=addPrim(mkArc(1.15,24)),WF_EMB=[0.42,0.12,0.1];
+// ---- world objects (bombs, sword waves, fire zones, slash trails); own = thrown by this player (deals the damage) ----
+const wbombs=[],wwaves=[],wfires=[],wslash=[];
+function wpReset(){wbombs.length=0;wwaves.length=0;wfires.length=0;wslash.length=0}
+// damage to an enemy from a weapon; the bell monk keeps his rule (front 3% / side 30% / back = bell) seen from (fx,fz)
+function wpDmg(e,dm,x,y,z,o){o=o||{};const q=!!o.quiet;
+if(e.monk){const k=monkK(e,o.fx==null?pl.x:o.fx,o.fz==null?pl.z:o.fz);if(k>=1&&e.bell)monkBellHit(e,dm*0.5,x,y,z,q);else{if(k<0.1&&!q)monkClank(e,x,y,z);if(k>0)damage(e,dm*k,false,x,y,z,q||k<0.1)}}
+else damage(e,dm,!!o.crit,x,y,z,q)}
+// enemy effects: 1 freeze (s), 2 stagger (鎧鬼), 3 slow (boss, s). The host runs the enemies, guests send a small message.
+function wpEffect(e,c,v){if(!e||e.dead)return;if(isCli()){if(c===1&&e.type!=='boss')e.frz=Math.max(e.frz||0,1);if(lim('ef'+e.id+'_'+c,0.4))(net.q.ef||(net.q.ef=[])).push([e.id,c,r1(v||0)]);return}wpEffectHost(e,c,v)}
+function wpEffectHost(e,c,v){if(c===1){if(e.type==='boss')return;if(!(e.frz>0)){fxStar(e.x,(e.y||0)+1,e.z,2.2,C.cyan,0.12);if(lim('frzT',0.3))sfxAt('ピキーン',e.x,(e.y||0)+2.6,e.z,{size:48,st:'cyan',life:0.4})}e.frz=Math.max(e.frz||0,v)}
+else if(c===2){if(e.type==='bru'&&e.st!=='stun'&&e.st!=='spawn'&&now-(e.stunAt||-9)>3.2){e.st='stun';e.stT=0;e.stunAt=now;e.cd=Math.max(e.cd||0,2);ev('txt','グラッ',r1(e.x),4.4,r1(e.z),58,'hit')}}
+else if(c===3){if(e.type==='boss')e.slw=Math.max(e.slw||0,v)}}
+// ================= ATTACKS =================
+function wpUpdate(dt,cine){const w=wpW(),f=inp.fire&&!cine;pl.at+=dt;
+if(w.kind==='bomb'&&pl.bombs<3){pl.bombT+=dt;if(pl.bombT>=WB_RF){pl.bombT=0;pl.bombs++}}
+if(pl.slamT>0){pl.slamT-=dt;if(pl.slamT<=0)hammerHit(pl.slamC)}
+if(pl.kkT>0){pl.kkT-=dt;if(pl.kkT<=0)komaCrush()}
+if(w.kind==='rail'){railUpdate(dt,f);return}
+if(w.kind==='gun'){const buff=pl.sp===2&&w.spMode==='buff';if(f&&pl.cool<=0&&(pl.reload<=0||buff)&&(!pl.sp||buff)){if(pl.ammo>0||buff){pl.reload=0;shoot()}else startReload()}return}
+if(w.kind==='katana'){if(f&&pl.cool<=0&&!pl.sp&&pl.lgT<=0)katanaSlash();return}
+if(w.kind==='hammer'){if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt/1.1);if(c0<1&&pl.hc>=1){snd('item');addText('ズオオッ',W*0.68,H*0.6,{size:52,st:'boom',life:0.4})}
+  if(pl.sp)pl.hon=0;else if(!f){pl.hon=0;pl.slamT=0.12;pl.slamC=pl.hc;pl.cool=0.5;wpAct(4);snd('whoosh')}}
+ else if(f&&pl.cool<=0&&!pl.sp){pl.hon=1;pl.hc=0;wpAct(3)}return}
+if(w.kind==='bomb'&&f&&pl.cool<=0&&!pl.sp&&pl.bombs>0)throwBomb(0)}
+// ---- 散華砲: golden-angle fan of pellets; damage falls off with distance. big = 大散華 (through walls and enemies) ----
+function shotgunFire(w,big){const pw=pl.pow>0?2:1,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2];
+const d0=big?aimDir():aimAssist(aimDir(),as?0.1:0.04,as?0.7:0.4),r=v3n([d0[2],0,-d0[0]]),u=[r[1]*d0[2]-r[2]*d0[1],r[2]*d0[0]-r[0]*d0[2],r[0]*d0[1]-r[1]*d0[0]];
+const n=big?36:w.pel,spr=big?0.36:0.085,seen=new Set(),bru=new Map(),R=big?45:60;
+for(let i=0;i<n;i++){const a=i*2.39996+rnd(0,0.3),q=spr*Math.sqrt((i+0.5)/n),d=v3n([d0[0]+(r[0]*Math.cos(a)+u[0]*Math.sin(a))*q,d0[1]+(r[1]*Math.cos(a)+u[1]*Math.sin(a))*q,d0[2]+(r[2]*Math.cos(a)+u[2]*Math.sin(a))*q]);
+ if(big){for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0&&t<tm)tm=t}
+   if(tm<R){wpDmg(e,34*SK.spw*pw,ox+d[0]*tm,oy+d[1]*tm,oz+d[2]*tm,{quiet:seen.has(e)});seen.add(e);if(e.type==='bru')wpEffect(e,2)}}
+  for(const s of shots)if(!s.dead){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.4);if(t>0&&t<R){popShot(s);if(isCli())net.q.ps.push(s.id)}}
+  if(G.mode==='pvp')for(const o of others){if(o.dead||seen.has(o))continue;const t=raySph(ox,oy,oz,d,o.x,o.y+1.1,o.z,0.8);if(t>0&&t<R){seen.add(o);pvHit(o,9*pw,false,ox+d[0]*t,oy+d[1]*t,oz+d[2]*t)}}
+  fxTracer(muz[0],muz[1],muz[2],ox+d[0]*R,oy+d[1]*R,oz+d[2]*R,i%3?C.sakura:C.white,0.12);if(net.on&&i%4===0)net.q.f.push([r1(ox+d[0]*30),r1(oy+d[1]*30),r1(oz+d[2]*30)])}
+ else{const h=rayHit(ox,oy,oz,d,R),t=h.t,hx=ox+d[0]*t,hy=oy+d[1]*t,hz=oz+d[2]*t,fall=clamp(1.55-t/12,0.3,1.55),again=!!(h.e&&seen.has(h.e));
+  if(h.e){seen.add(h.e);if(h.e.type==='bru'&&t<11)bru.set(h.e,(bru.get(h.e)||0)+1)}
+  rayApply(h,w.dmg*fall*pw,hx,hy,hz,again||(!h.e&&i>2),0.4*fall*pw,R);
+  if(i%2===0)fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,pw>1?C.orange:C.white,0.06);if(net.on&&i<5)net.q.f.push([r1(hx),r1(hy),r1(hz)])}}
+for(const[e,k]of bru)if(k>=3)wpEffect(e,2);
+{const ad=aimDir(),sx=muz[0]+ad[0]*1.6,sy=muz[1]+ad[1]*1.6,sz=muz[2]+ad[2]*1.6;fxSparks(sx,sy,sz,big?24:8,big?10:6,C.sakura);fxStar(sx,sy,sz,big?2.6:1.1,C.sakura,0.1)}
+if(!big)addText(pick(['ズドン！','ドゴン！','バン！']),W*0.72+rnd(-40,60),H*0.62+rnd(-40,30),{size:pw>1?62:54,st:pw>1?'boom':'fire',life:0.25,grow:0.12})}
+// ---- 氷魄砲: held beam, ticks every 0.06 s through every enemy up to the first wall; heat ----
+function railUpdate(dt,f){let on=0;
+if(pl.sp===2)on=2;else if(f&&!pl.ovh&&!pl.sp){on=1;pl.heat+=dt/3.2;if(pl.heat>=1){pl.heat=1;pl.ovh=1;on=0;snd('reload');addText('シューッ',W*0.7,H*0.62,{size:54,st:'cyan',life:0.5})}}
+if(on!==1){pl.heat=Math.max(0,pl.heat-dt*(pl.ovh?0.5:0.75));if(pl.ovh&&pl.heat<=0){pl.ovh=0;snd('reload')}}
+pl.rOn=on;if(on){pl.rt-=dt;let n=0;while(pl.rt<=0&&n<3){pl.rt+=0.06;n++;railTick(on===2)}pl.flashT=0.03;pl.rec=Math.max(pl.rec,0.25)}else pl.rt=0}
+function railTick(ice){const pw=pl.pow>0?2:1,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),as?0.06:0.02,as?0.6:0.3),wallT=rayWorld(ox,oy,oz,d[0],d[1],d[2],120),dm=(ice?12*SK.spw:9)*pw,rr=ice?0.45:0.15;let hit=0;
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]+rr);if(t>0&&t<tm)tm=t}
+ if(tm<wallT){const hx=ox+d[0]*tm,hy=oy+d[1]*tm,hz=oz+d[2]*tm;wpDmg(e,dm,hx,hy,hz,{quiet:1});if(ice)wpEffect(e,e.type==='boss'?3:1,e.type==='boss'?0.35:3);hit++;if(lim('rs'+e.id,0.1))fxSparks(hx,hy,hz,3,5,ice?C.white:C.cyan)}}
+for(const s of shots)if(!s.dead){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.3);if(t>0&&t<wallT){popShot(s);if(isCli())net.q.ps.push(s.id)}}
+if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const t=raySph(ox,oy,oz,d,o.x,o.y+1.1,o.z,0.7);if(t>0&&t<wallT&&lim('rpv'+o.slot,0.12))pvHit(o,(ice?10:7)*pw,false,ox+d[0]*t,oy+d[1]*t,oz+d[2]*t)}
+pl.rEnd=wallT;if(hit){addGauge(0.5);hitMark=0.08;if(lim('rlh',0.12))snd('hit')}
+if(lim('zap',0.09))snd('zap');if(wallT<120&&lim('rwl',0.08))fxSparks(ox+d[0]*wallT,oy+d[1]*wallT,oz+d[2]*wallT,3,5,ice?C.white:C.cyan)}
+// ---- 祓い刀: a short lunge towards the nearest enemy in front, then the cut (in front, ±70°, 3.5 m) ----
+function katanaSlash(){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);let best=null,bd=7.5;
+for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk))continue;const dx=e.x-pl.x,dz=e.z-pl.z,d=Math.hypot(dx,dz);if(d<bd&&d>0.01&&(dx*fx+dz*fz)/d>0.82){bd=d;best=e}}
+let lx=fx,lz=fz,dist=1.3;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hypot(dx,dz);lx=dx/d;lz=dz/d;dist=clamp(d-1.5-(best.r||0.5),0,5.5)}
+pl.cool=0.42;pl.slN=pl.slN?0:1;wpAct(1+pl.slN);pl.lgx=lx;pl.lgz=lz;pl.lgT=0.12;pl.lgV=pl.frz>0?0:dist/0.12;pl.lgP=1;snd('slash');
+addText(pick(['ザンッ！','ズバッ！','シュバッ']),W*0.62+rnd(-60,80),H*0.58+rnd(-30,30),{size:56,st:'cyan',life:0.3})}
+function wpLunge(dt){if(pl.lgT<=0)return;const s=Math.min(dt,pl.lgT);pl.x+=pl.lgx*pl.lgV*s;pl.z+=pl.lgz*pl.lgV*s;pl.lgT-=dt;if(pl.lgT<=0&&pl.lgP){pl.lgP=0;katanaHit()}}
+function katanaHit(){const R=3.5,A=1.22,pw=pl.pow>0?2:1;let n=0,cut=0;wslash.push({x:pl.x,y:pl.y+1.15,z:pl.z,yaw:pl.yaw,dir:pl.slN?1:-1,t:0});
+const inArc=(x,y,z,r)=>{const dx=x-pl.x,dz=z-pl.z,dh=Math.hypot(dx,dz)-r;if(dh>R||y-r>pl.y+3.4||y+r<pl.y-0.4)return false;return dh<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<A};
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(inArc(s[0],s[1],s[2],s[3])){wpDmg(e,62*pw,s[0],s[1],s[2],{quiet:n>1});n++;break}}
+for(const s of shots)if(!s.dead&&inArc(s.x,s.y,s.z,s.r+0.6)){popShot(s);if(isCli())net.q.ps.push(s.id);fxStar(s.x,s.y,s.z,1.6,C.cyan,0.1);cut++}
+if(G.mode==='pvp')for(const o of others)if(!o.dead&&inArc(o.x,o.y+1.1,o.z,0.6))pvHit(o,34*pw,false,o.x,o.y+1.1,o.z);
+if(cut&&lim('cutT',0.3))addText('カキン！',W/2+rnd(-120,120),H*0.4,{size:56,st:'cyan',life:0.4});if(n){shake(0.12);stopT(0.035)}}
+// 一閃・天断ち: a wall-crossing crescent flying 80 m, 15 m wide, every enemy (and the boss) it passes is cut once
+function katanaWave(){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),y=pl.y+1.3;wwaves.push({x:pl.x,y,z:pl.z,dx:fx,dz:fz,d:0.5,t:0,own:1,hit:new Set()});wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz)]);
+wpAct(7);pl.cutT=0.55;snd('slash');snd('boom',1.2);flash(0.5);invA=1;shake(0.6);stopT(0.08);addText('ズバァァン！',W/2,H*0.2,{size:96,st:'cyan',life:0.9,rot:-0.12})}
+// ---- 火消しの大槌: slam 2.1 m ahead, radius 2.8 → 6.2 with the charge ----
+function hammerHit(c){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),x=pl.x+fx*2.1,z=pl.z+fz*2.1,r=2.8+3.4*c,pw=pl.pow>0?2:1,dm=(55+105*c)*pw;let n=0;
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;let hs=null;for(const s of spheres(e))if(Math.hypot(s[0]-x,s[2]-z)-s[3]<r&&s[1]-s[3]<pl.y+2.6){hs=s;break}
+ if(hs){wpDmg(e,dm,hs[0],hs[1],hs[2],{quiet:n>0});n++;if(e.type==='bru')wpEffect(e,2);else if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-x,e.z-z)||1;e.kx=(e.x-x)/d*(8+6*c);e.kz=(e.z-z)/d*(8+6*c)}}}
+for(const s of shots)if(!s.dead&&Math.hypot(s.x-x,s.z-z)<r&&s.y<pl.y+3){popShot(s);if(isCli())net.q.ps.push(s.id)}
+if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-x,o.z-z)<r&&o.y<pl.y+2)pvHit(o,(28+40*c)*pw,false,o.x,o.y+1.1,o.z);
+hammerFx(x,z,r,c);wxPush(['h',r1(x),r1(z),r1(r),r1(c)])}
+function hammerFx(x,z,r,c){fxRing(x,0.1,z,r*2,C.white,0.3);fxRing(x,0.12,z,r*1.2,C.yellow,0.22);fxSmoke(x,0.3,z,5+((c*5)|0),1+c,C.smoke,3+3*c);fxDebris(x,0.3,z,6,6+4*c,C.stoneD,0.18);fxStar(x,0.6,z,2.5+2*c,C.white,0.1);
+decals.push({x,z,r:r*0.7,life:4});const k=sat(1.3-Math.hypot(x-cam.x,z-cam.z)/30);shake((0.2+0.35*c)*k);stopT(0.04*k);snd('boom',0.5+0.7*c);sfxAt(c>0.8?'ドゴォォン！':'ドゴッ！',x,2.6,z,{size:60+30*c,st:'boom',life:0.5})}
+// 駒砕き: leap, then slam everything within 16 m; the screen cracks into manga panels (pl.crackT)
+function komaCrush(){const pw=pl.pow>0?2:1,R=16,dm=380*SK.spw*pw;pl.vy=Math.min(pl.vy,-26);
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;let hs=null;for(const s of spheres(e))if(Math.hypot(s[0]-pl.x,s[2]-pl.z)-s[3]<R){hs=s;break}
+ if(hs){wpDmg(e,dm,hs[0],hs[1],hs[2],{quiet:1});if(e.type==='bru')wpEffect(e,2);else if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*14;e.kz=(e.z-pl.z)/d*14}}}
+for(const s of shots)if(!s.dead&&Math.hypot(s.x-pl.x,s.z-pl.z)<R){popShot(s);if(isCli())net.q.ps.push(s.id)}
+if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-pl.x,o.z-pl.z)<R)pvHit(o,55*pw,false,o.x,o.y+1.1,o.z);
+komaFx(pl.x,pl.z,1);wxPush(['H',r1(pl.x),r1(pl.z)]);const q=Math.random;pl.crackT=1.1;
+pl.crk=[[W*(0.24+q()*0.14),-30,W*(0.3+q()*0.14),H+30],[W*(0.6+q()*0.14),-30,W*(0.55+q()*0.14),H+30],[-30,H*(0.28+q()*0.12),W+30,H*(0.36+q()*0.1)],[-30,H*(0.66+q()*0.1),W+30,H*(0.6+q()*0.1)]]}
+function komaFx(x,z,own){fxRing(x,0.1,z,32,C.white,0.5);fxRing(x,0.14,z,20,C.yellow,0.4);fxRing(x,0.16,z,10,C.orange,0.3);for(let i=0;i<8;i++){const a=i/8*TAU;fxSmoke(x+Math.cos(a)*6,0.4,z+Math.sin(a)*6,2,1.6,C.smoke,4)}
+fxDebris(x,0.3,z,14,12,C.stoneD,0.25);decals.push({x,z,r:9,life:8});shake(own?1:0.5);flash(0.4);stopT(own?0.14:0.05);snd('boom',2);sfxAt('バキィィン！',x,4,z,{size:110,st:'boom',life:0.9})}
+// ---- 焙烙火矢 ----
+function throwBomb(big){const d=aimDir(),AO=aimOrigin(),rx=Math.cos(pl.yaw),rz=-Math.sin(pl.yaw),sp=big?17:21,x=AO[0]+d[0]*0.8+rx*0.22,y=AO[1]-0.1+d[1]*0.8,z=AO[2]+d[2]*0.8+rz*0.22;
+const b={x,y,z,vx:d[0]*sp+pl.vx*0.3,vy:d[1]*sp+(big?6:4.5),vz:d[2]*sp+pl.vz*0.3,big:big?1:0,own:1,t:0,rot:0};wbombs.push(b);wxPush(['b',r2(x),r2(y),r2(z),r2(b.vx),r2(b.vy),r2(b.vz),b.big]);
+if(!big){pl.bombs--;pl.cool=0.5}wpAct(big?6:5);snd('whoosh');addText(big?'ヒュルル…':'シュッ',W*0.66+rnd(-40,40),H*0.6,{size:big?70:46,st:big?'boom':'cyan',life:0.35})}
+function bombBoom(b,he){const big=b.big,R=big?9:4.3,x=b.x,y=Math.max(0.4,b.y),z=b.z;explode(x,y,z,big?3.6:1.5,{text:big?'ドォォォン！':'ドカァン！'});decals.push({x,z,r:big?6:2.6,life:big?8:5});
+if(big)for(let k=0;k<7;k++){const c=[C.red,C.yellow,C.cyan,C.pink,C.white,C.orange,C.sakura][k],px=x+rnd(-6,6),py=y+rnd(5,11),pz=z+rnd(-6,6);fxStar(px,py,pz,rnd(2.5,4.5),c,0.5);fxSparks(px,py,pz,8,9,c)}
+if(b.own){const pw=pl.pow>0?2:1,base=(big?520*SK.spw:130)*pw,fx=x-b.vx*0.12,fz=z-b.vz*0.12;let n=0;
+ for(const e of enemies){if(e.dead||e.st==='spawn')continue;let m=1e9,hs=null;for(const s of spheres(e)){const d=Math.hypot(s[0]-x,s[1]-y,s[2]-z)-s[3];if(d<m){m=d;hs=s}}if(e===he)m=0;
+  if(hs&&m<R){wpDmg(e,base*(1-0.5*sat(m/R)),hs[0],hs[1],hs[2],{quiet:n>0,fx,fz});n++}}
+ for(const s of shots)if(!s.dead&&Math.hypot(s.x-x,s.y-y,s.z-z)<R){popShot(s);if(isCli())net.q.ps.push(s.id)}
+ if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-x,o.z-z)<R&&Math.abs(o.y+1-y)<R)pvHit(o,(big?60:38)*pw,false,o.x,o.y+1.1,o.z);
+ if(big){const onB=he&&he.type==='boss'?he:null,fixed=onB&&!onB.monk;// the fixed demon king burns on his chest (not on a hand slammed next to the player)
+  wfires.push({x:fixed?0:x,y:fixed?17:onB?y:0.1,z:fixed?-17.5:z,r:5.5,t:6,own:1,tk:0,e:onB,ox:onB?x-onB.x:0,oz:onB?z-onB.z:0,big:fixed?1:0})}}
+else if(big)wfires.push({x,y:0.1,z,r:5.5,t:6,own:0})}
+// ---- per frame: bombs, waves, fire zones, trails (everyone's, only the owner's deal damage) ----
+function wpWorld(dt){if(pl.cutT>0)pl.cutT-=RDT;if(pl.crackT>0)pl.crackT-=RDT;
+for(let i=wslash.length-1;i>=0;i--){wslash[i].t+=dt;if(wslash[i].t>0.17)wslash.splice(i,1)}
+for(let i=wbombs.length-1;i>=0;i--){const b=wbombs[i],px=b.x,py=b.y,pz=b.z;b.t+=dt;b.vy-=22*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;b.rot+=dt*9;
+ const R=b.big?0.75:0.3;let hit=b.y<R||b.t>5,he=null;
+ if(!hit){const dx=b.x-px,dy=b.y-py,dz=b.z-pz,l=Math.hypot(dx,dy,dz);if(l>1e-4){const t=rayWorld(px,py,pz,dx/l,dy/l,dz/l,l);if(t<l-1e-3){b.x=px+dx/l*t;b.y=py+dy/l*t;b.z=pz+dz/l*t;hit=true}}}
+ if(!hit)for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(Math.hypot(b.x-s[0],b.y-s[1],b.z-s[2])<s[3]+R){hit=true;he=e;break}if(hit)break}
+ if(!hit&&b.own&&G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(b.x-o.x,b.y-o.y-1,b.z-o.z)<1){hit=true;break}
+ if(!hit&&lim('bsm'+i,0.06))fxSmoke(b.x,b.y+0.2,b.z,1,b.big?0.8:0.3,C.smokeD,0.5);
+ if(hit){wbombs.splice(i,1);bombBoom(b,he)}}
+for(let i=wwaves.length-1;i>=0;i--){const w=wwaves[i],d0=w.d;w.d+=50*dt;w.t+=dt;
+ if(w.own){const pw=pl.pow>0?2:1,dm=430*SK.spw*pw,crossed=(x,z,r,wd)=>{const rx=x-w.x,rz=z-w.z,al=rx*w.dx+rz*w.dz;return al>d0-r&&al<w.d+r&&Math.abs(-rx*w.dz+rz*w.dx)<wd+r};
+  for(const e of enemies){if(e.dead||e.st==='spawn'||w.hit.has(e))continue;for(const s of spheres(e))if(crossed(s[0],s[2],s[3],7.5)){w.hit.add(e);wpDmg(e,dm,s[0],s[1],s[2],{fx:w.x,fz:w.z});if(e.type==='bru')wpEffect(e,2);break}}
+  for(const s of shots)if(!s.dead&&crossed(s.x,s.z,1,8)){popShot(s);if(isCli())net.q.ps.push(s.id)}
+  if(G.mode==='pvp')for(const o of others)if(!o.dead&&!w.hit.has(o)&&crossed(o.x,o.z,0.6,7.5)){w.hit.add(o);pvHit(o,70*pw,false,o.x,o.y+1.1,o.z)}}
+ if(w.d>5&&lim('wvs'+i,0.04)){const fx=w.x+w.dx*w.d,fz=w.z+w.dz*w.d;fxSparks(fx,w.y,fz,4,6,C.cyan)}
+ if(w.d>80)wwaves.splice(i,1)}
+for(let i=wfires.length-1;i>=0;i--){const f=wfires[i];f.t-=dt;if(f.e){if(f.e.dead)f.e=null;else if(f.e.monk){f.x=f.e.x+f.ox;f.z=f.e.z+f.oz}}
+ if(f.own&&f.t>0){f.tk-=dt;if(f.tk<=0){f.tk=0.3;const pw=pl.pow>0?2:1,dm=60*0.3*SK.spw*pw;if(f.e)damage(f.e,dm*1.5,false,f.x,f.y,f.z,true);
+  for(const e of enemies){if(e.dead||e.st==='spawn'||e===f.e)continue;for(const s of spheres(e))if(Math.hypot(s[0]-f.x,s[2]-f.z)<f.r+s[3]*0.5&&s[1]-s[3]<2.5){damage(e,dm,false,s[0],s[1],s[2],true);break}}
+  if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-f.x,o.z-f.z)<f.r&&o.y<1.5)pvHit(o,8*pw,false,o.x,o.y+1,o.z)}}
+ if(f.t>0.4&&lim('fsm'+i,0.25))fxSmoke(f.x+rnd(-f.r,f.r)*0.6,f.y+0.8,f.z+rnd(-f.r,f.r)*0.6,1,1.1,C.smokeD,1.5);
+ if(f.t<=0)wfires.splice(i,1)}}
+// others' visual events (net 'p' message .w)
+function wfxPlay(o,a){switch(a[0]){
+case'b':wbombs.push({x:a[1],y:a[2],z:a[3],vx:a[4],vy:a[5],vz:a[6],big:a[7],own:0,t:0,rot:0});break;
+case'k':wwaves.push({x:a[1],y:a[2],z:a[3],dx:a[4],dz:a[5],d:0.5,t:0,own:0});snd('slash');break;
+case'h':hammerFx(a[1],a[2],a[3],a[4]);break;
+case'H':komaFx(a[1],a[2],0);break}}
+// another player's action counter changed: replay the pose from the start (and the sword trail)
+function wpOtherAct(o,an,ak){if(o.an===an)return;const first=o.an==null;o.an=an;if(first)return;o.ak=ak;o.at=0;
+if(ak===1||ak===2){wslash.push({x:o.x,y:o.y+1.15,z:o.z,yaw:o.yaw,dir:ak===2?1:-1,t:0});const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd('slash');sndVol=v}}
+// ================= SPECIALS (pl.sp 1 = cut-in, 2 = active for spDur()) =================
+function wpSpStart(){const w=wpW();pl.hon=0;switch(w.id){
+case'gun':snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1;break;
+case'rifle':snd('charge');addText('ダダダダダッ！',W/2,H*0.15,{size:80,st:'cyan',life:0.9,grow:0.1,rot:-0.08});flash(0.35);pl.ammo=SK.mag;pl.reload=0;break;
+case'shotgun':pl.flashT=0.08;pl.kick+=0.12;shotgunFire(w,1);snd('sgun');snd('boom',1.4);flash(0.6);invA=1;shake(0.8);addText('ズドドドン！',W/2,H*0.15,{size:90,st:'boom',life:0.9,rot:-0.08});break;
+case'rail':snd('freeze');addText('パキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.08});flash(0.5);invA=1;pl.ovh=0;break;
+case'katana':katanaWave();break;
+case'hammer':pl.vy=Math.max(pl.vy,10);pl.kkT=0.42;wpAct(8);snd('jump');snd('charge');addText('ハァァッ！',W/2,H*0.16,{size:84,st:'boom',life:0.6,rot:-0.06});break;
+case'bomb':throwBomb(1);break}}
+function wpSpTick(dt){const w=wpW();if(w.id==='gun'){trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt)}else if(w.id==='rail'){lines(0.25,'#bfefff')}else if(w.id==='rifle'&&lim('rfx',0.5))lines(0.3,'#fff')}
+// ================= DRAW: world =================
+function railBeam(a,b,ice){const NF=F_UNLIT|F_NOCAST,dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz);if(l<0.2)return;const w=ice?0.26:0.13;
+mPush();mT((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);orient(dx,dy,dz);mRX(PI/2);mS(w,l,w);emit(CYL,ice?C.white:C.cyan,0,0,NF,0);mPop();
+const ux=dx/l,uy=dy/l,uz=dz/l,n=Math.min(10,Math.ceil(l/4));for(let i=0;i<n;i++){const t=((now*(ice?2:4)+i/n)%1)*l;mPush();mT(a[0]+ux*t,a[1]+uy*t,a[2]+uz*t);orient(dx,dy,dz);mRX(PI/2);const s=ice?0.9+0.3*(i%2):0.5;mS(s,1,s);emit(RING,i%2?C.cyan:C.white,0,0,NF,0);mPop()}
+let px=a[0],py=a[1],pz=a[2];const k=Math.min(8,Math.ceil(l/3)),jit=ice?0.35:0.22;for(let i=1;i<=k;i++){const t=i/k*l,qx=a[0]+ux*t+(i<k?rnd(-jit,jit):0),qy=a[1]+uy*t+(i<k?rnd(-jit,jit):0),qz=a[2]+uz*t+(i<k?rnd(-jit,jit):0);
+ mPush();mT((px+qx)/2,(py+qy)/2,(pz+qz)/2);const ll=orient(qx-px,qy-py,qz-pz);mS(0.05,0.05,ll);emit(BOX,ice?C.cyan:C.white,0,0,NF,0);mPop();px=qx;py=qy;pz=qz}
+bill(BURST,b[0],b[1],b[2],ice?1.4:0.7,now*30,ice?C.white:C.cyan,NF);bill(STAR,a[0],a[1],a[2],ice?0.6:0.3,now*20,C.white,NF)}
+function drawWpWorld(){const NF=F_UNLIT|F_NOCAST;
+for(const s of wslash){const k=0.75+0.25*easeOut(sat(s.t/0.05)),sc=3.8*k;mPush();mT(s.x,s.y,s.z);mRY(s.yaw);mRZ(s.dir*0.55);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mPop()}
+for(const w of wwaves){const sc=16*Math.min(1,0.4+w.t*4),fx=w.x+w.dx*w.d,fz=w.z+w.dz*w.d,yaw=Math.atan2(-w.dx,-w.dz);
+ mPush();mT(fx-w.dx*sc*0.5,w.y,fz-w.dz*sc*0.5);mRY(yaw);mRZ(-0.45);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mT(0,0.012,0.03);mS(0.9,1,0.9);emit(SLASH,C.cyan,0,0,NF,0);mPop()}
+for(const b of wbombs){const s=b.big?4:1.6;mPush();mT(b.x,b.y,b.z);mRY(b.rot);mRX(b.rot*0.7);mS(s,s,s);if(wpReady(6))wpModel(6);else sph(0,0,0,0.2,0.2,0.2,C.red);mPop();
+ bill(STAR,b.x,b.y+0.22*s,b.z,0.12*s+0.05*Math.sin(now*40),now*20,C.yellow,NF)}
+for(const f of wfires){const k=Math.min(1,f.t/0.5)*Math.min(1,(6-f.t)/0.25+0.15)*(f.big?3:1),hi=f.y>0.5,n=hi?6:9,rr=hi?1.4*(f.big?3:1):f.r*0.62;
+ if(!hi)put(CYL,f.x,0.08,f.z,0,0,0,f.r*2*k,0.02,f.r*2*k,WF_EMB,0,0,F_NOCAST|F_NOEDGE);
+ for(let j=0;j<n;j++){const a=j/n*TAU+f.x*0.7,r=j===0?0:rr*(0.55+0.45*((j*7)%3)/2),h=(hi?2.2:1.5+((j*5)%3)*0.55)*k*(1+0.22*Math.sin(now*9+j*1.7)),tl=0.18*Math.sin(now*5+j);
+  put(CONE,f.x+Math.cos(a)*r,f.y+h*0.45,f.z+Math.sin(a)*r,tl,a,-tl,h*0.42,h,h*0.42,j%3?C.orange:C.red,0,0,NF|F_FLAME);put(CONE,f.x+Math.cos(a)*r*0.9,f.y+h*0.3,f.z+Math.sin(a)*r*0.9,tl,a+1,-tl,h*0.3,h*0.62,h*0.3,C.yellow,0,0,NF|F_FLAME)}}}
+// local rail beam (after the view model / hero set muz)
+function wpDrawLate(){if(G.state!=='play'&&!(G.state==='title'&&G.demoOn))return;if(pl.rOn&&!pl.dead&&!(G.kcT>=0)&&!monkCine()&&!(tpsOn()&&tpsD<0.9&&SET.view!==2)){const d=aimDir(),AO=aimOrigin(),t=pl.rEnd||40;railBeam(muz,[AO[0]+d[0]*t,AO[1]+d[1]*t,AO[2]+d[2]*t],pl.rOn===2)}}
+// another player's rail beam (direction from their yaw / pitch)
+function wpOtherBeam(o){const cp=Math.cos(o.pitch),d=[-Math.sin(o.yaw)*cp,Math.sin(o.pitch),-Math.cos(o.yaw)*cp],t=rayWorld(o.gx,o.gy,o.gz,d[0],d[1],d[2],60);railBeam([o.gx,o.gy,o.gz],[o.gx+d[0]*t,o.gy+d[1]*t,o.gz+d[2]*t],!!(o.rb&16))}
+// ================= DRAW: first-person view model (camera space, layer 2) =================
+const KV_I=[0.3,-0.34,-0.5,0.25,0.95,0.35],KV_A=[[0,KV_I],[0.07,[0.42,-0.12,-0.45,-0.9,0.6,0.9]],[0.17,[-0.32,-0.42,-0.55,1.25,-0.25,-0.6]],[0.42,[-0.25,-0.45,-0.55,1.1,-0.2,-0.5]],[0.65,KV_I]],
+KV_B=[[0,KV_I],[0.07,[-0.3,-0.45,-0.5,1.0,-0.3,-0.6]],[0.17,[0.42,-0.1,-0.5,-1.1,0.7,0.8]],[0.42,[0.4,-0.12,-0.5,-1.0,0.65,0.7]],[0.65,KV_I]],
+KV_S=[[0,KV_I],[0.2,[0.5,-0.2,-0.35,-1.6,0.15,1.4]],[0.32,[-0.5,-0.25,-0.5,1.6,0.05,-1.4]],[0.7,[-0.4,-0.3,-0.5,1.4,0,-1.2]],[1,KV_I]],
+HV_I=[0.42,-0.52,-0.55,-0.15,1.15,-0.2],HV_R=[0.3,-0.22,-0.38,-0.1,2.15,-0.1],HV_D=[0.1,-0.36,-0.72,0,-0.3,0],
+HV_S=[[0,HV_R],[0.11,HV_D],[0.45,HV_D],[0.8,HV_I]],HV_SP=[[0,HV_I],[0.3,HV_R],[0.4,[0.25,-0.1,-0.3,-0.05,2.5,0]],[0.47,HV_D],[0.95,HV_D],[1.3,HV_I]],
+BV_I=[0.3,-0.34,-0.62],BV_T=[[0,BV_I],[0.12,[0.38,-0.06,-0.38]],[0.22,[0.12,-0.08,-0.95]],[0.4,[0.16,-0.6,-0.8]],[0.75,BV_I]];
+function glove(x,y,z){sph(x,y,z,0.1,0.12,0.13,C.glove)}
+function wpView(){const i=pl.wp|0,w=WPN[i];if(!wpReady(i))return false;curLayer=2;mPush();M.set(CAMW);
+const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0),at=pl.at,ak=pl.ak|0,br=Math.sin(now*2)*0.006;let tip=[0,0,-0.6],s=0.8,show=1,fl=0;
+mT(bx,-by-dip*0.3+br,0);
+if(w.kind==='gun'||w.kind==='rail'){mT(0.21,-0.25,-0.5+pl.rec*(w.kind==='rail'?0.01:0.05));mRY(0.05);mRX((w.kind==='rail'?pl.rec*0.01:pl.rec*(w.kick||0.01)*3)-dip*0.8);mRZ(-dip*0.5);s=0.62;tip=w.muz;fl=1;
+ glove(0,-0.05,0.03);put(CYL,0.06,-0.21,0.27,1.05,0,-0.2,0.13,0.5,0.13,C.sleeve);glove(0,-0.04,-w.fore*s)}
+else if(w.kind==='katana'){const v=kf(ak===1?KV_A:ak===2?KV_B:ak===7?KV_S:[[0,KV_I]],at);mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);glove(0,0,0);glove(0,0,0.13);tip=[0,0,-0.76]}
+else if(w.kind==='hammer'){let v;if(ak===3&&pl.hon){v=HV_I.map((a,j)=>a+(HV_R[j]-a)*sat(at/0.18));v[0]+=rnd(-1,1)*0.006*pl.hc;v[1]+=rnd(-1,1)*0.006*pl.hc}else v=kf(ak===4?HV_S:ak===8?HV_SP:[[0,HV_I]],at);
+ mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);glove(0,0,0);glove(0,0,-0.24);s=0.72;tip=[0,0,-0.84]}
+else{const th=ak===5||ak===6,v=th?kf(BV_T,at):BV_I;mT(v[0],v[1],v[2]);glove(0,-0.08,0.02);show=(!th||at<0.2||at>0.6)&&(pl.bombs>0||(ak===6&&at<0.2)||pl.sp>0);s=ak===6&&at<0.2||pl.sp===1?2:0.95;mT(0,0.1*s,0);mRY(now*0.6);tip=[0.035,0.19,0]}
+mPush();mS(s,s,s);if(show)wpModel(i);mPop();
+muz[0]=M[0]*tip[0]*s+M[4]*tip[1]*s+M[8]*tip[2]*s+M[12];muz[1]=M[1]*tip[0]*s+M[5]*tip[1]*s+M[9]*tip[2]*s+M[13];muz[2]=M[2]*tip[0]*s+M[6]*tip[1]*s+M[10]*tip[2]*s+M[14];
+if(fl&&pl.flashT>0&&w.kind==='gun'){const buff=pl.sp===2&&w.spMode==='buff';bill(BURST,muz[0],muz[1],muz[2],w.pel?0.42:0.24,pl.spin*3,buff?C.cyan:w.pel?C.sakura:C.yellow,F_UNLIT);bill(STAR,muz[0],muz[1],muz[2],0.15,pl.spin,C.white,F_UNLIT)}
+if(w.kind==='bomb'&&show)bill(STAR,muz[0],muz[1],muz[2],0.035+0.015*Math.sin(now*40),now*20,C.yellow,F_UNLIT);
+if(pl.sp===1){const k=0.15+pl.spT*0.6;bill(BURST,muz[0],muz[1],muz[2],k,now*20,C.cyan,F_UNLIT);bill(STAR,muz[0],muz[1],muz[2],k*0.5,-now*20,C.white,F_UNLIT)}
+mPop();curLayer=1;return true}
+// ================= DRAW: hero poses with a weapon (model space: up +Y, faces +Z, the hero's right is -X) =================
+const KH_I=[-0.17,1.2,0.3,0.3,0.95],KH_A=[[0,KH_I],[0.07,[-0.36,1.55,0.08,1.7,0.7]],[0.18,[0.2,1.06,0.36,-1.5,-0.35]],[0.42,[0.18,1.08,0.34,-1.4,-0.3]],[0.65,KH_I]],
+KH_B=[[0,KH_I],[0.07,[0.16,1.03,0.32,-1.0,-0.4]],[0.18,[-0.38,1.55,0.12,1.5,0.65]],[0.42,[-0.36,1.53,0.12,1.4,0.6]],[0.65,KH_I]],
+KH_S=[[0,KH_I],[0.2,[-0.4,1.35,-0.05,2.3,0.15]],[0.32,[0.33,1.3,0.25,-2.0,0]],[0.75,[0.31,1.3,0.25,-1.9,0]],[1,KH_I]],
+HH_I=[-0.2,1.18,0.28,0.35,1.95],HH_R=[-0.1,1.72,0.12,0.15,2.45],HH_D=[-0.04,1.02,0.42,0.05,-0.8],
+HH_S=[[0,HH_R],[0.12,HH_D],[0.45,HH_D],[0.8,HH_I]],HH_SP=[[0,HH_I],[0.3,HH_R],[0.4,[-0.08,1.8,0.08,0.1,2.6]],[0.47,HH_D],[0.95,HH_D],[1.3,HH_I]],
+HB_I=[-0.27,1.22,0.3],HB_T=[[0,HB_I],[0.16,[-0.33,1.78,-0.2]],[0.27,[-0.12,1.62,0.5]],[0.5,[-0.04,1.15,0.4]],[0.85,HB_I]];
+// body twist / bend for the swing (before heroGlobals)
+function wpHeroBody(o,wp){const k=WPN[wp].kind,at=o.at==null?9:o.at,ak=o.ak|0;let tw=0,bd=0;
+if(k==='katana'){if(ak===1)tw=kf([[0,0],[0.07,-0.45],[0.18,0.5],[0.45,0.4],[0.65,0]],at);else if(ak===2)tw=kf([[0,0],[0.07,0.4],[0.18,-0.45],[0.45,-0.35],[0.65,0]],at);else if(ak===7)tw=kf([[0,0],[0.2,-0.7],[0.32,0.7],[0.75,0.6],[1,0]],at)}
+else if(k==='hammer'){if(ak===4)bd=kf([[0,-0.1],[0.12,0.45],[0.45,0.45],[0.8,0]],at);else if(ak===3)bd=-0.12*sat(at/0.2);else if(ak===8)bd=kf([[0,0],[0.3,-0.15],[0.47,0.5],[0.95,0.5],[1.3,0]],at)}
+else if(k==='bomb'&&(ak===5||ak===6))tw=kf([[0,0],[0.16,-0.45],[0.27,0.4],[0.5,0.25],[0.85,0]],at);
+if(tw){hRot('spine',HY,tw*0.5);hRot('chest',HY,tw*0.5)}if(bd){hRot('spine',HX,bd*0.6);hRot('chest',HX,bd*0.4)}}
+// arms (IK) and the weapon frame WF; the weapon hangs on the right wrist the IK actually reached
+function wpHeroArms(o,wp,A,pit){const w=WPN[wp],k=w.kind,at=o.at==null?9:o.at,ak=o.ak|0,Hh=HERO;let P,f,u,s=1,show=1,tip=[0,0,-0.6],pr=[-1,-0.35,-0.1],tr=-1.2,lp=[0.6,-0.8,0],tl=1.3,L=null;
+if(k==='gun'||k==='rail'){const R=m3axis(HX,-pit),r=m3v(R,[HERO_GUN_X+0.02,-0.12,0.13-(o.fireT>0?0.03:0)]);P=[A[0]+r[0],A[1]+r[1],A[2]+r[2]];f=m3v(R,[0,0,1]);u=m3v(R,[0,1,0]);tip=w.muz}
+else if(k==='katana'){const K=ak===1?KH_A:ak===2?KH_B:ak===7?KH_S:[[0,KH_I]],v=kf(K,at),v2=kf(K,at+0.03);P=[v[0],v[1]+Math.sin(now*2)*0.01,v[2]];f=dirYE(v[3],v[4]);const f2=dirYE(v2[3],v2[4]),m=[f2[0]-f[0],f2[1]-f[1],f2[2]-f[2]];
+ u=Math.hypot(m[0],m[1],m[2])>0.02?[-m[0],-m[1],-m[2]]:[0,0.3,-1];pr=[-1,-0.6,0];lp=[1,-0.6,0];tr=-0.5;tl=0.5;tip=[0,0,-0.76]}
+else if(k==='hammer'){let v;if(ak===3&&o.hc!=null){v=HH_I.map((a,j)=>a+(HH_R[j]-a)*sat(at/0.2));v[1]+=Math.sin(now*40)*0.008*(o.hc||0)}else v=kf(ak===4?HH_S:ak===8?HH_SP:[[0,HH_I]],at);
+ P=[v[0],v[1],v[2]];f=dirYE(v[3],v[4]);u=[1,0,0];pr=[-1,-0.5,0];lp=[1,-0.5,0];tip=[0,0,-0.84]}
+else{const th=ak===5||ak===6;P=th?kf(HB_T,at):HB_I;f=[0,0,1];u=[0,1,0];L=[0.24,1.12,0.2];lp=[1,-0.8,0.2];
+ show=(!th||at<0.24||at>0.75)&&(o.bombs==null||o.bombs>0||(ak===6&&at<0.24));s=ak===6&&at<0.24?2.6:1.5;tip=[0.035,0.19,0]}
+heroArm('R',P,pr,tr);P=Hh.GT[Hh.bi.hand_R].slice();
+if(k==='gun'||k==='rail')L=[P[0]+f[0]*w.fore-u[0]*0.015,P[1]+f[1]*w.fore-u[1]*0.015,P[2]+f[2]*w.fore-u[2]*0.015];
+else if(k==='katana')L=[P[0]-f[0]*0.14,P[1]-f[1]*0.14,P[2]-f[2]*0.14];else if(k==='hammer')L=[P[0]+f[0]*0.27,P[1]+f[1]*0.27,P[2]+f[2]*0.27];
+if(L)heroArm('L',L,lp,tl);if(k==='bomb')P=[P[0],P[1]+0.07*s,P[2]+0.04];
+wpFrame(P,f,u,s);return{show,tip}}
+// inside the hero's model matrix: the weapon, and the muzzle / tip point o.gx/gy/gz
+function wpHeroDraw(o,wp,fr){const g=gId;gId=0;mPush();mApply(WF);if(fr.show)wpModel(wp);const t=fr.tip;
+o.gx=M[0]*t[0]+M[4]*t[1]+M[8]*t[2]+M[12];o.gy=M[1]*t[0]+M[5]*t[1]+M[9]*t[2]+M[13];o.gz=M[2]*t[0]+M[6]*t[1]+M[10]*t[2]+M[14];mPop();gId=g}
+// ================= HUD / overlays =================
+function wpHUD(w){if(w.kind==='rail'){const v=pl.heat||0;gauge(W/2-110,662,250,18,v,pl.ovh?(Math.sin(now*16)>0?'#ff3b30':'#ffd91a'):v>0.75?'#ff8a2b':'#59d8ff','熱');if(pl.ovh)txt('冷却中…',W/2+15,634,24,'#fff',INK,6)}
+else if(w.kind==='bomb'){for(let i=0;i<3;i++){const x=W/2-60+i*60,y=672,on=i<pl.bombs;ctx.beginPath();ctx.arc(x+3,y+4,19,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(x,y,19,0,TAU);ctx.fillStyle=on?'#e5402b':'rgba(255,255,255,.55)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();
+  if(!on&&i===pl.bombs){ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,16,-PI/2,-PI/2+TAU*sat(pl.bombT/WB_RF));ctx.closePath();ctx.fillStyle='#ff9a7a';ctx.fill()}ctx.fillStyle=INK;ctx.fillRect(x-4,y-27,8,9)}}
+else if(w.kind==='hammer'&&pl.hon)gauge(W/2-100,662,230,18,pl.hc,pl.hc>=1?(Math.sin(now*16)>0?'#fff':'#ffc21a'):'#ffc21a','溜')}
+// special timer for the timed ones (珠時雨 / 妖光・氷牢)
+function wpSpHUD(w){if(pl.sp!==2||(w.spMode!=='buff'&&w.spMode!=='mode'))return;const r=sat(1-pl.spT/spDur());txt(w.sp,W/2,588,24,'#fff',INK,6);gauge(W/2-90,604,220,14,r,'#35e0ff','')}
+function wpOverlay(){if(G.state!=='play')return;
+if(pl.cutT>0){const t=0.55-pl.cutT,g=easeOut(sat(t/0.08)),a=sat(pl.cutT/0.2);ctx.save();ctx.globalAlpha=a;ctx.translate(W/2,H/2);ctx.rotate(-0.36);const L=W*0.75*g,hw=Math.max(3,22*(1-t*1.2));
+ ctx.beginPath();ctx.moveTo(-L,0);ctx.quadraticCurveTo(0,-hw*1.6,L,0);ctx.quadraticCurveTo(0,hw*1.6,-L,0);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-L*0.9,0);ctx.lineTo(L*0.9,0);ctx.strokeStyle='#59d8ff';ctx.lineWidth=3;ctx.stroke();ctx.restore();
+ if(t>0.06){const k=easeBack(sat((t-0.06)/0.15));ctx.save();ctx.globalAlpha=a;ctx.translate(W*0.24,H*0.66);ctx.rotate(-0.12);ctx.scale(k,k);txt('一閃',0,0,110,'#fff',INK,16,'center','#59d8ff',30);ctx.restore()}}
+if(pl.crackT>0&&pl.crk){const a=sat(pl.crackT/0.3),j=pl.crackT>0.85?rnd(-6,6):0;ctx.save();ctx.globalAlpha=a;ctx.translate(j,j*0.6);ctx.lineCap='square';
+ for(const[lw,c]of[[30,INK],[16,'#fff']]){ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.beginPath();for(const l of pl.crk){ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3])}ctx.stroke()}
+ if(pl.crackT>0.5){const k=easeBack(sat((1.1-pl.crackT)/0.15));ctx.save();ctx.translate(W*0.3,H*0.34);ctx.rotate(-0.08);ctx.scale(k,k);txt('駒砕き',0,0,96,'#ffd91a',INK,16,'center','#fff',30);ctx.restore()}ctx.restore()}}
+// ================= EQUIP SCREEN (G.menu 'equip') =================
+let eqSel=-1,eqPop=-9;const EQ={px:612,py:196,pw:618,ph:236};
+function openEquip(back){G.menu='equip';G.eqBack=back||'main';eqSel=wpIdx(WS.eq)}
+function fitTxt(s,x,y,size,maxw,fill,al){ctx.font='900 '+size+'px '+FONT;const w=ctx.measureText(s).width;if(w>maxw)size=Math.floor(size*maxw/w);txt(s,x,y,size,fill,null,0,al||'left')}
+function drawEquip(){const sel=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[sel],ok=wpOwn(sel),eqI=wpCur(),isEq=ok&&sel===eqI,X=EQ.px,Y=EQ.py,PW=EQ.pw,PH=EQ.ph;
+ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.rect(X,Y,PW,PH);ctx.clip('evenodd');ctx.fillStyle='rgba(22,18,31,.55)';ctx.fillRect(0,0,W,H);focusLines(W/2,H/2,520,44,'rgba(255,255,255,.14)',7);ctx.restore();
+drawLogo(250,70,0.34);head('武器の装備');
+// list
+for(let i=0;i<WPN.length;i++){const c=i%2,r=(i/2)|0,x=46+c*270,y=200+r*104,cw=256,ch=92,wi=WPN[i],o=wpOwn(i),s=i===sel,e=o&&i===eqI;
+ btns.push({x,y,w:cw,h:ch,cb:()=>{eqSel=i}});
+ para(x+5,y+7,cw,ch,12);ctx.fillStyle=INK;ctx.fill();para(x,y,cw,ch,12);ctx.fillStyle=o?'#fff':'#4d5370';ctx.fill();
+ ctx.save();para(x,y,cw,ch,12);ctx.clip();ctx.fillStyle=o?wi.col:'#373c58';ctx.fillRect(x,y,30,ch);ctx.globalAlpha=0.18;ctx.fillStyle=dotPat;ctx.fillRect(x,y+ch*0.55,cw+20,ch);ctx.restore();
+ para(x,y,cw,ch,12);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();if(s){para(x-5,y-5,cw+10,ch+10,13);ctx.strokeStyle='#ffd91a';ctx.lineWidth=6;ctx.stroke()}
+ fitTxt(o?wi.name:'？？？',x+44,y+36,28,cw-60,o?INK:'#c9cce0');txt(o?wi.type:'未入手',x+46,y+70,17,o?'#555a70':'#a5a9c4',null,0,'left');
+ if(e){ctx.save();ctx.translate(x+cw-46,y+66);ctx.rotate(-0.12);para(-40,-15,80,30,6);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('装備中',3,1,18,'#fff');ctx.restore()}}
+// preview frame (the 3D weapon is drawn through the hole by wpPreview)
+ctx.fillStyle=INK;ctx.fillRect(X+PW,Y+10,9,PH);ctx.fillRect(X+9,Y+PH,PW,10);ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(X,Y,PW,PH);
+if(!ok)txt('？',X+PW-50,Y+50,64,'#fff',INK,10);
+// info
+panel(X,Y+PH+18,PW,170);const iy=Y+PH+18;para(X+16,iy-26,Math.min(PW-40,60+w.name.length*34),48,14);ctx.fillStyle=ok?w.col:'#4d5370';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();
+txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');txt(ok?w.type:'',X+PW-24,iy+22,18,'#555a70',null,0,'right');
+const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
+if(ok){tag(X+18,iy+50,'通常',INK);fitTxt(w.d[0],X+92,iy+50,21,PW-110,INK);fitTxt(w.d[1],X+92,iy+80,18,PW-110,'#3a3f55');
+ tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
+else{txt('５つのステージをすべてクリアすると入手',X+PW/2,iy+68,24,INK);txt('（いまのクリア '+skClr()+'/5）',X+PW/2,iy+108,20,'#555a70')}
+if(DEV)txt('超強化中：すべての武器が使えます',X,H-26,16,'#ffd91a',INK,5,'left');
+B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});
+B(X+PW-300,628,300,62,!ok?'未入手':isEq?'装備中':'装備する',()=>{if(ok&&!isEq){WS.eq=w.id;wsSave();snd('item');eqPop=now}},{col:!ok?'#d8d8e0':isEq?'#ffd91a':'#ff4a3d',tc:ok&&!isEq?'#fff':INK,size:30});
+if(now-eqPop<0.7){const u=now-eqPop,k=easeBack(sat(u/0.15));ctx.save();ctx.globalAlpha=sat((0.7-u)/0.2);ctx.translate(X+PW-150,612);ctx.rotate(-0.1);ctx.scale(k*0.7,k*0.7);burstPath(4,5,120,44,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,120,44,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('装備！',0,2,44,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
+// 3D preview inside the equip window (camera space, layer 2): a light backdrop and the weapon turning slowly
+function wpPreview(){if(G.state!=='menu'||G.menu!=='equip')return;const i=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[i],ok=wpOwn(i);curLayer=2;mPush();M.set(CAMW);
+const tn=Math.tan(cam.fov/2),asp=W/H,D=1.3,cx=((EQ.px+EQ.pw/2)/W*2-1)*tn*asp,cy=(1-(EQ.py+EQ.ph/2)/H*2)*tn,hw=EQ.pw/W*tn*asp,hh=EQ.ph/H*tn,D2=D*1.5;
+mPush();mT(cx*D2,cy*D2,-D2);mS(hw*2*D2+0.06,hh*2*D2+0.06,1);emit(QUAD,ok?w.bg:[.78,.8,.88],0,0,F_UNLIT|F_NOCAST,0);mPop();
+mT(cx*D,cy*D-0.02,-D);const md=w.file&&WMOD[w.id],mn=md?md.mn:[-0.08,-0.19,-0.63],mx=md?md.mx:[0.08,0.12,0.12],lz=mx[2]-mn[2],ly=mx[1]-mn[1],sc=Math.min(hw*2*D*0.8/Math.max(lz,0.25),hh*2*D*0.72/Math.max(ly,0.05));
+if(w.kind==='bomb')mRY(now*0.8);else{mRY(PI/2+0.4*Math.sin(now*0.7));mRX(0.15)}mS(sc,sc,sc);mT(-(mn[0]+mx[0])/2,-(mn[1]+mx[1])/2,-(mn[2]+mx[2])/2);
+if(md)wpModel(i,ok?null:C.inkD);else if(!w.file){if(ok)drawYoGun(now*2,1);else{mPush();drawYoGun(0,0);mPop()}}
+mPop();curLayer=1}

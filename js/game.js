@@ -65,15 +65,15 @@ if(boss&&boss.st!=='rise'&&!(boss.monk&&boss.st==='drop')){const v=sat(boss.hp/b
  if(boss.monk&&boss.st==='tired'){const r=Math.max(0,boss.dur-boss.stT),k=(now*6|0)%2;txt('背中ガラ空き！',W/2,boss.bell?140:112,34,k?'#ffd91a':'#fff',INK,7);gauge(540,boss.bell?168:140,200,12,sat(r/boss.dur),'#59d8ff','')}
  if(boss.monk&&boss.bell&&boss.st!=='trans'){gauge(560,92,300,16,sat(boss.bhp/boss.bmax),boss.bflash>0?'#fff':boss.st==='tired'?'#ff8a1a':'#ffc21a','鐘');if(boss.st!=='tired')txt('背後に回って鐘を撃て！',W/2,132,20,'#fff',INK,5)}}
 // ammo
-const na=SK.mag,st=Math.min(18,288/na),iw=st*0.67,bx=W/2-na*st/2;for(let i=0;i<na;i++){const x=bx+i*st,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+iw/2,y-14);ctx.lineTo(x+iw,y-2);ctx.lineTo(x+iw,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
-if(pl.reload>0&&Math.sin(now*20)>-0.3)txt('装填中…',W/2,640,26,'#fff',INK,6);
+const wq=wpW();if(wq.ammo){const na=SK.mag,st=Math.min(18,288/na),iw=st*0.67,bx=W/2-na*st/2;for(let i=0;i<na;i++){const x=bx+i*st,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+iw/2,y-14);ctx.lineTo(x+iw,y-2);ctx.lineTo(x+iw,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
+if(pl.reload>0&&Math.sin(now*20)>-0.3)txt('装填中…',W/2,640,26,'#fff',INK,6)}else wpHUD(wq);wpSpHUD(wq);
 if(SET.view!==2||!tpsOn())drawCross()}
 function drawTouch(){if(!hasTouch)return;ctx.save();ctx.globalAlpha=0.8;const sx=touch.ox,sy=touch.oy;ctx.beginPath();ctx.arc(sx,sy,78,0,TAU);ctx.fillStyle='rgba(255,255,255,.28)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
 ctx.beginPath();ctx.arc(sx+touch.dx*70,sy+touch.dy*70,36,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();ctx.fillStyle=dotPat;ctx.fill();
 for(const k in BTN){const b=BTN[k];let held=false;for(const id in touch.hold)if(touch.hold[id]===k)held=true;const r=b.r*(held?0.9:1);ctx.beginPath();ctx.arc(b.x+4,b.y+6,r,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(b.x,b.y,r,0,TAU);
 let col='#fff';if(k==='fire')col='#ff4a3d';else if(k==='special')col=spReady()?(Math.sin(now*14)>0?'#ffd91a':'#35e0ff'):'#b9c2d6';else if(k==='dash')col=pl.dashCd>0?'#b9c2d6':'#7fd6ff';ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
 if(k==='special'&&pl.gauge<100){ctx.beginPath();ctx.arc(b.x,b.y,r-8,-PI/2,-PI/2+TAU*pl.gauge/100);ctx.strokeStyle='#35b8ff';ctx.lineWidth=8;ctx.stroke()}
-txt(b.l,b.x,b.y+2,k==='fire'?70:b.l.length>1?b.r*0.62:40,k==='fire'?'#fff':INK,k==='fire'?INK:null,8)}ctx.restore()}
+txt(k==='fire'?wpW().btn:b.l,b.x,b.y+2,k==='fire'?70:b.l.length>1?b.r*0.62:40,k==='fire'?'#fff':INK,k==='fire'?INK:null,8)}ctx.restore()}
 const logoL=layout('コマブレイカー',128,0.0,false);logoL.forEach((l,i)=>{l.y=Math.sin(i*1.3)*8;l.r=(i%2?0.05:-0.05)});
 function drawLogo(cx,cy,sc){ctx.save();ctx.translate(cx,cy);ctx.scale(sc,sc);ctx.rotate(-0.05);
 burstPath(0,10,520,165,22,1.22,9);ctx.fillStyle=INK;ctx.fill();burstPath(-8,0,520,165,22,1.22,9);ctx.fillStyle='#fff';ctx.fill();ctx.save();ctx.clip();ctx.fillStyle=dotPat;ctx.globalAlpha=0.35;ctx.fillRect(-700,40,1400,300);ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.lineJoin='miter';ctx.stroke();
@@ -95,12 +95,12 @@ ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(-150,10);ctx.quadraticCurveTo(-1
 ctx.save();ctx.beginPath();ctx.moveTo(-150,10);ctx.quadraticCurveTo(-10,-70,150,-20);ctx.quadraticCurveTo(40,70,-120,50);ctx.clip();ctx.fillStyle='#ff9d00';ctx.beginPath();ctx.ellipse(12,-2,60,64,0,0,TAU);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.stroke();ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(12,0,24,32,0,0,TAU);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-12,-26,15,0,TAU);ctx.arc(34,18,7,0,TAU);ctx.fill();ctx.restore();
 ctx.fillStyle=INK;ctx.beginPath();ctx.moveTo(-165,4);ctx.quadraticCurveTo(-20,-98,165,-34);ctx.quadraticCurveTo(-10,-62,-150,18);ctx.fill();ctx.beginPath();ctx.moveTo(-200,-66);ctx.lineTo(130,-128);ctx.lineTo(160,-100);ctx.lineTo(-185,-36);ctx.fill();
 ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-110,54);ctx.quadraticCurveTo(10,76,130,40);ctx.stroke();ctx.restore();
-ctx.strokeStyle=INK;ctx.lineWidth=8;ctx.strokeRect(-800,-h,1600,h*2);if(u>0.9){txt('必殺！',260,-38,96,'#ffd91a',INK,16,'center','#fff',28);txt('墨龍砲',300,62,84,'#fff',INK,16)}ctx.restore()}
+ctx.strokeStyle=INK;ctx.lineWidth=8;ctx.strokeRect(-800,-h,1600,h*2);if(u>0.9){txt('必殺！',260,-38,96,'#ffd91a',INK,16,'center','#fff',28);const nm=wpW().sp;txt(nm,300,62,Math.min(84,440/nm.length),'#fff',INK,16)}ctx.restore()}
 function drawCutBoss(){const t=3.2-cutBoss,u=sat(t/0.25)*sat(cutBoss/0.3);ctx.fillStyle=INK;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,70*u);ctx.lineTo(0,130*u);ctx.fill();ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(W,H);ctx.lineTo(W,H-150*u);ctx.lineTo(0,H-90*u);ctx.fill();
 if(t>0.5){const k=easeBack(sat((t-0.5)/0.25));ctx.save();ctx.translate(60,H-74);ctx.rotate(-0.045);ctx.scale(k,k);const bc=STG[G.stage].cut;if(bc[0])txt(bc[0],0,-10,54,'#fff',null,0,'left');txt(bc[1],bc[0]?250:0,-4,92,'#ff2e2e','#fff',10,'left');ctx.restore()}}
 function drawWipe(){const t=wipe.t,c=easeOut(t<0.5?t*2:(1-t)*2);ctx.fillStyle=INK;const n=7,bw=W/n+60;for(let i=0;i<n;i++){const x=i*(W/n)-30,w=bw*c*1.02;ctx.beginPath();const o=t<0.5?0:bw-w;ctx.moveTo(x+o+70,-10);ctx.lineTo(x+o+w+70,-10);ctx.lineTo(x+o+w-70,H+10);ctx.lineTo(x+o-70,H+10);ctx.fill()}}
 // ================= MAIN =================
-function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawTempleDoor(GDT);drawParts();if(G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()&&!tpsOn())drawGun();
+function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawTempleDoor(GDT);drawParts();if(G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()&&!tpsOn())drawGun();wpPreview();wpDrawLate();
 gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthRange(0,1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,shFbo);gl.viewport(0,0,SHN,SHN);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(pS.p);gl.uniformMatrix4fv(pS.u.uLVP,false,LVP);gl.uniform1f(pS.u.uT,now);flushLayer(0);flushLayer(1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,gFbo);gl.viewport(0,0,W,H);gl.clearBufferfv(gl.COLOR,0,[0,0,0,1]);gl.clearBufferfv(gl.COLOR,1,[0.5,0.5,0,0]);gl.clearBufferfv(gl.DEPTH,0,[1]);
