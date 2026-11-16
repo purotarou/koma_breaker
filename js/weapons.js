@@ -2,7 +2,7 @@
 // ================= WEAPONS 武器 (STORY.md「武器と必殺技」) =================
 // Seven weapons: 妖弾銃 (the standard, box-built gun of old) + six models (blender/weapons.blend -> assets/weapon_*.glb).
 // One weapon is equipped (装備画面: main menu / lobby →「装備」, saved in localStorage koma_wpn) and used for the whole stage, versus too.
-// The six come together once all five stages are cleared (SKS.clr, WS.got), or at once while the developer 超強化 switch (DEV) is on.
+// The six come only from the weapon gacha (not built yet: it calls wsGive(id), WS.own = {weaponId:1}), or all at once while the developer 超強化 switch (DEV) is on.
 // Each weapon has its own normal attack and its own special (必殺); the gauge (妖珠) is shared. Skills: damage / special power /
 // gauge work for every weapon; magazine / reload / fire rate only for the ones with ammo (wpApply scales SK after skApply).
 //  連珠銃 32発・威力24・毎秒7発・装填0.8秒・反動なし / 珠時雨: 5 s of free ammo, double rate, homing aim.
@@ -33,11 +33,12 @@ const WPN=[
  d:['投げて爆発。３個まで持ち、投げた玉は1個ずつ4秒で戻る','ボスにも当たる。必殺ゲージが早くたまる'],s:'特大の爆発のあと、炎が約６秒燃え残る'}];
 const WB_RF=4,RAIL_DM=9,RAIL_ICE=20;// bomb: seconds from its own throw until that bomb is back / 氷魄砲 damage per 0.06 s tick (normal, 氷牢)
 // ---- ownership / equip (localStorage koma_wpn: {eq: weapon id, got: 1 once the six were obtained}) ----
-const WS={eq:'gun',got:0};
+const WS={eq:'gun',own:{}};
 try{const s=JSON.parse(localStorage.getItem('koma_wpn')||'null');if(s)Object.assign(WS,s)}catch(e){}
 function wsSave(){try{localStorage.setItem('koma_wpn',JSON.stringify(WS))}catch(e){}}
-if(!WS.got&&skClr()>=5){WS.got=1;wsSave()}// a save that already cleared everything gets them at start-up
-const wpIdx=id=>Math.max(0,WPN.findIndex(w=>w.id===id)),wpOwn=i=>i===0||!!DEV||!!WS.got,wpW=()=>WPN[pl.wp|0]||WPN[0];
+// the gacha hands out a weapon with wsGive(id); returns true when it was new (false = a duplicate)
+function wsGive(id){if(id==='gun'||WS.own[id])return false;WS.own[id]=1;wsSave();return true}
+const wpIdx=id=>Math.max(0,WPN.findIndex(w=>w.id===id)),wpOwn=i=>i===0||!!DEV||!!WS.own[WPN[i].id],wpW=()=>WPN[pl.wp|0]||WPN[0];
 function wpCur(){if(G.demoOn)return 0;const i=wpIdx(WS.eq);return wpOwn(i)?i:0}
 // weapon numbers on top of the skills (called at the end of skApply, pl.wp is set first in resetPlayer)
 function wpApply(s){const w=WPN[pl.wp|0];if(!w)return;if(w.ammo){s.mag=Math.max(2,Math.round(s.mag*w.mag/16));s.rel*=w.rel;s.cool*=w.cool/0.125}s.gauge*=w.g}
@@ -390,7 +391,7 @@ txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');txt(ok?w.type:'',X+P
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 if(ok){tag(X+18,iy+50,'通常',INK);fitTxt(w.d[0],X+92,iy+50,21,PW-110,INK);fitTxt(w.d[1],X+92,iy+80,18,PW-110,'#3a3f55');
  tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
-else{txt('５つのステージをすべてクリアすると入手',X+PW/2,iy+68,24,INK);txt('（いまのクリア '+skClr()+'/5）',X+PW/2,iy+108,20,'#555a70')}
+else{txt('武器ガチャで入手できる',X+PW/2,iy+68,24,INK);txt('（ガチャは近日実装）',X+PW/2,iy+108,20,'#555a70')}
 if(eqDet&&ok)drawEqDet(w,X,Y,PW,PH+188);
 if(DEV)txt('超強化中：すべての武器が使えます',X,H-26,16,'#ffd91a',INK,5,'left');
 B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});
