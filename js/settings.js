@@ -34,7 +34,6 @@ txt('選択中：'+LAYN[laySel],tx+20,ty+92,26,'#e5402b',null,0,'left');const sz
 B(tx+230,ty+64,56,52,'－',()=>laySize(-0.1),{sk:0,size:32});txt('大きさ ×'+sz.toFixed(1),tx+364,ty+92,22,INK);B(tx+440,ty+64,56,52,'＋',()=>laySize(0.1),{sk:0,size:32});
 B(tx+316,ty+8,140,46,'初期配置',()=>{SET.lay=null;applySet()},{size:22});B(tx+466,ty+8,172,46,'完了',()=>{layEdit=false;layDrag=null;applySet()},{col:'#ffd91a',size:26});
 B(tx+516,ty+68,122,46,'左右反転',()=>{SET.lh=SET.lh?0:1;applySet()},{size:20})}
-function toggleFS(){const d=document,el=d.documentElement;try{if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}}catch(e){}}
 function gearBtn(x,y){btns.push({x,y,w:62,h:62,cb:openSet});ctx.fillStyle=INK;ctx.fillRect(x+5,y+6,62,62);ctx.fillStyle='#fff';ctx.fillRect(x,y,62,62);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.strokeRect(x,y,62,62);
 ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.beginPath();for(let i=0;i<32;i++){const a=(i+0.5)/32*TAU,r=(i>>1)%2?15:22;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,7,0,TAU);ctx.fill();ctx.restore()}
 function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');btns.push({x:160,y:36,w:360,h:90,cb:devTapTitle});
@@ -49,7 +48,6 @@ tog(372,'ボタンの大きさ',['小','中','大'],[0.85,1,1.15].indexOf(SET.si
 tog(442,'ボタン配置',['右手で撃つ','左手で撃つ'],SET.lh,i=>{SET.lh=i;applySet()});
 tog(512,'視点の上下',['通常','反転'],SET.inv>0?0:1,i=>{SET.inv=i?-1:1;applySet()});
 tog(582,'視点',['1人称','2人称','3人称'],[0,2,1].indexOf(SET.view|0),i=>{const v=[0,2,1][i];if((SET.view|0)!==v)tpsSet(v)});
-B(960,592,150,50,'全画面',()=>toggleFS(),{size:24});
 B(960,386,150,50,'自由に配置',()=>{layEdit=true;layDrag=null},{sk:8,size:22,col:'#59d8ff'});const px=960,py=478,pw=150,ph=84;ctx.fillStyle='#cfe6ff';ctx.fillRect(px,py,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(px,py,pw,ph);
 for(const k in BTN){const b=BTN[k];ctx.beginPath();ctx.arc(px+b.x/W*pw,py+b.y/H*ph,Math.max(3,b.r/W*pw),0,TAU);ctx.fillStyle=k==='fire'?'#ff4a3d':'#fff';ctx.fill();ctx.lineWidth=1.5;ctx.stroke()}
 btns.push({x:px,y:py,w:pw,h:ph,cb:()=>{layEdit=true;layDrag=null}});if(SET.lay)txt('カスタム',px+pw/2,py+ph+14,16,'#e5402b');ctx.beginPath();ctx.arc(px+(touch.hx||150)/W*pw,py+(touch.hy||560)/H*ph,10,0,TAU);ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();ctx.stroke();txt('配置プレビュー',px+pw/2,py-14,16,INK)}
