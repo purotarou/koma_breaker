@@ -85,7 +85,7 @@ const chk=(x,y,z,bias)=>{const px=x-ox,py=y-oy,pz=z-oz,l=Math.hypot(px,py,pz)||1
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(pvp)for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
 if(bp){const k=as?0.85:0.5;d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}
 let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],140),he=null,hm=1,hs=null,ho=null,htg=0;const wallT=tw;
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0,tg=0;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(e.monk){if(t<tm){tm=t;mm=s[4];tg=s[5]}}else{if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}}if(tm<tw){tw=tm;he=e;hm=mm;htg=tg}}
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0,tg=0,tb=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(e.monk){if(s[5]==='bell'){if(t<tb)tb=t}if(t<tm){tm=t;mm=s[4];tg=s[5]}}else{if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}}if(e.monk&&tg!=='bell'&&tb<tm+1.6){tm=tb;tg='bell';mm=1}if(tm<tw){tw=tm;he=e;hm=mm;htg=tg}}
 if(boss&&boss.monk&&boss.bell2&&boss.bell2.y<0.3){const c=boss.bell2,t=raySph(ox,oy,oz,d,c.x,1.6,c.z,MK_BELL_R+0.2);if(t>0&&t<tw){tw=t;he=null;htg='cover'}}
 for(const s of shots){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.35);if(t>0&&t<tw){tw=t;he=null;hs=s}}
 if(pvp)for(const o of others){if(o.dead)continue;const t1=raySph(ox,oy,oz,d,o.x,o.y+0.85,o.z,0.6),t2=raySph(ox,oy,oz,d,o.x,o.y+1.62,o.z,0.34),t=t1>0&&t2>0?Math.min(t1,t2):Math.max(t1,t2);if(t>0&&t<tw){tw=t;he=null;hs=null;ho=o;hm=t2>0?2:1}}
