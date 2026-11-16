@@ -83,7 +83,7 @@ SKS.pt-=n.c0;SKS.own[n.id]=1;SKS.last=n.id;skSave();snd('item');skPop={id:n.id,t
 // take back one panel (only the end of a path); all its points come back
 function skUndo(n){if(!skHas(n.id))return;if(SKN.some(m=>skHas(m.id)&&m.par.includes(n.id))){skMsg={s:'先のスキルを外してから',t:now};return}
 delete SKS.own[n.id];const r=n.c0-SKRESPEC;SKS.pt+=r;if(SKS.last===n.id)SKS.last=n.par[0]||null;skSave();snd('ui');skMsg={s:n.n+'を外しました（振り直し代'+SKRESPEC+'ポイント・'+r+'ポイント戻りました）',t:now}}
-let skConf=false;// 全部振り直しの確認ポップアップ
+let skConf=false;// 全て振り直すの確認ポップアップ
 function skRespecInfo(){let sp=0,k=0;for(const n of SKN)if(skHas(n.id)){sp+=n.c0;k++}return{k,sp,loss:k*SKRESPEC,back:sp-k*SKRESPEC}}
 function skAskReset(){if(!skRespecInfo().k){skMsg={s:'習得したスキルがありません',t:now};return}skConf=true}
 function skReset(){let r=0,k=0;for(const n of SKN)if(skHas(n.id)){r+=n.c0-SKRESPEC;k++}if(!k)return;SKS.pt+=r;SKS.own={};SKS.last=null;skSave();skMsg={s:'振り直し：'+k+'個外して'+r+'ポイント戻りました（1個につき'+SKRESPEC+'ポイント）',t:now}}
@@ -186,12 +186,12 @@ if(n){const s=skState(n),col=SKB[n.b].col,path=n.ln==='A'?SKB[n.b].la:n.ln==='B'
  if(s==='own')B(X+130,cy+204,220,52,'外す（-'+SKRESPEC+'）',()=>skUndo(n),{size:26,col:'#d8d8e0'});else B(X+130,cy+204,220,52,'習得する',()=>skBuy(n),{size:26,col:s==='ok'?'#ff4a3d':'#d8d8e0',tc:s==='ok'?'#fff':'#6a6f88'})}
 else{txt('光っている丸をタップして選ぼう',X+239,cy+58,23,INK);txt('同じ系統で選べる道は１本だけ',X+239,cy+106,18,INK);txt('習得すると、その先が見えてくる',X+239,cy+138,18,INK);txt('ポイントは全部で'+SKMAX+'。全部は取れない！',X+239,cy+194,20,'#e5402b','#fff',6)}
 if(skMsg&&now-skMsg.t<2.2)txt(skMsg.s,X+245,562,20,'#ff5a4d',INK,6,'center','#fff',10);else txt('初クリア＋3／2回目＋1／ボス無傷＋1／全面クリア＋4／外すと1個-1',X+245,562,15,'#fff',INK,5);
-B(X,616,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,616,230,56,'全部振り直し',()=>skAskReset(),{size:24,col:'#d8d8e0'});
+B(X,616,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,616,230,56,'全て振り直す',()=>skAskReset(),{size:24,col:'#d8d8e0'});
 if(skConf){const f=skRespecInfo();btns.length=0;ctx.fillStyle='rgba(10,12,40,.72)';ctx.fillRect(0,0,W,H);
- const x=340,y=170,w=600,h=380;panel(x,y,w,h);ctx.fillStyle='#e5402b';ctx.fillRect(x,y,w,64);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(x,y,w,64);txt('全部振り直しますか？',x+w/2,y+34,32,'#fff',INK,6);
+ const x=340,y=170,w=600,h=380;panel(x,y,w,h);ctx.fillStyle='#e5402b';ctx.fillRect(x,y,w,64);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(x,y,w,64);txt('全て振り直しますか？',x+w/2,y+34,32,'#fff',INK,6);
  txt('習得したスキル '+f.k+'個を、すべて外します',x+w/2,y+98,22,INK);
  txt('使ったポイント　'+f.sp,x+w/2,y+142,24,INK);
  txt('振り直し代　-'+f.loss+'（1個につき'+SKRESPEC+'）',x+w/2,y+182,24,'#e5402b');
  txt('戻るポイント　'+f.back,x+w/2,y+222,26,INK);
- txt('いまの '+SKS.pt+' → '+(SKS.pt+f.back)+' ポイント',x+w/2,y+274,34,'#e5402b','#fff',7);
+ txt('現在 '+SKS.pt+' → 変更後 '+(SKS.pt+f.back),x+w/2,y+274,34,'#e5402b','#fff',7);
  B(x+40,y+306,240,58,'やめる',()=>{skConf=false},{size:26});B(x+w-280,y+306,240,58,'振り直す',()=>{skConf=false;skReset()},{size:26,col:'#ff4a3d',tc:'#fff'})}}
