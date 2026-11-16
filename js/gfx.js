@@ -21,16 +21,17 @@ const VS_G=`#version 300 es
 precision highp float;
 ${INST}
 ${ANIM}
+layout(location=8) in vec2 aU;
 uniform mat4 uVP,uLVP;
-out vec3 vN,vW,vO,vL;out vec4 vC,vX;
-void main(){mat4 m=mat4(i0,i1,i2,i3);vec4 w=m*vec4(aP,1.0);mat3 m3=mat3(m);
+out vec3 vN,vW,vO,vL;out vec4 vC,vX;out vec2 vU;
+void main(){vU=aU;mat4 m=mat4(i0,i1,i2,i3);vec4 w=m*vec4(aP,1.0);mat3 m3=mat3(m);
 vec3 s2=vec3(dot(m3[0],m3[0]),dot(m3[1],m3[1]),dot(m3[2],m3[2]));
 vN=normalize(m3*(aN/s2));w.xyz=kbAnim(w.xyz,i3.xyz,m3,iX.z,vN);vW=w.xyz;vO=aP*sqrt(s2);
 vec4 l=uLVP*vec4(w.xyz+vN*0.07,1.0);vL=l.xyz*0.5+0.5;vC=iC;vX=iX;gl_Position=uVP*w;}`;
 const FS_G=`#version 300 es
 precision highp float;precision mediump sampler2DShadow;
-in vec3 vN,vW,vO,vL;in vec4 vC,vX;
-uniform sampler2DShadow uSh;uniform vec3 uLD,uCam;uniform mat4 uV;uniform float uT;
+in vec3 vN,vW,vO,vL;in vec4 vC,vX;in vec2 vU;
+uniform sampler2DShadow uSh;uniform sampler2D uHT;uniform vec3 uLD,uCam;uniform mat4 uV;uniform float uT;
 layout(location=0) out vec4 o0;layout(location=1) out vec4 o1;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float ln(float d,float w){float a=fwidth(d)*1.2+1e-5;return 1.0-smoothstep(w-a,w+a,d);}
@@ -41,7 +42,13 @@ float L=dot(N,uLD)*0.5+0.5;float sh=1.0;
 if(vL.x>0.0&&vL.x<1.0&&vL.y>0.0&&vL.y<1.0&&vL.z<1.0)sh=texture(uSh,vec3(vL.xy,vL.z-0.0012));
 L=min(L,mix(0.2,1.0,sh));
 float pf=1.0-smoothstep(28.0,80.0,length(vW-uCam));
-if(mat>0.5){
+// mat 10/11: textured (the hero, uHT on unit 3, UV at location 8). 11 also turns the strongly red texels (the coat) into the instance colour,
+// keeping the texture's shading. A flash (gTint, which also sets the unlit flag) whitens it.
+if(mat>9.5){vec3 t=texture(uHT,vU).rgb;
+ if(mat>10.5){float c=(t.r-max(t.g,t.b))/max(t.r,0.001);float k=smoothstep(0.25,0.45,c)*step(0.12,t.r)*(1.0-smoothstep(0.03,0.07,t.g-t.b));
+  t=mix(t,vC.rgb*clamp((t.r+t.g+t.b)/1.1,0.35,1.15),k);}
+ alb=unlit>0.5?mix(t,vec3(1.0),0.85):t;}
+else if(mat>0.5){
  if(mat<1.5){vec2 p=vW.xz/vec2(1.6,1.0);float row=floor(p.y);p.x+=mod(row,2.0)*0.5;vec2 c=floor(p);vec2 f=fract(p);vec2 dd=min(f,1.0-f)*vec2(1.6,1.0);
   float l=max(ln(dd.x,0.03),ln(dd.y,0.03));alb*=0.93+0.1*hash(c+row*13.0);alb=mix(alb,alb*0.5,l*pf);}
  else if(mat<2.5){float d=abs(fract(vO.x/0.5)-0.5)*0.5;alb=mix(alb,alb*0.55,ln(d,0.02)*pf);}
@@ -66,6 +73,7 @@ vec3 Vd=normalize(uCam-vW);
 if(vX.y>0.0){vec3 Hh=normalize(Vd+uLD);float sp=pow(max(dot(N,Hh),0.0),24.0/vX.y);if(sp>0.5&&sh>0.5)a=1.0;}
 if(vX.w>0.0){float rim=1.0-max(dot(N,Vd),0.0);if(rim>1.0-0.3*vX.w&&dot(N,uLD)>-0.1)a=1.0;}
 if(unlit>0.5)a=0.85;
+if(mat>9.5)a=mix(a,0.85,0.45);// the texture already carries soft shading: tone dots only in the deeper shadows
 o0=vec4(alb,a);
 vec3 vn=normalize(mat3(uV)*N);
 o1=vec4(vn.xy*0.5+0.5,vX.x/255.0,(unlit+2.0*noE)/3.0);}`;
@@ -159,7 +167,14 @@ dir=clamp(dir*rc,vec2(-8.0),vec2(8.0))*uPx;
 vec3 A=0.5*(texture(uT,vUv+dir*(1.0/3.0-0.5)).rgb+texture(uT,vUv+dir*(2.0/3.0-0.5)).rgb);
 vec3 B=A*0.5+0.25*(texture(uT,vUv+dir*-0.5).rgb+texture(uT,vUv+dir*0.5).rgb);
 float lb=dot(B,lu);oC=vec4((lb<mn||lb>mx)?A:B,1.0);}`;
-const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT']);
+const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT','uHT']);
+// textured models (kb_mat 10/11) sample uHT on texture unit 3 (units 0-2 are the shadow map / G-buffer). A 1x1 white stands in until a texture loads,
+// so the sampler never shares a unit with the shadow sampler. setModelTex() swaps in the real one (js/hero.js).
+gl.useProgram(pG.p);gl.uniform1i(pG.u.uHT,3);
+let modelTex=gl.createTexture();gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,modelTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));gl.activeTexture(gl.TEXTURE0);
+function setModelTex(img){const t=gl.createTexture();gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.activeTexture(gl.TEXTURE0);gl.deleteTexture(modelTex);modelTex=t}
 const pS=mkProg(VS_S,FS_S,['uLVP','uT']);
 const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight','uShade','uFogR']);
 const pF=mkProg(VS_Q,FS_F,['uT','uPx']);
@@ -200,6 +215,14 @@ function addPrim(mb){const vbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,v
 for(let l=0;l<3;l++){const b={d:new Float32Array(64*FL),n:0,cap:64,buf:gl.createBuffer(),vao:gl.createVertexArray(),dirty:true};gl.bindVertexArray(b.vao);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,24,12);
 gl.bindBuffer(gl.ARRAY_BUFFER,b.buf);for(let k=0;k<6;k++){gl.enableVertexAttribArray(2+k);gl.vertexAttribPointer(2+k,4,gl.FLOAT,false,96,k*16);gl.vertexAttribDivisor(2+k,1)}p.b.push(b)}
 gl.bindVertexArray(null);prims.push(p);return prims.length-1}
+// Indexed prim over caller-owned buffers (CPU-skinned models, js/hero.js): vbo = position+normal (stride 24, rewritten each frame),
+// uvb = UV (location 8), idx = Uint16 indices. Several prims may share one vbo / uvb with different index lists.
+function addIdxPrim(vbo,uvb,idx){const ib=gl.createBuffer(),p={count:idx.length,ib,b:[]};
+for(let l=0;l<3;l++){const b={d:new Float32Array(4*FL),n:0,cap:4,buf:gl.createBuffer(),vao:gl.createVertexArray(),dirty:true};gl.bindVertexArray(b.vao);gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,24,12);
+gl.bindBuffer(gl.ARRAY_BUFFER,uvb);gl.enableVertexAttribArray(8);gl.vertexAttribPointer(8,2,gl.FLOAT,false,8,0);
+gl.bindBuffer(gl.ARRAY_BUFFER,b.buf);for(let k=0;k<6;k++){gl.enableVertexAttribArray(2+k);gl.vertexAttribPointer(2+k,4,gl.FLOAT,false,96,k*16);gl.vertexAttribDivisor(2+k,1)}
+if(l===0){gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,idx,gl.STATIC_DRAW)}else gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);p.b.push(b)}
+gl.bindVertexArray(null);prims.push(p);return prims.length-1}
 const BOX=addPrim(mkBox()),SPH=addPrim(mkSph(10,16)),CYL=addPrim(mkCyl(16)),CONE=addPrim(mkCone(16,false,0,0.5)),PYR=addPrim(mkCone(4,true,PI/4,0.7071)),PRISM=addPrim(mkPrism()),
 STAR=addPrim(mkStar(10,0.24,0.5,0,1)),BURST=addPrim(mkStar(14,0.2,0.5,0.45,7)),RING=addPrim(mkRing(28,0.4)),QUAD=addPrim(mkQuad()),SPIKE=addPrim(mkSph(6,10,(i,j)=>(i===0||i===6)?0.5:((i+j)%2===0?0.5:0.27)));
 const F_UNLIT=1,F_NOEDGE=2,F_NOCAST=4,F_SWAY=8,F_CLOTH=16,F_DRIFT=32,F_FLAME=64;
@@ -212,7 +235,7 @@ function put(pi,x,y,z,rx,ry,rz,sx,sy,sz,c,mat,gloss,fl,rim){mPush();mT(x,y,z);if
 const box=(x,y,z,sx,sy,sz,c,mat,gloss,fl,rim)=>put(BOX,x,y,z,0,0,0,sx,sy,sz,c,mat,gloss,fl,rim);
 const sph=(x,y,z,sx,sy,sz,c,mat,gloss,fl,rim)=>put(SPH,x,y,z,0,0,0,sx,sy,sz,c,mat,gloss,fl,rim);
 const cyl=(x,y,z,sx,sy,sz,c,mat,gloss,fl,rim)=>put(CYL,x,y,z,0,0,0,sx,sy,sz,c,mat,gloss,fl,rim);
-function flushLayer(l){for(const p of prims){const b=p.b[l];if(!b.n)continue;gl.bindVertexArray(b.vao);if(b.dirty){gl.bindBuffer(gl.ARRAY_BUFFER,b.buf);gl.bufferData(gl.ARRAY_BUFFER,b.d.subarray(0,b.n*FL),l===0?gl.STATIC_DRAW:gl.DYNAMIC_DRAW);b.dirty=false}gl.drawArraysInstanced(gl.TRIANGLES,0,p.count,b.n)}}
+function flushLayer(l){for(const p of prims){const b=p.b[l];if(!b.n)continue;gl.bindVertexArray(b.vao);if(b.dirty){gl.bindBuffer(gl.ARRAY_BUFFER,b.buf);gl.bufferData(gl.ARRAY_BUFFER,b.d.subarray(0,b.n*FL),l===0?gl.STATIC_DRAW:gl.DYNAMIC_DRAW);b.dirty=false}if(p.ib)gl.drawElementsInstanced(gl.TRIANGLES,p.count,gl.UNSIGNED_SHORT,0,b.n);else gl.drawArraysInstanced(gl.TRIANGLES,0,p.count,b.n)}}
 function beginDynamic(){for(const p of prims){p.b[1].n=0;p.b[2].n=0}idD=0;curLayer=1;mReset();gTint=0;gId=0}
 // ---- camera ----
 const cam={x:0,y:1.62,z:16,yaw:0,pitch:0,roll:0,fov:80*PI/180};

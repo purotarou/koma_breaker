@@ -24,7 +24,8 @@
 | `assets/weapon_hammer.glb` | 火消しの大槌 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_bomb.glb` | 焙烙火矢（ボム） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `blender/src/komabure_chara_kakeru.glb` | 主人公カケルの元モデル（Tripo の出力そのまま。12部品に分割済み、テクスチャ付き） | ユーザーが Tripo AI で生成（2026-11-16、**有料プラン**で生成） | Tripo の公式ヘルプ（https://www.tripo3d.ai/help/privacy-policy/can-i-use-models-commercially ）によると、有料プランで生成したモデルは商用利用・改変・配布ができる。表記義務の記載は見当たらない。ただし利用規約の原文そのものは未確認（公式ヘルプとブログの記述に基づく）。無料プランはモデルの権利の扱いが異なるので、無料で作ったモデルは使わない |
-| `blender/hero_kakeru.blend` | 主人公カケルのゲーム用元データ | 上記を Blender に取り込み、6部品にまとめ・減面（約4,500三角面）・テクスチャの色を単色マテリアルに置き換え・関節に原点を移したもの | 上記と同じ（Tripo 有料プランの生成物） |
-| `assets/hero_kakeru.glb` | 主人公カケルのゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 上記と同じ（Tripo 有料プランの生成物） |
+| `blender/hero_kakeru.blend` | 主人公カケルのゲーム用元データ | 上記を Blender に取り込み、穴のない1つの形に作り直して減面（約8,000三角面）・新しい UV に元のテクスチャを焼き付け・16本の骨を入れたもの | 上記と同じ（Tripo 有料プランの生成物） |
+| `blender/hero_kakeru_tex.png` | 主人公カケルのテクスチャ（1024px） | 上記の元モデルのテクスチャを焼き付け直し、上着のテカリを塗り直したもの | 上記と同じ（Tripo 有料プランの生成物） |
+| `assets/hero_kakeru.glb` | 主人公カケルのゲーム用モデル（骨・テクスチャ入り） | 上記から `tools/blender_export_hero.py` で書き出し | 上記と同じ（Tripo 有料プランの生成物） |
 
 ステージ1・2の小物（しめ縄・絵馬掛け・散った花びら・草・提灯・陣幕・槍掛け・砲弾など）、手描き風の模様（葉・木の皮・水面）、揺れ・はためき・炎・雲の動きもすべて本プロジェクトで自作。外部からダウンロードした素材は使っていない。
