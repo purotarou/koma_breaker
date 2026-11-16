@@ -33,7 +33,7 @@ if(dz_&&pl.dashCd<=0){inp.dash=true;if(Math.abs(inp.mx)<0.3)inp.mx=ai.st}
 if(spReady()&&tgt&&Math.abs(dyaw)<0.12&&(tgt.type==='bru'||tgt.type==='boss'||enemies.length>=3))inp.special=true;if(pl.ammo<=0)inp.reload=true;for(const s of shocks){const dd=Math.hypot(pl.x-s.x,pl.z-s.z)-s.r;if(dd>0&&dd<2.8)inp.jump=true}}
 // ================= INPUT =================
 function evPos(t){const r=uic.getBoundingClientRect();return{x:(t.clientX-r.left)/r.width*W,y:(t.clientY-r.top)/r.height*H}}
-addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m')});uic.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m');skTouch('u',null,'m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m');if(!touchMode)skTouch('m',evPos(e),'m')});uic.addEventListener('wheel',e=>{if(skWheel(evPos(e),e.deltaY))e.preventDefault()},{passive:false});uic.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousemove',e=>{if(touchMode||G.state!=='play')return;if(document.pointerLockElement===uic||mouseFire){inp.lx+=(e.movementX||0)*0.0024*SET.sens;inp.ly+=(e.movementY||0)*0.0024*SET.sens*SET.inv}});
 addEventListener('keyup',e=>{keys[e.code]=false});
 // ================= UI =================

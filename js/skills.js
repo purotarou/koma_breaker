@@ -88,37 +88,89 @@ function skReset(){let r=0;for(const n of SKN)if(skHas(n.id))r+=n.c0;if(!r)retur
 function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;let p=0;const i=G.stage;
 if(cl){if(!SKS.clr[i]){SKS.clr[i]=1;p+=3;if(skClr()===5)p+=4}else if(!SKS.c2[i]){SKS.c2[i]=1;p+=1}if(!G.bHurt&&!SKS.nd[i]){SKS.nd[i]=1;p+=1}}
 SKS.pt+=p;G.rew=p;skSave()}
-// ---- skill tree screen: a cross of panels (manga page) ----
+// ---- skill tree screen: a yokai-magic seal (pan / zoom) ----
+// The cross is drawn in "world" coords around SKC and shown through a view (SKVR) that can be dragged, pinched and wheel-zoomed.
 const SKC=[380,394],SKST=40,SKSW=34,SKO=[[0,-1],[1,0],[0,1],[-1,0]],SKSD=[[1,0],[0,1],[-1,0],[0,-1]];
+const SKVR={x:30,y:22,w:700,h:676},SKVC=[380,368],SKS0=0.94,skV={x:0,y:0,s:SKS0},skP={};let skPinch=null;
+const SK9='臨兵闘者皆陣列在前';
 function skPos(b,d,sv){const o=SKO[b],s=SKSD[b];return[SKC[0]+o[0]*SKST*d+s[0]*SKSW*sv,SKC[1]+o[1]*SKST*d+s[1]*SKSW*sv]}
-function skLine(a,b,on,col){ctx.lineCap='round';ctx.strokeStyle=INK;ctx.lineWidth=on?11:5;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();if(on){ctx.strokeStyle=col;ctx.lineWidth=6;ctx.stroke()}ctx.lineCap='butt'}
-function drawSkill(){const nc=skClr();
-// paper page behind the cross (also covers the logo on this screen)
-ctx.fillStyle=INK;ctx.fillRect(38,30,700,676);ctx.fillStyle='#f6f0df';ctx.fillRect(30,22,700,676);ctx.save();ctx.globalAlpha=0.12;ctx.fillStyle=dotPat;ctx.fillRect(30,22,700,676);ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(30,22,700,676);
-// edges first
-for(const n of SKN){const p=skPos(n.b,n.d,n.sv),q=n.par.length?skPos(SKI[n.par[0]].b,SKI[n.par[0]].d,SKI[n.par[0]].sv):SKC;skLine(q,p,skHas(n.id),SKB[n.b].col)}
-for(let b=0;b<4;b++){const bc=SKB[b].col,t=skPos(b,7.05,0);ctx.beginPath();ctx.arc(t[0]+3,t[1]+4,21,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(t[0],t[1],21,0,TAU);ctx.fillStyle=bc;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(SKB[b].n,t[0],t[1]+1,26,'#fff',INK,6);
- for(const[k,sv]of[['la',-1],['lb',1]]){const q=skPos(b,6.9,sv);txt(SKB[b][k],q[0],q[1],15,'#fff',INK,5)}}
-// start node
-ctx.beginPath();ctx.arc(SKC[0],SKC[1],24,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();txt('起点',SKC[0],SKC[1]+1,17,INK);
-for(const n of SKN){const p=skPos(n.b,n.d,n.sv),s=skState(n),own=s==='own',ok=s==='ok',bc=SKB[n.b].col,r=n.cap?19:15,sel=skSel===n.id;
- btns.push({x:p[0]-21,y:p[1]-21,w:42,h:42,cb:()=>{skSel=n.id;skMsg=null}});
- ctx.beginPath();ctx.arc(p[0]+3,p[1]+4,r,0,TAU);ctx.fillStyle=INK;ctx.fill();
- ctx.beginPath();ctx.arc(p[0],p[1],r,0,TAU);ctx.fillStyle=own?bc:ok?'#fff':'#c9c9d3';ctx.fill();
- ctx.strokeStyle=ok?(Math.sin(now*8)>0?'#ffd91a':INK):INK;ctx.lineWidth=ok?6:4;ctx.stroke();
- if(sel){ctx.beginPath();ctx.arc(p[0],p[1],r+7,0,TAU);ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke()}
- txt(n.cap?'極':String(n.c0),p[0],p[1]+1,n.cap?20:17,own?'#fff':s==='ok'||s==='pt'?INK:'#7a7a88',own?INK:null,own?5:0);
- if(skPop&&skPop.id===n.id&&now-skPop.t<0.7){const u=now-skPop.t,k=easeBack(sat(u/0.18))*(1+0.25*(1-sat(u/0.18)));ctx.save();ctx.globalAlpha=sat((0.7-u)/0.2);ctx.translate(p[0],p[1]-34);ctx.rotate(-0.12);ctx.scale(k*0.6,k*0.6);burstPath(4,5,104,40,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,104,40,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('習得！',0,2,40,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
-// right column: title, points, the chosen panel
-const X=742;para(X,108,300,52,18);ctx.fillStyle=INK;ctx.fill();txt('スキルツリー',X+160,135,30,'#fff');
-para(X+6,180,480,62,16);ctx.fillStyle=INK;ctx.fill();para(X,174,480,62,16);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
-txt('スキルポイント',X+120,205,24,INK);txt(String(SKS.pt),X+320,205,46,'#e5402b',INK,4);txt('クリア済み '+nc+'/5',X+420,205,17,INK);
-ctx.fillStyle=INK;ctx.fillRect(X+6,268,480,250);ctx.fillStyle='#fff';ctx.fillRect(X,262,480,250);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(X,262,480,250);
+function skScr(p){return[SKVC[0]+skV.x+(p[0]-SKC[0])*skV.s,SKVC[1]+skV.y+(p[1]-SKC[1])*skV.s]}
+const skIn=p=>p.x>=SKVR.x&&p.x<=SKVR.x+SKVR.w&&p.y>=SKVR.y&&p.y<=SKVR.y+SKVR.h;
+function skClampV(){const m=330*skV.s;skV.x=clamp(skV.x,-m,m);skV.y=clamp(skV.y,-m,m)}
+function skZoom(f,px,py){const s1=clamp(skV.s*f,0.7,2.6),k=s1/skV.s;skV.x=(px-SKVC[0])-(px-SKVC[0]-skV.x)*k;skV.y=(py-SKVC[1])-(py-SKVC[1]-skV.y)*k;skV.s=s1;skClampV()}
+function skHit(x,y){let best=null,bd=1e9;for(const n of SKN){const q=skScr(skPos(n.b,n.d,n.sv)),d=Math.hypot(q[0]-x,q[1]-y);if(d<(n.cap?22:17)*skV.s+10&&d<bd){bd=d;best=n}}return best}
+// pointer hooks from the input code: ph 'd' down / 'm' move / 'u' up. Returns true when the tree used the event.
+function skTouch(ph,p,id){if(G.state!=='menu'||G.menu!=='skill'||setOpen||wipe.on){for(const k in skP)delete skP[k];skPinch=null;return false}
+ if(ph==='d'){if(!skIn(p))return false;for(const b of btns)if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return false;
+  skP[id]={x:p.x,y:p.y,x0:p.x,y0:p.y,mv:0};const ks=Object.keys(skP);if(ks.length===2){const a=skP[ks[0]],b=skP[ks[1]];skPinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1};a.mv=b.mv=1}return true}
+ const q=skP[id];if(!q)return false;
+ if(ph==='m'){const ks=Object.keys(skP);
+  if(ks.length>=2&&skPinch){const a=skP[ks[0]],b=skP[ks[1]],mx0=(a.x+b.x)/2,my0=(a.y+b.y)/2;q.x=p.x;q.y=p.y;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,d=Math.hypot(a.x-b.x,a.y-b.y)||1;skV.x+=mx-mx0;skV.y+=my-my0;skZoom(d/skPinch.d,mx,my);skPinch.d=d}
+  else{skV.x+=p.x-q.x;skV.y+=p.y-q.y;q.x=p.x;q.y=p.y;if(Math.hypot(p.x-q.x0,p.y-q.y0)>10)q.mv=1;skClampV()}return true}
+ delete skP[id];if(Object.keys(skP).length<2)skPinch=null;if(!q.mv){const n=skHit(q.x,q.y);if(n){skSel=n.id;skMsg=null;snd('ui')}}return true}
+function skWheel(p,dy){if(G.state!=='menu'||G.menu!=='skill'||setOpen||!skIn(p))return false;skZoom(Math.exp(-dy*0.0015),p.x,p.y);return true}
+function skCircle(t){ctx.save();ctx.translate(SKC[0],SKC[1]);ctx.lineWidth=2;
+ ctx.strokeStyle='rgba(190,150,255,.32)';for(const r of[326,292,206,148]){ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke()}
+ ctx.save();ctx.rotate(t*0.04);for(let i=0;i<18;i++){ctx.save();ctx.rotate(i/18*TAU);txt(SK9[i%9],0,-309,20,'rgba(215,185,255,.42)');ctx.restore()}ctx.restore();
+ ctx.save();ctx.rotate(-t*0.06);ctx.strokeStyle='rgba(190,150,255,.28)';for(let i=0;i<72;i++){ctx.rotate(TAU/72);ctx.beginPath();ctx.moveTo(0,-292);ctx.lineTo(0,i%6?-286:-278);ctx.stroke()}ctx.restore();
+ ctx.save();ctx.rotate(t*0.08);ctx.strokeStyle='rgba(255,110,190,.22)';ctx.lineWidth=2.5;for(let k=0;k<2;k++){ctx.rotate(PI/4);ctx.strokeRect(-146,-146,292,292)}ctx.restore();
+ ctx.save();ctx.rotate(-t*0.12);ctx.setLineDash([10,12]);ctx.strokeStyle='rgba(120,220,255,.25)';ctx.beginPath();ctx.arc(0,0,176,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();ctx.restore()}
+function skEdge(a,b,on,col,t){ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);
+ if(!on){ctx.strokeStyle='rgba(200,180,255,.2)';ctx.lineWidth=3;ctx.stroke();ctx.lineCap='butt';return}
+ ctx.strokeStyle=col;ctx.globalAlpha=0.28;ctx.lineWidth=16;ctx.stroke();ctx.globalAlpha=1;ctx.lineWidth=5;ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+ ctx.setLineDash([3,15]);ctx.lineDashOffset=-t*45;ctx.lineWidth=4;ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0;ctx.lineCap='butt'}
+function skShape(x,y,r,cap){ctx.beginPath();if(!cap){ctx.arc(x,y,r,0,TAU);return}for(let i=0;i<16;i++){const a=i/16*TAU-PI/2,q=i%2?r*0.78:r;i?ctx.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q):ctx.moveTo(x+Math.cos(a)*q,y+Math.sin(a)*q)}ctx.closePath()}
+function skNode(n,t){const p=skPos(n.b,n.d,n.sv),x=p[0],y=p[1],s=skState(n),own=s==='own',ok=s==='ok',col=SKB[n.b].col,r=n.cap?21:14,sel=skSel===n.id;
+ if(own){ctx.globalAlpha=0.22+0.08*Math.sin(t*3+n.d);ctx.fillStyle=col;skShape(x,y,r+10,n.cap);ctx.fill();ctx.globalAlpha=1;const g=ctx.createRadialGradient(x-r*0.3,y-r*0.3,1,x,y,r);g.addColorStop(0,'#fff');g.addColorStop(0.45,col);g.addColorStop(1,col);ctx.fillStyle=g}
+ else ctx.fillStyle=ok?'#22163a':'#110b1d';
+ skShape(x,y,r,n.cap);ctx.fill();ctx.strokeStyle=own?'#fff':ok?col:'rgba(255,255,255,.22)';ctx.lineWidth=own?2:ok?3:2;ctx.stroke();
+ if(ok){const k=(t*1.4+n.d*0.2)%1;ctx.globalAlpha=1-k;ctx.strokeStyle=col;ctx.lineWidth=2;skShape(x,y,r+3+k*12,n.cap);ctx.stroke();ctx.globalAlpha=1}
+ if(n.cap&&(own||ok)){ctx.fillStyle=own?'#fff':col;for(let i=0;i<8;i++){const a=t*(own?1.2:0.6)+i/8*TAU;ctx.beginPath();ctx.arc(x+Math.cos(a)*(r+13),y+Math.sin(a)*(r+13),own?2.6:1.8,0,TAU);ctx.fill()}}
+ if(sel){ctx.save();ctx.setLineDash([5,5]);ctx.lineDashOffset=t*18;ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,r+(n.cap?20:10),0,TAU);ctx.stroke();ctx.restore()}
+ const lab=n.cap?'極':own?n.n.replace('極み：','')[0]:String(n.c0);
+ txt(lab,x,y+1,n.cap?22:own?17:15,own?'#fff':ok?'#fff':'rgba(255,255,255,.4)',own?INK:null,own?5:0);
+ if(skPop&&skPop.id===n.id&&now-skPop.t<0.9){const u=now-skPop.t;ctx.globalAlpha=sat((0.9-u)/0.3);ctx.strokeStyle=col;ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,y,r+u*70,0,TAU);ctx.stroke();ctx.globalAlpha=1;
+  const k=easeBack(sat(u/0.18));ctx.save();ctx.globalAlpha=sat((0.9-u)/0.25);ctx.translate(x,y-r-26);ctx.scale(k*0.55,k*0.55);txt('会得！',0,0,44,'#fff',col,10,'center',INK,16);ctx.restore()}}
+function skBadge(b,t){const p=skPos(b,7.05,0),col=SKB[b].col;ctx.save();ctx.translate(p[0],p[1]);
+ ctx.globalAlpha=0.3;ctx.fillStyle=col;ctx.beginPath();ctx.arc(0,0,36,0,TAU);ctx.fill();ctx.globalAlpha=1;
+ const g=ctx.createRadialGradient(0,-8,2,0,0,26);g.addColorStop(0,'#fff');g.addColorStop(0.35,col);g.addColorStop(1,'#1a0f2c');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,26,0,TAU);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+ ctx.save();ctx.rotate(t*(b%2?-0.7:0.7));ctx.strokeStyle=col;ctx.lineWidth=2;for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.beginPath();ctx.moveTo(0,-31);ctx.lineTo(0,i%3?-34:-38);ctx.stroke()}ctx.restore();
+ txt(SKB[b].n,0,1,30,'#fff',INK,7);ctx.restore();
+ for(const[k,sv]of[['la',-1],['lb',1]]){const q=skPos(b,6.95,sv);txt(SKB[b][k],q[0],q[1],15,'#efe4ff','#07050d',5)}}
+function skCore(t){const x=SKC[0],y=SKC[1];ctx.globalAlpha=0.25+0.1*Math.sin(t*2);ctx.fillStyle='#c79bff';ctx.beginPath();ctx.arc(x,y,44,0,TAU);ctx.fill();ctx.globalAlpha=1;
+ const g=ctx.createRadialGradient(x-8,y-8,2,x,y,30);g.addColorStop(0,'#fff');g.addColorStop(0.5,'#d9b8ff');g.addColorStop(1,'#5b2a9c');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,30,0,TAU);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+ ctx.save();ctx.translate(x,y);ctx.rotate(-t*0.9);ctx.fillStyle='#f3e6ff';for(let i=0;i<6;i++){ctx.rotate(TAU/6);ctx.beginPath();ctx.moveTo(0,-36);ctx.lineTo(4,-42);ctx.lineTo(-4,-42);ctx.fill()}ctx.restore();txt('妖',x,y+1,32,'#2a0f45')}
+function skRoundBtn(x,y,label,cb){btns.push({x:x-24,y:y-24,w:48,h:48,cb});ctx.fillStyle='rgba(20,12,36,.85)';ctx.beginPath();ctx.arc(x,y,22,0,TAU);ctx.fill();ctx.strokeStyle='#c9a2ff';ctx.lineWidth=2.5;ctx.stroke();txt(label,x,y+1,label.length>1?14:26,'#f3e6ff')}
+function drawSkill(){const nc=skClr(),t=now,R=SKVR;
+// ---- left: the seal ----
+ctx.fillStyle='#000';ctx.fillRect(R.x+8,R.y+8,R.w,R.h);ctx.save();
+const bg=ctx.createRadialGradient(SKVC[0],SKVC[1],30,SKVC[0],SKVC[1],560);bg.addColorStop(0,'#2d1a4c');bg.addColorStop(0.55,'#150d29');bg.addColorStop(1,'#06040c');ctx.fillStyle=bg;ctx.fillRect(R.x,R.y,R.w,R.h);
+ctx.beginPath();ctx.rect(R.x,R.y,R.w,R.h);ctx.clip();
+for(let i=0;i<8;i++){const L=R.w+360,x=R.x-180+(((i*173+t*(10+i*2)*(i%2?1:-1))%L)+L)%L,y=R.y+50+i*82;ctx.globalAlpha=0.05;ctx.fillStyle='#b9a0ff';ctx.beginPath();ctx.ellipse(x,y,170,24,0,0,TAU);ctx.fill()}
+for(let i=0;i<26;i++){const k=(t*0.05+i*0.137)%1,x=R.x+((i*263)%R.w),y=R.y+R.h-k*R.h;ctx.globalAlpha=0.5*Math.sin(k*PI);ctx.fillStyle=i%3?'#ffcf7a':'#c9a2ff';ctx.beginPath();ctx.arc(x+Math.sin(t+i)*10,y,1.6+(i%3),0,TAU);ctx.fill()}ctx.globalAlpha=1;
+ctx.translate(SKVC[0]+skV.x,SKVC[1]+skV.y);ctx.scale(skV.s,skV.s);ctx.translate(-SKC[0],-SKC[1]);
+skCircle(t);
+for(const n of SKN){const p=skPos(n.b,n.d,n.sv),q=n.par.length?skPos(SKI[n.par[0]].b,SKI[n.par[0]].d,SKI[n.par[0]].sv):SKC;skEdge(q,p,skHas(n.id),SKB[n.b].col,t)}
+for(let b=0;b<4;b++)skBadge(b,t);skCore(t);for(const n of SKN)skNode(n,t);
+ctx.restore();
+ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(R.x,R.y,R.w,R.h);ctx.strokeStyle='#c9a24a';ctx.lineWidth=2;ctx.strokeRect(R.x+9,R.y+9,R.w-18,R.h-18);
+skRoundBtn(R.x+46,R.y+R.h-46,'＋',()=>skZoom(1.25,SKVC[0],SKVC[1]));skRoundBtn(R.x+104,R.y+R.h-46,'－',()=>skZoom(0.8,SKVC[0],SKVC[1]));skRoundBtn(R.x+162,R.y+R.h-46,'元へ',()=>{skV.x=skV.y=0;skV.s=SKS0});
+txt(touchMode?'指で動かす・２本指で拡大':'ドラッグで移動・ホイールで拡大',R.x+R.w-24,R.y+R.h-30,15,'rgba(230,215,255,.7)',null,0,'right');
+// ---- right: scroll of secrets ----
+const X=746;ctx.fillStyle='rgba(6,4,12,.72)';ctx.fillRect(X-10,96,510,602);ctx.strokeStyle='#c9a24a';ctx.lineWidth=2;ctx.strokeRect(X-4,102,498,590);
+txt('妖術秘伝',X+245,140,46,'#ffe7a8',INK,10,'center','#7a3cff',16);txt('― スキルツリー ―',X+245,184,17,'#d9c8ff');
+txt('スキルポイント',X+120,232,22,'#efe4ff');txt(String(SKS.pt),X+280,230,48,'#ffd34d',INK,6);txt('/'+SKMAX,X+340,240,20,'#bda9e8',null,0,'left');txt('クリア '+nc+'/5',X+440,232,17,'#bda9e8');
+// ofuda card
+const cy=264,ch=264;ctx.fillStyle='#000';ctx.fillRect(X+6,cy+6,478,ch);ctx.fillStyle='#f2e6c4';ctx.fillRect(X,cy,478,ch);ctx.strokeStyle='#b8322a';ctx.lineWidth=4;ctx.strokeRect(X+8,cy+8,462,ch-16);ctx.lineWidth=1.5;ctx.strokeRect(X+14,cy+14,450,ch-28);
 const n=skSel&&SKI[skSel];
-if(n){const s=skState(n),bc=SKB[n.b].col;para(X+16,278,96,34,10);ctx.fillStyle=bc;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(SKB[n.b].n+'・'+(n.ln==='A'?SKB[n.b].la:n.ln==='B'?SKB[n.b].lb:n.ln==='C'?'枝':'幹'),X+68,296,18,'#fff',INK,4);
- txt(n.n,X+130,296,n.n.length>8?24:28,INK,null,0,'left');txt(n.e,X+240,356,n.e.length>20?17:20,INK);
- txt(n.c0+'ポイント',X+90,410,22,'#e5402b');txt(s==='own'?'習得済み':s==='ok'?'習得できる':skMsgOf(s,n),X+300,410,s==='own'||s==='ok'?22:16,s==='own'?'#1f9a4a':s==='ok'?INK:'#7a7a88');
- if(s==='own')B(X+130,438,220,58,'外す',()=>skUndo(n),{size:26,col:'#d8d8e0'});else B(X+130,438,220,58,'習得する',()=>skBuy(n),{size:26,col:s==='ok'?'#ff4a3d':'#d8d8e0',tc:s==='ok'?'#fff':INK})}
-else{txt('丸をタップしてスキルを選ぼう',X+240,320,22,INK);txt('同じ系統では、３本の道から１本だけ',X+240,366,18,INK);txt('道の先の「極」は、その道を極めた証',X+240,398,18,INK);txt('ポイントは全部で'+SKMAX+'。全部は取れない',X+240,446,18,'#e5402b')}
-if(skMsg&&now-skMsg.t<2.2)txt(skMsg.s,X+240,548,20,'#ff5a4d',INK,6,'center','#fff',10);else txt('初クリア＋3／2回目＋1／ボスを無傷で＋1／全面クリア＋4',X+240,548,16,'#fff',INK,5);
-B(X,620,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,620,230,56,'全部振り直し',()=>skReset(),{size:24,col:'#d8d8e0'})}
+if(n){const s=skState(n),col=SKB[n.b].col,path=n.ln==='A'?SKB[n.b].la:n.ln==='B'?SKB[n.b].lb:n.ln==='C'?'外れ道':'幹';
+ ctx.fillStyle=col;ctx.beginPath();ctx.arc(X+52,cy+56,26,0,TAU);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(SKB[n.b].n,X+52,cy+57,28,'#fff',INK,6);
+ txt(SKB[n.b].n+'の術・'+path+(n.cap?'・極み':' '+'一二三四五'[n.d-1]+'段'),X+92,cy+40,15,'#7a2a22',null,0,'left');
+ txt(n.n,X+92,cy+72,n.n.length>8?25:30,INK,null,0,'left');
+ txt(n.e,X+239,cy+128,n.e.length>21?16:19,INK);
+ ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(X+70,cy+188,30,0,TAU);ctx.fill();ctx.strokeStyle='#7a1d16';ctx.lineWidth=2;ctx.stroke();txt(n.c0+'P',X+70,cy+189,24,'#fff');
+ txt(s==='own'?'会得済み':s==='ok'?'会得できる':skMsgOf(s,n),X+270,cy+168,s==='own'||s==='ok'?22:15,s==='own'?'#1e7a3c':s==='ok'?INK:'#8a6d5a');
+ if(s==='own')B(X+160,cy+190,220,52,'封じる（外す）',()=>skUndo(n),{size:22,col:'#d8d8e0'});else B(X+160,cy+190,220,52,'会得する',()=>skBuy(n),{size:26,col:s==='ok'?'#ff4a3d':'#cfc6b4',tc:s==='ok'?'#fff':'#6a5a4a'})}
+else{txt('光る印をタップして術を選べ',X+239,cy+60,22,INK);txt('ひとつの系統で、選べる道は１本だけ',X+239,cy+108,17,INK);txt('道の果ての「極」は、その道を極めた証',X+239,cy+140,17,INK);txt('ポイントは全部で'+SKMAX+'。すべては会得できぬ',X+239,cy+190,18,'#b8322a')}
+if(skMsg&&now-skMsg.t<2.2)txt(skMsg.s,X+245,560,19,'#ff7a6a',INK,6);else txt('初クリア＋3／2回目＋1／ボス無傷＋1／全面クリア＋4',X+245,560,15,'#d9c8ff');
+B(X,616,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,616,230,56,'すべて封じる',()=>skReset(),{size:22,col:'#d8d8e0'})}
