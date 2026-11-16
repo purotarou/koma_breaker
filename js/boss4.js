@@ -31,7 +31,7 @@ for(const ni of J.scenes[J.scene||0].nodes){const o=mk(ni);if(o.name==='Boss4_Ro
 MONK.ready=!!(MONK.root&&MONK.Bell)}
 
 // ---------------- state ----------------
-function mkMonk(id){const k=1+0.8*(G.np-1),hp=(G.demoOn?2600:3400)*k,bh=760*(1+0.6*(G.np-1));
+function mkMonk(id){const k=1+0.8*(G.np-1),hp=(G.demoOn?2600:3400)*k,bh=2400*(1+0.6*(G.np-1));
 return{id,type:'boss',monk:1,x:0,y:0,z:-42,yaw:0,t:0,st:'drop',stT:0,flash:0,bflash:0,dead:false,seed:1,mine:-9,hp,mhp:hp,phase:1,bhp:bh,bmax:bh,bell:1,tfB:0,
  atk:0,cdT:0.6,tx:0,tz:-18,ax:0,az:-42,chain:0,n:0,k:0,cmb:0,sw:0,dx:0,dz:1,dur:0,wp:0,wa:0,px:0,pz:-42,ti:null,r:MK_R,bell2:null,
  sc:MK_SC,open:0,cue:0,lst:'',yo:0,hx:0,hL:{x:0,y:0,z:0},hR:{x:0,y:0,z:0},ah:-1,mouth:0}}
@@ -230,6 +230,5 @@ if(b.st==='swing')for(let i=0;i<2;i++){const th=i?1.15:0.6,k=th-b.stT;if(k<0||k>
 if(b.bell2)drawFallenBell(b.bell2);drawIces()}
 function drawFallenBell(c){mPush();mT(c.x0,c.y,c.z0);mRY(c.yaw);mRX(c.tilt);mS(MK_SC,MK_SC,MK_SC);gId=nid();
 if(MONK.ready)for(const it of MONK.Bell.items)emit(it.pi,it.c,it.mat,it.gloss,it.fl,it.rim);else sph(0,1.3,0,1.8,2.6,1.8,C.gold);gId=0;
-// cracks
-for(const[a,y,r,l]of[[0.3,1.5,0.4,1.0],[0.5,1.1,-0.6,0.8],[2.4,1.7,0.3,0.9],[3.6,1.0,-0.5,1.1],[4.9,1.4,0.6,0.7]])put(BOX,Math.sin(a)*0.97,y,Math.cos(a)*0.97,0,a,r,0.06,l,0.05,C.inkD,0,0,F_NOCAST);mPop()}
+mPop()}
 function drawIces(){for(const i of ices){const r=i.r*Math.min(1,i.life*3);put(CYL,i.x,0.03,i.z,0,0,0,r*2,0.03,r*2,C.ice,0,.9,F_NOCAST,0.4);put(CYL,i.x,0.045,i.z,0,0,0,r*1.2,0.02,r*1.2,C.iceP,0,.9,F_NOCAST)}}
