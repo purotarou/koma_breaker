@@ -23,6 +23,10 @@ const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:4,fox:
 [{ch:'第一話',name:'唐傘、舞う',g:[{kasa:3,imp:2},{kasa:3,lan:2}],say:['傘が','跳んでくる!']},{ch:'第二話',name:'ろくろ首の夜道',g:[{roku:1,lan:4},{roku:2,kasa:2,lan:2}],say:['首が','伸びた!?']},{ch:'第三話',name:'橋の上の鎧鬼',g:[{bru:1,kasa:3},{roku:2,lan:3},{bru:1,roku:1,kasa:2}]},{ch:'最終話',name:'大入道',boss:1}],
 [{ch:'第一話',name:'吹雪の参道',g:[{yuki:3,imp:3},{yuki:3,imp:3}],say:['さ、寒い…!']},{ch:'第二話',name:'凍える鎧鬼',g:[{ibru:1,yuki:2},{ibru:1,lan:3,imp:2}],say:['氷の鎧…','硬いぞ!']},{ch:'第三話',name:'鐘の消えた鐘楼',g:[{yuki:4,imp:3},{ibru:1,yuki:3},{ibru:1,lan:2,yuki:2}],say:['鐘が','ない…?']},{ch:'最終話',name:'鐘の僧',boss:1}],
 [{ch:'第一話',name:'墨に溶ける色',g:[{shade:2,imp:4},{shade:2,lan:3}],say:['足元の','墨が動く!']},{ch:'第二話',name:'過去の影',g:[{shade:2,shadeR:2},{shadeR:2,bom:3,lan:2}],say:['見覚えが','あるぞ…']},{ch:'第三話',name:'最後の門番',g:[{bru:1,shade:2,imp:2},{shadeR:2,lan:3,bom:3},{bru:2,shade:2}]},{ch:'最終話',name:'白抜魔王シロヌキ',boss:1}]];
+// Difficulty by stage (the later the stage, the bigger the step): enemy HP / boss HP (the bell too) / damage dealt to the player / small-enemy ink-imp speed.
+// Meant to keep pace with the skill tree and the weapon gacha; tune here. Not used in the demo or versus. A 6th stage onwards keeps climbing by the last step.
+const DIF=[{hp:1.25,bh:1.2,dmg:1.15,spd:1.05},{hp:1.5,bh:1.4,dmg:1.3,spd:1.1},{hp:1.8,bh:1.6,dmg:1.45,spd:1.15},{hp:2.15,bh:1.85,dmg:1.6,spd:1.2},{hp:2.6,bh:2.15,dmg:1.8,spd:1.25}];
+function difOf(n){if(G.demoOn||G.mode==='pvp')return{hp:1,bh:1,dmg:1,spd:1};if(n<DIF.length)return DIF[n];const a=DIF[DIF.length-1],k=n-DIF.length+1;return{hp:a.hp+0.45*k,bh:a.bh+0.3*k,dmg:a.dmg+0.2*k,spd:Math.min(1.5,a.spd+0.05*k)}}
 const SPAWN=[[0,16,0],[-4,18,0],[4,18,0],[0,20,0]],PSPAWN=[[-17,17],[17,-20],[17,17],[-17,-20],[0,17],[0,-13]];
 function setStage(n){if(curStage===n)return;curStage=n;templeDoor.t=templeDoor.target=0;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();[buildStage1,buildStage2,buildStage3,buildStage4,buildStage5][n]();mReset();curLayer=1;setSun(STG[n].sun);setArena(STG[n].arena)}
 // Stage 2 (castle) is authored in Blender: blender/stage_castle.blend -> assets/stage_castle.glb (loaded by js/glb.js).
@@ -140,7 +144,7 @@ else if(pl.sp===2){pl.spT+=dt;wpSpTick(dt);if(pl.spT>spDur()){pl.sp=0;if(SK.gAft
 wpUpdate(dt,cine);
 pl.gunDip=lerp(pl.gunDip,pl.reload>0?1:0,1-Math.exp(-14*dt))}
 function hurtPlayer(d,x,z,by){if(pl.inv>0||pl.dead||G.cine>0||monkCine()||G.state==='clear'||G.state==='menu')return;if(SK.spinv&&(pl.sp===1||pl.sp===2&&pl.spT<spDur()*0.5))return;if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
-d*=SK.def*(SK.fud&&pl.hp<SK.hp*0.5?0.9:1);pl.hp-=d;G.dmg+=d;if(boss)G.bHurt=1;pl.inv=by==null?0.45:0.1;hurtA=1;const st=SK.steady?0.5:1;shake(0.5*st);snd('hurt');stopT(0.04*st);lines(0.6,'#c20020');pl.tilt=(Math.random()<.5?-1:1)*0.09*st;pl.lastBy=by==null?-1:by;
+d*=difOf(G.stage).dmg;d*=SK.def*(SK.fud&&pl.hp<SK.hp*0.5?0.9:1);pl.hp-=d;G.dmg+=d;if(boss)G.bHurt=1;pl.inv=by==null?0.45:0.1;hurtA=1;const st=SK.steady?0.5:1;shake(0.5*st);snd('hurt');stopT(0.04*st);lines(0.6,'#c20020');pl.tilt=(Math.random()<.5?-1:1)*0.09*st;pl.lastBy=by==null?-1:by;
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
 if(pl.hp<=0&&SK.rev&&!pl.revU){pl.revU=1;pl.hp=Math.round(SK.hp*SK.revH);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
 else if(pl.hp<=0){pl.hp=0;pl.dead=true;pl.deadT=0;pl.revT=0;pl.sp=0;if(!net.on)gameOver();else if(G.mode==='pvp'){pl.respT=3;if(net.host)pvTally(pl.lastBy,net.slot);else net.q.kb.push(pl.lastBy)}else pl.respT=15}}
@@ -163,14 +167,14 @@ function spawnFx(e){if(e.type==='lan'){fxSmoke(e.x,e.y,e.z,5,0.9,C.smoke,2);fxSt
 if(lim('spawnT',0.5)){sfxAt(pick(['ヌッ','ボコッ','ズズ…']),e.x,3,e.z,{size:46,st:'ink',life:0.5});snd('spawn')}}
 function mkEnemy(type,x,z,v){T=pickT(x,z);const e={id:++eidN,type,v:v||0,x,y:0,z,yaw:Math.atan2(T.x-x,T.z-z),t:rnd(0,9),st:'spawn',stT:0,flash:0,dead:false,seed:rnd(0,100),kx:0,kz:0,sc:1,cd:2,mine:-9};
 const F=FOE[type];if(F)F.init(e);else if(type==='imp'){e.hp=v?30:40;e.sc=rnd(0.9,1.2);e.spd=v?rnd(5.4,6):rnd(3.6,4.8);e.r=0.55}else if(type==='lan'){e.hp=40;e.y=e.by=rnd(2.6,4.6);e.oa=Math.atan2(x-T.x,z-T.z);e.dir=Math.random()<.5?-1:1;e.oR=rnd(8,13);e.cd=rnd(1.2,2.8);e.r=0.6}else{e.hp=340;e.r=1.1;e.cd=1.5}
-e.hp*=1+0.55*(G.np-1);if(type==='bru'&&v===2){e.bh=e.hp;e.hp+=FT.ibru.armor*(1+0.55*(G.np-1));e.ap=1}enemies.push(e);spawnFx(e);return e}
+const df=difOf(G.stage);e.hp*=(1+0.55*(G.np-1))*df.hp;if(e.spd)e.spd*=df.spd;if(type==='bru'&&v===2){e.bh=e.hp;e.hp+=FT.ibru.armor*(1+0.55*(G.np-1))*df.hp;e.ap=1}enemies.push(e);spawnFx(e);return e}
 function spawnNear(type,tries){T=pickR();let bx=0,bz=0,bs=-1e9;for(let i=0;i<(tries||10);i++){const a=T.yaw+PI+rnd(-1.5,1.5),d=rnd(9,17),x=clamp(T.x+Math.sin(a)*d,-BX+2.6,BX-2.6),z=clamp(T.z+Math.cos(a)*d,boss?-9:BZ0+2.6,BZ1-2.6);let s=0;for(const p of allP())s+=Math.min(12,Math.hypot(x-p.x,z-p.z));for(const e of enemies)s+=Math.min(3,Math.hypot(e.x-x,e.z-z));for(const c of colC)if(Math.hypot(c.x-x,c.z-z)<c.r+1.2)s-=50;if(s>bs){bs=s;bx=x;bz=z}}const q=FVAR[type];return q?mkEnemy(q[0],bx,bz,q[1]):mkEnemy(type,bx,bz)}
 function popShot(s){if(s.dead)return;s.dead=true;if(s.k>1)return popShot2(s);if(s.k===1)explode(s.x,s.y,s.z,1.2,{ink:1});else{fxStar(s.x,s.y,s.z,1.3,C.white,0.08);fxBlobs(s.x,s.y,s.z,6,5,C.ink,0.14)}}
 function updateShots(dt){for(let i=shots.length-1;i>=0;i--){const s=shots[i];if(s.dead){shots.splice(i,1);continue}s.life-=dt;s.vy-=s.g*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;if(s.k>1&&shotUpd2(s))continue;
 if(s.k===0||s.k===2||s.k===3){let hit=null;for(const p of allP())if(Math.hypot(s.x-p.x,s.y-p.y-1.1,s.z-p.z)<s.r+0.55)hit=p;if(hit){hurtT(hit,s.dmg,s.x,s.z);popShot(s)}else if(s.y<0.1||s.life<=0||Math.abs(s.x)>BX+0.4||s.z>BZ1+0.4||s.z<BZ0-0.4)popShot(s)}
 else if(s.y<0.35){s.dead=true;ev('bomb',r1(s.x),r1(s.z));areaHurt(s.x,s.z,3.4,s.dmg)}}}
 function bossIntro(){G.cine=3.2;cutBoss=3.2;musOn=2;snd('roar')}
-function spawnBoss(){if(STG[G.stage].monk)return spawnMonk();const bk=STG[G.stage].bk,b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st:'rise',stT:0,flash:0,dead:false,seed:1,mine:-9,hp:(G.demoOn?3000:bk?BT[bk].hp:STG[G.stage].hard?4400:3600)*(1+0.8*(G.np-1)),bk,k:0,n:0,p0:0,p1:0,yo:-38,hx:0,phase:1,atk:0,r:6,hL:restH(-1,-38),hR:restH(1,-38),mouth:0,cdT:1,ah:-1,tx:0,tz:0,vn:0,sm:false,s0:null,ti:null};
+function spawnBoss(){if(STG[G.stage].monk)return spawnMonk();const bk=STG[G.stage].bk,b={id:++eidN,type:'boss',x:0,y:0,z:-21.5,yaw:0,t:0,st:'rise',stT:0,flash:0,dead:false,seed:1,mine:-9,hp:(G.demoOn?3000:bk?BT[bk].hp:G.stage>=4?5600:STG[G.stage].hard?4400:3600)*(1+0.8*(G.np-1))*difOf(G.stage).bh,bk,k:0,n:0,p0:0,p1:0,yo:-38,hx:0,phase:1,atk:0,r:6,hL:restH(-1,-38),hR:restH(1,-38),mouth:0,cdT:1,ah:-1,tx:0,tz:0,vn:0,sm:false,s0:null,ti:null};
 b.mhp=b.hp;enemies.push(b);boss=b;bossIntro();return b}
 function bossCos(b,dt){b.t+=dt;b.stT+=dt;b.flash-=dt;b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);
 if(b.st==='rise'){trauma=Math.max(trauma,0.3);if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12))fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3)}

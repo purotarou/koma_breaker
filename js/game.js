@@ -87,7 +87,7 @@ drawLogo(lerp(250,W/2,k),lerp(92,250,k),lerp(0.36,0.95,k));
 if(G.demoOn){ctx.fillStyle=INK;ctx.fillRect(W-250,26,214,44);txt('DEMO PLAY',W-143,49,28,Math.sin(now*6)>0?'#ffd91a':'#fff')}
 const p=1+0.05*Math.sin(now*6);ctx.save();ctx.translate(W/2,lerp(662,560,k));ctx.scale(p*lerp(0.8,1,k),p*lerp(0.8,1,k));burstPath(4,6,330,50,20,1.2,4);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,330,50,20,1.2,4);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();txt('画面をタップでスタート！',0,2,38,INK);ctx.restore();
 if(k>0.6){ctx.globalAlpha=(k-0.6)*2.5;txt(hasTouch?'左スティック：移動　　右側ドラッグ：視点　　撃・必殺・跳・回避・装填ボタン':'WASD：移動　マウス：視点／射撃　SPACE：ジャンプ　SHIFT：回避　E：必殺　R：装填',W/2,668,20,'#fff',INK,6);
-ctx.globalAlpha=1;gearBtn(W-86,24)}}
+ctx.globalAlpha=1;menuBtn(W-86,24)}}
 // drawCutSp (the special cut-in, one style per weapon) is in weapons.js
 function drawCutBoss(){const t=3.2-cutBoss,u=sat(t/0.25)*sat(cutBoss/0.3);ctx.fillStyle=INK;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(W,70*u);ctx.lineTo(0,130*u);ctx.fill();ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(W,H);ctx.lineTo(W,H-150*u);ctx.lineTo(0,H-90*u);ctx.fill();
 if(t>0.5){const k=easeBack(sat((t-0.5)/0.25));ctx.save();ctx.translate(60,H-74);ctx.rotate(-0.045);ctx.scale(k,k);const bc=STG[G.stage].cut;if(bc[0])txt(bc[0],0,-10,54,'#fff',null,0,'left');txt(bc[1],bc[0]?250:0,-4,92,'#ff2e2e','#fff',10,'left');ctx.restore()}}

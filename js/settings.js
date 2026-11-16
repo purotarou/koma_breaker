@@ -34,6 +34,23 @@ txt('選択中：'+LAYN[laySel],tx+20,ty+92,26,'#e5402b',null,0,'left');const sz
 B(tx+230,ty+64,56,52,'－',()=>laySize(-0.1),{sk:0,size:32});txt('大きさ ×'+sz.toFixed(1),tx+364,ty+92,22,INK);B(tx+440,ty+64,56,52,'＋',()=>laySize(0.1),{sk:0,size:32});
 B(tx+316,ty+8,140,46,'初期配置',()=>{SET.lay=null;applySet()},{size:22});B(tx+466,ty+8,172,46,'完了',()=>{layEdit=false;layDrag=null;applySet()},{col:'#ffd91a',size:26});
 B(tx+516,ty+68,122,46,'左右反転',()=>{SET.lh=SET.lh?0:1;applySet()},{size:20})}
+// title screen: ≡ button -> small menu (設定 / セーブデータ初期化), the reset asks first (menuOpen 1 = menu, 2 = confirm)
+let menuOpen=0;
+function menuBtn(x,y){btns.push({x,y,w:62,h:62,cb:()=>{menuOpen=1}});ctx.fillStyle=INK;ctx.fillRect(x+5,y+6,62,62);ctx.fillStyle='#fff';ctx.fillRect(x,y,62,62);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.strokeRect(x,y,62,62);ctx.fillStyle=INK;for(let i=0;i<3;i++)ctx.fillRect(x+14,y+16+i*13,34,7)}
+// every save key (hi-scores, skills, weapons, clears); the settings (koma_set) stay
+function resetSave(){try{const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('koma_')&&k!=='koma_set')ks.push(k)}for(const k of ks)localStorage.removeItem(k)}catch(e){}location.reload()}
+const CREDITS=[['企画・原案','駒破り制作委員会'],['シナリオ','墨の乱 実行委員会'],['3Dモデル','ひたすら捏ねた粘土職人'],['主人公モデル生成','Tripo AI'],['効果音・BGM','ブラウザの中の小さな楽団'],['描き文字監修','巨大な「ドン！」'],['テストプレイ','何度もやられた勇者たち'],['特別協力','墨鬼のみなさん（出演料は墨）'],['そして','遊んでくれた あなた']];
+const TERMS=['第１条　このゲームの敵は、「やめて」と言っても止まりません。','第２条　墨鬼を倒した数が多いほど、自慢する権利が発生します。','第３条　ボスの攻撃は予告が出ます。見て、避けて、撃ちましょう。','第４条　遊びすぎて夜更かししても、墨の魔王は責任を取りません。','第５条　背中ガラ空きの僧を見つけたら、遠慮なく撃ってください。','第６条　この規約に同意しなくても遊べます。どうせ読んでないので。'];
+function drawMenuPop(){if(!menuOpen||G.state!=='title'||setOpen)return;btns.push({x:0,y:0,w:W,h:H,cb:()=>{menuOpen=menuOpen>2?1:0}});ctx.fillStyle='rgba(22,18,31,.7)';ctx.fillRect(0,0,W,H);
+if(menuOpen===1){panel(380,130,520,380);para(410,106,260,54,18);ctx.fillStyle=INK;ctx.fill();txt('メニュー',540,134,30,'#fff');btns.push({x:380,y:130,w:520,h:380,cb:()=>{}});
+ B(430,190,420,72,'クレジット',()=>{menuOpen=3},{col:'#ffd91a',size:34});B(430,278,420,72,'利用規約',()=>{menuOpen=4},{size:34});B(430,366,420,72,'セーブデータ初期化',()=>{menuOpen=2},{col:'#ff4a3d',tc:'#fff',size:30});B(1090,628,150,50,'とじる',()=>{menuOpen=0},{sk:8,size:22})}
+else if(menuOpen===3||menuOpen===4){const cr=menuOpen===3;panel(220,100,840,520);para(250,76,300,54,18);ctx.fillStyle=cr?'#e5402b':'#2f6fd8';ctx.fill();txt(cr?'クレジット':'利用規約',400,104,30,'#fff');btns.push({x:220,y:100,w:840,h:520,cb:()=>{}});
+ if(cr){txt('激弾！コマブレイカー',640,170,44,'#e5402b',INK,8,'center','#fff',14);CREDITS.forEach((c,i)=>{const y=224+i*36;txt(c[0],500,y,22,'#555a70',null,0,'right');txt(c[1],540,y,26,INK,null,0,'left')})}
+ else{txt('コマブレイカー 利用規約（全６条）',640,166,34,INK);TERMS.forEach((t,i)=>txt(t,260,226+i*52,24,INK,null,0,'left'));txt('※ これは遊び心です。法的な効力はありません。',640,522,20,'#d9262c')}
+ B(540,560,200,50,'もどる',()=>{menuOpen=1},{sk:8,size:24})}
+else{panel(300,150,680,420);para(330,126,300,54,18);ctx.fillStyle='#d9262c';ctx.fill();txt('かくにん',480,154,30,'#fff');btns.push({x:300,y:150,w:680,h:420,cb:()=>{}});
+ txt('セーブデータを初期化しますか？',640,260,40,INK);txt('ハイスコア・クリア記録・スキル・入手した武器が',640,334,26,INK);txt('すべて消えます。元には戻せません。',640,370,26,'#d9262c');
+ B(340,440,280,84,'やめる',()=>{menuOpen=1},{size:36});B(660,440,280,84,'初期化する',()=>resetSave(),{col:'#ff4a3d',tc:'#fff',size:36})}}
 function gearBtn(x,y){btns.push({x,y,w:62,h:62,cb:openSet});ctx.fillStyle=INK;ctx.fillRect(x+5,y+6,62,62);ctx.fillStyle='#fff';ctx.fillRect(x,y,62,62);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.strokeRect(x,y,62,62);
 ctx.save();ctx.translate(x+31,y+31);ctx.rotate(now*0.4);ctx.fillStyle=INK;ctx.beginPath();for(let i=0;i<32;i++){const a=(i+0.5)/32*TAU,r=(i>>1)%2?15:22;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,7,0,TAU);ctx.fill();ctx.restore()}
 function drawSettings(){if(layEdit){drawLayEdit();return}btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});ctx.fillStyle='rgba(22,18,31,.75)';ctx.fillRect(0,0,W,H);panel(150,70,980,600);para(180,46,300,60,22);ctx.fillStyle=INK;ctx.fill();txt('設定',342,77,38,'#fff');btns.push({x:160,y:36,w:360,h:90,cb:devTapTitle});
