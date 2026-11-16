@@ -90,7 +90,7 @@ else damage(e,dm,!!o.crit,x,y,z,q)}
 // enemy effects: 1 freeze (s), 2 stagger (鎧鬼), 3 slow (boss, s). The host runs the enemies, guests send a small message.
 function wpEffect(e,c,v){if(!e||e.dead)return;if(isCli()){if(c===1&&e.type!=='boss')e.frz=Math.max(e.frz||0,1);if(lim('ef'+e.id+'_'+c,0.4))(net.q.ef||(net.q.ef=[])).push([e.id,c,r1(v||0)]);return}wpEffectHost(e,c,v)}
 function wpEffectHost(e,c,v){if(c===1){if(e.type==='boss')return;if(!(e.frz>0)){fxStar(e.x,(e.y||0)+1,e.z,2.2,C.cyan,0.12);if(lim('frzT',0.3))sfxAt('ピキーン',e.x,(e.y||0)+2.6,e.z,{size:48,st:'cyan',life:0.4})}e.frz=Math.max(e.frz||0,v)}
-else if(c===2){if(e.type==='bru'&&e.st!=='stun'&&e.st!=='spawn'&&now-(e.stunAt||-9)>3.2){e.st='stun';e.stT=0;e.stunAt=now;e.cd=Math.max(e.cd||0,2);ev('txt','グラッ',r1(e.x),4.4,r1(e.z),58,'hit')}}
+else if(c===2){if(e.type==='bru'&&!e.ap&&e.st!=='stun'&&e.st!=='spawn'&&now-(e.stunAt||-9)>3.2){e.st='stun';e.stT=0;e.stunAt=now;e.cd=Math.max(e.cd||0,2);ev('txt','グラッ',r1(e.x),4.4,r1(e.z),58,'hit')}}
 else if(c===3){if(e.type==='boss')e.slw=Math.max(e.slw||0,v)}}
 // ================= ATTACKS =================
 function wpUpdate(dt,cine){const w=wpW(),f=inp.fire&&!cine;pl.at+=dt;

@@ -33,7 +33,7 @@ if(dz_&&pl.dashCd<=0){inp.dash=true;if(Math.abs(inp.mx)<0.3)inp.mx=ai.st}
 if(spReady()&&tgt&&Math.abs(dyaw)<0.12&&(tgt.type==='bru'||tgt.type==='boss'||enemies.length>=3))inp.special=true;if(pl.ammo<=0)inp.reload=true;for(const s of shocks){const dd=Math.hypot(pl.x-s.x,pl.z-s.z)-s.r;if(dd>0&&dd<2.8)inp.jump=true}}
 // ================= INPUT =================
 function evPos(t){const r=uic.getBoundingClientRect();return{x:(t.clientX-r.left)/r.width*W,y:(t.clientY-r.top)/r.height*H}}
-addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m');skTouch('u',null,'m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m');if(!touchMode)skTouch('m',evPos(e),'m')});uic.addEventListener('wheel',e=>{if(skWheel(evPos(e),e.deltaY))e.preventDefault()},{passive:false});uic.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m');skTouch('u',null,'m');ssTouch('u',null,'m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m');if(!touchMode){const p=evPos(e);skTouch('m',p,'m');ssTouch('m',p,'m')}});uic.addEventListener('wheel',e=>{if(skWheel(evPos(e),e.deltaY)||ssWheel(e))e.preventDefault()},{passive:false});uic.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousemove',e=>{if(touchMode||G.state!=='play')return;if(document.pointerLockElement===uic||mouseFire){inp.lx+=(e.movementX||0)*0.0024*SET.sens;inp.ly+=(e.movementY||0)*0.0024*SET.sens*SET.inv}});
 addEventListener('keyup',e=>{keys[e.code]=false});
 // ================= UI =================
@@ -61,7 +61,7 @@ gauge(100,30,300,30,pl.hp/SK.hp,pl.hp>50?'#35d06a':pl.hp>25?'#ffc21a':'#ff3b30',
 if(full){ctx.save();ctx.translate(372,84);ctx.rotate(-0.1);const s=1+0.12*Math.sin(now*10);ctx.scale(s,s);burstPath(0,0,56,26,10,1.3,3);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('OK!!',0,1,24,INK);ctx.restore()}
 txt('撃破',W-150,40,22,'#fff',INK,6,'right');txt(String(G.kills),W-40,40,44,'#ffd91a',INK,8,'right');txt(String(G.score).padStart(6,'0'),W-40,82,26,'#fff',INK,6,'right');
 if(G.combo>=2){const s=1+Math.max(0,G.comboPop)*1.2;ctx.save();ctx.translate(W-110,128);ctx.rotate(-0.1);ctx.scale(s,s);txt(G.combo+'連撃!',0,0,38,'#ff3b30',INK,8,'center','#fff',14);ctx.restore()}
-if(boss&&boss.st!=='rise'&&!(boss.monk&&boss.st==='drop')){const v=sat(boss.hp/boss.mhp);gauge(480,28,520,24,v,boss.phase>1?'#ff3b30':'#a04cff',boss.monk?'ボス':'魔王');txt(STG[G.stage].boss,740,70,22,'#fff',INK,6);
+if(boss&&boss.st!=='rise'&&!(boss.monk&&boss.st==='drop')){const v=sat(boss.hp/boss.mhp);gauge(480,28,520,24,v,boss.phase>1?'#ff3b30':'#a04cff',boss.monk||boss.bk==='nyudo'?'ボス':'魔王');txt(STG[G.stage].boss,740,70,22,'#fff',INK,6);
  if(boss.monk&&boss.st==='tired'){const r=Math.max(0,boss.dur-boss.stT),k=(now*6|0)%2;txt('背中ガラ空き！',W/2,boss.bell?140:112,34,k?'#ffd91a':'#fff',INK,7);gauge(540,boss.bell?168:140,200,12,sat(r/boss.dur),'#59d8ff','')}
  if(boss.monk&&boss.bell&&boss.st!=='trans'){gauge(560,92,300,16,sat(boss.bhp/boss.bmax),boss.bflash>0?'#fff':boss.st==='tired'?'#ff8a1a':'#ffc21a','鐘');if(boss.st!=='tired')txt('背後に回って鐘を撃て！',W/2,132,20,'#fff',INK,5)}}
 // ammo

@@ -8,7 +8,7 @@ let boss=null,hitMark=0,hitCrit=false,cutSp=0,cutBoss=0,touchMode=false,RDT=0;co
 const aimDir=()=>{const cp=Math.cos(pl.pitch);return[-Math.sin(pl.yaw)*cp,Math.sin(pl.pitch),-Math.cos(pl.yaw)*cp]};
 function raySph(ox,oy,oz,d,cx,cy,cz,r){const px=cx-ox,py=cy-oy,pz=cz-oz,t=px*d[0]+py*d[1]+pz*d[2];if(t<0)return-1;const d2=px*px+py*py+pz*pz-t*t;if(d2>r*r)return-1;return Math.max(0.01,t-Math.sqrt(r*r-d2))}
 function startReload(){if(!wpW().ammo||pl.reload>0||pl.ammo>=SK.mag)return;pl.reload=SK.rel;snd('reload');addText(pl.ammo===0?'カチッ':'ガシャッ',W*0.72,H*0.62,{size:50,st:'cyan',life:0.4})}
-function spheres(e){const fx=Math.sin(e.yaw),fz=Math.cos(e.yaw);
+function spheres(e){const fx=Math.sin(e.yaw),fz=Math.cos(e.yaw);{const F=FOE[e.type];if(F)return F.sph(e)}
 if(e.type==='imp')return[[e.x,e.y+0.62*e.sc,e.z,0.68*e.sc,1]];
 if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.3,2]];
 if(e.type==='bru')return[[e.x,1.0,e.z,0.95,1],[e.x,2.0,e.z,1.1,1],[e.x+fx*0.2,3.0,e.z+fz*0.2,0.55,2]];
@@ -20,19 +20,20 @@ T=pickT(e.x,e.z);e.t+=dt;e.stT+=dt;e.flash-=dt;if(e.type==='boss'){const k=e.slw
 if(e.st==='spawn'){if(e.stT>0.7){e.st='chase';e.stT=0}continue}
 e.x+=e.kx*dt;e.z+=e.kz*dt;const f=Math.exp(-8*dt);e.kx*=f;e.kz*=f;
 const dx=T.x-e.x,dz=T.z-e.z,d=Math.hypot(dx,dz)||1,wy=Math.atan2(dx,dz);
-if(e.type==='imp'){
- if(e.st==='chase'){e.yaw+=angDiff(wy,e.yaw)*Math.min(1,dt*8);const wob=Math.sin(e.t*2.3+e.seed)*0.6;let mx=dx/d-dz/d*wob*0.5,mz=dz/d+dx/d*wob*0.5;const ml=Math.hypot(mx,mz);e.x+=mx/ml*e.spd*dt;e.z+=mz/ml*e.spd*dt;if(e.v){if(d<1.9)kill(e,-1)}else if(d<2.7){e.st='wind';e.stT=0}}
+const F=FOE[e.type];if(F)F.upd(e,dt,T,dx,dz,d,wy);else if(e.type==='imp'){
+ if(e.st==='chase'){e.yaw+=angDiff(wy,e.yaw)*Math.min(1,dt*8);const wob=Math.sin(e.t*2.3+e.seed)*0.6;let mx=dx/d-dz/d*wob*0.5,mz=dz/d+dx/d*wob*0.5;const ml=Math.hypot(mx,mz);e.x+=mx/ml*e.spd*dt;e.z+=mz/ml*e.spd*dt;if(e.v){if(d<FT.bom.trig){e.st='fuse';e.stT=0;ev('txt','ジジジ…',r1(e.x),2.6,r1(e.z),46,'boom')}}else if(d<2.7){e.st='wind';e.stT=0}}
  else if(e.st==='wind'){e.yaw+=angDiff(wy,e.yaw)*Math.min(1,dt*8);if(e.stT>0.4){e.st='lunge';e.stT=0;e.lx=dx/d;e.lz=dz/d;e.hd=false}}
  else if(e.st==='lunge'){e.x+=e.lx*13*dt;e.z+=e.lz*13*dt;if(!e.hd&&d<1.3&&T.y<1.1){e.hd=true;hurtT(T,8,e.x,e.z)}if(e.stT>0.22){e.st='rec';e.stT=0}}
+ else if(e.st==='fuse'){if(e.stT>FT.bom.fuse)kill(e,-1)}
  else if(e.stT>0.6)e.st='chase'}
 else if(e.type==='lan'){e.oa+=dt*e.dir*0.5;if(Math.random()<dt*0.25)e.dir=-e.dir;const tx=clamp(T.x+Math.sin(e.oa)*e.oR,-20,20),tz=clamp(T.z+Math.cos(e.oa)*e.oR,-24,20),k=Math.min(1,dt*1.2);
  e.x+=(tx-e.x)*k;e.z+=(tz-e.z)*k;e.y=e.by+Math.sin(e.t*2)*0.4;e.yaw=wy;e.cd-=dt;if(e.st==='chase'&&e.cd<=0){e.st='charge';e.stT=0}
  if(e.st==='charge'&&e.stT>0.5){e.st='chase';e.cd=rnd(2.4,3.8);const ox=e.x+Math.sin(wy)*0.6,oz=e.z+Math.cos(wy)*0.6,tx2=T.x+T.vx*0.4-ox,ty=1.2-e.y,tz2=T.z+T.vz*0.4-oz,l=Math.hypot(tx2,ty,tz2)||1;
   shots.push({id:++eidN,k:0,x:ox,y:e.y,z:oz,vx:tx2/l*10,vy:ty/l*10,vz:tz2/l*10,r:0.28,dmg:9,g:0,life:5});if(lim('pe',0.4))sfxAt('ペッ',e.x,e.y+0.8,e.z,{size:44,st:'ink',life:0.35})}}
-else{
+else{if(e.ap&&e.hp<=e.bh){e.ap=0;e.st='stun';e.stT=0;e.cd=2;ev('icebrk',r1(e.x),r1(e.z))}
  if(e.st==='chase'){e.yaw+=angDiff(wy,e.yaw)*Math.min(1,dt*4);e.x+=Math.sin(e.yaw)*2.4*dt;e.z+=Math.cos(e.yaw)*2.4*dt;e.cd-=dt;if(d<3.8){e.st='swing';e.stT=0;e.hd=false}else if(e.cd<=0&&d<22){e.st='wind';e.stT=0;ev('txt','ゴゴゴ',r1(e.x),4.6,r1(e.z),56,'ink')}}
  else if(e.st==='wind'){e.yaw+=angDiff(wy,e.yaw)*Math.min(1,dt*6);if(e.stT>0.8){e.st='charge';e.stT=0;e.cx=Math.sin(e.yaw);e.cz=Math.cos(e.yaw);ev('txt','ドドドド',r1(e.x),4.6,r1(e.z),64,'boom')}}
- else if(e.st==='charge'){const px=e.x,pz=e.z;e.x+=e.cx*12*dt;e.z+=e.cz*12*dt;collide(e,e.r);if(lim('dust'+e.seed,0.07))fxSmoke(e.x,0.3,e.z,1,0.9,C.smoke,1);
+ else if(e.st==='charge'){const px=e.x,pz=e.z;e.x+=e.cx*12*dt;e.z+=e.cz*12*dt;collide(e,e.r);if(lim('dust'+e.seed,0.07))fxSmoke(e.x,0.3,e.z,1,0.9,C.smoke,1);if(e.v===2&&lim('itr'+e.id,0.22))ev('ice',r1(e.x),r1(e.z),2.3);
   if(d<2.3){hurtT(T,24,e.x,e.z);e.st='rec';e.stT=0;e.cd=2.5}
   else if(Math.hypot(e.x-px,e.z-pz)<6*dt&&e.stT>0.15){e.st='stun';e.stT=0;e.cd=2;ev('stun',r1(e.x+e.cx),r1(e.z+e.cz))}
   else if(e.stT>1.7){e.st='rec';e.stT=0;e.cd=2.5}}
@@ -48,6 +49,7 @@ if(b.st==='rise'){b.yo=Math.min(0,-38+b.stT/2.6*38);trauma=Math.max(trauma,0.3);
  if(b.stT>3.0){b.st='idle';b.stT=0;b.cdT=0.8}return}
 if(b.st==='die'){b.mouth=1;bossDieFx(b);for(const s of[-1,1]){const h=s<0?b.hL:b.hR;h.y=Math.max(1,h.y-dt*3)}
  if(b.stT>BDIE_END){ev('bossEnd');b.dead=true;G.endT=0;G.score+=5000;G.kills++}return}
+if(b.bk){updBoss2(b,dt,hands);return}
 if(b.phase===1&&b.hp<b.mhp*0.5){b.phase=2;b.st='stag';b.stT=0;b.ah=-1;ev('roar',1);ev('say','オノレ','ェェェ!!',1)}
 for(let i=0;i<2;i++){if(b.ah===i)continue;const r=restH(i?1:-1,0),h=hands[i],k=Math.min(1,dt*4);h.x+=(r.x-h.x)*k;h.y+=(r.y-h.y)*k;h.z+=(r.z-h.z)*k}
 const p2=b.phase>1;
@@ -63,11 +65,11 @@ else if(b.st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);f
 // ================= DRAW ENTITIES =================
 function drawImp(e){const s=e.sc;let sq=1,hop=0,lean=0,arm=0.5;mPush();
 if(e.st==='spawn'){const u=e.stT/0.7,k=0.3+0.7*easeBack(Math.min(1,u));mT(e.x,-1.2*(1-easeOut(Math.min(1,u))),e.z);mRY(e.yaw);mS(s*k,s*k,s*k)}
-else{if(e.st==='chase'){hop=Math.abs(Math.sin(e.t*9))*0.22;sq=1+Math.sin(e.t*18)*0.06}else if(e.st==='wind'){sq=0.72;arm=1.6}else if(e.st==='lunge'){sq=1.2;lean=0.5;arm=2.2;hop=0.3}mT(e.x,hop,e.z);mRY(e.yaw);mRX(lean);mS(s,s*sq,s)}
-gTint=e.flash>0?1:0;sph(0,0.62,0,1.02,0.98,0.94,e.v?C.red:C.ink,0,1,0,1);if(e.v){cyl(0,1.2,0,0.07,0.3,0.07,C.black);put(SPIKE,0,1.44,0,e.t*9,e.t*7,0,0.34,0.34,0.34,C.yellow,0,0,F_UNLIT)}
+else{if(e.st==='chase'){hop=Math.abs(Math.sin(e.t*9))*0.22;sq=1+Math.sin(e.t*18)*0.06}else if(e.st==='wind'){sq=0.72;arm=1.6}else if(e.st==='lunge'){sq=1.2;lean=0.5;arm=2.2;hop=0.3}else if(e.st==='fuse'){sq=1+0.35*sat(e.stT/FT.bom.fuse)+Math.sin(e.t*50)*0.04;arm=2.4}mT(e.x,hop,e.z);mRY(e.yaw);mRX(lean);mS(s,s*sq,s)}
+gTint=e.flash>0||(e.st==='fuse'&&Math.sin(e.t*44)>0)?1:0;sph(0,0.62,0,1.02,0.98,0.94,e.v?C.red:C.ink,0,1,0,1);if(e.v){cyl(0,1.2,0,0.07,0.3,0.07,C.black);put(SPIKE,0,1.44,0,e.t*9,e.t*7,0,0.34,0.34,0.34,C.yellow,0,0,F_UNLIT)}
 for(const d of[-1,1]){put(CONE,d*0.27,1.13,0.04,0,0,-d*0.4,0.2,0.46,0.2,e.v?C.gold:C.red,0,.6);put(SPH,d*0.2,0.72,0.4,0,0,d*0.25,0.28,0.3,0.14,C.white);sph(d*0.19,0.7,0.46,0.1,0.12,0.06,C.red,0,0,F_UNLIT);
 put(BOX,d*0.21,0.88,0.43,0,0,d*0.45,0.34,0.08,0.1,C.inkD);put(SPH,d*0.56,0.6,0.05,0,0,d*(0.4+arm),0.17,0.5,0.17,C.ink,0,1);sph(d*0.22,0.08,0.06+Math.sin(e.t*9+d)*0.12*(e.st==='chase'?1:0),0.3,0.16,0.4,C.inkD)}
-box(0,0.4,0.42,0.46,0.13,0.1,C.tongue);for(let i=0;i<4;i++)put(CONE,-0.165+i*0.11,0.44,0.47,PI,0,0,0.09,0.12,0.06,C.white);gTint=0;mPop()}
+box(0,0.4,0.42,0.46,0.13,0.1,C.tongue);for(let i=0;i<4;i++)put(CONE,-0.165+i*0.11,0.44,0.47,PI,0,0,0.09,0.12,0.06,C.white);gTint=0;mPop();if(e.st==='fuse')put(RING,e.x,0.12,e.z,0,0,0,5.6,1,5.6,C.red,0,0,F_UNLIT|F_NOCAST)}
 function drawLan(e){const ch=e.st==='charge'?e.stT/0.5:0,k=(e.st==='spawn'?easeBack(Math.min(1,e.stT/0.5)):1)*(1+ch*0.25);
 mPush();mT(e.x,e.y,e.z);mRY(e.yaw);mRZ(Math.sin(e.t*1.7)*0.12);mS(k,k,k);gTint=e.flash>0?1:0;
 sph(0,0,0,0.95,1.15,0.95,C.lant,6,.5);cyl(0,0.56,0,0.5,0.14,0.5,C.black);cyl(0,-0.56,0,0.5,0.14,0.5,C.black);
@@ -75,7 +77,7 @@ sph(0,0.08,0.36,0.56,0.56,0.3,C.white);sph(0,0.08,0.47,0.32,0.32,0.16,ch>0?C.red
 box(0,-0.3,0.4,0.5,0.07,0.12,C.inkD);put(BOX,0.05,-0.47,0.44,Math.sin(e.t*5)*0.3,0,0,0.16,0.36,0.04,C.tongue);put(CONE,0,0.9+Math.sin(e.t*13)*0.04,0,0,e.t*3,0,0.34,0.6,0.34,C.cyan,0,0,F_UNLIT);
 const fl=Math.sin(e.t*14)*0.5;for(const d of[-1,1]){mPush();mT(d*0.45,0.15,-0.05);mRZ(d*(0.3+fl));box(d*0.45,0,0,0.8,0.42,0.05,C.ink);put(BOX,d*0.75,-0.25,0,0,0,d*0.5,0.3,0.3,0.05,C.ink);mPop()}
 cyl(0,-0.8,0,0.05,0.4,0.05,C.red);sph(0,-1.02,0,0.16,0.16,0.16,C.red);gTint=0;mPop()}
-function drawBru(e){const wk=e.st==='chase'?Math.sin(e.t*6):e.st==='charge'?Math.sin(e.t*16):0;let k=1,lean=0,armR=0.2;
+function drawBru(e){const ic=e.v===2,s0=C.skin,s1=C.skinD;if(ic){C.skin=C.iceP;C.skinD=C.cyanD}const wk=e.st==='chase'?Math.sin(e.t*6):e.st==='charge'?Math.sin(e.t*16):0;let k=1,lean=0,armR=0.2;
 if(e.st==='spawn')k=0.3+0.7*easeBack(Math.min(1,e.stT/0.7));else if(e.st==='wind'){lean=-0.15;armR=-1.2}else if(e.st==='charge'){lean=0.45;armR=-0.6}else if(e.st==='swing'){const u=e.stT;armR=u<0.5?-2.6*(u/0.5):-2.6+3.6*Math.min(1,(u-0.5)/0.1)}else if(e.st==='stun')lean=-0.25;
 const hot=e.st==='wind'||e.st==='charge';
 mPush();mT(e.x,0,e.z);mRY(e.yaw);mS(k,k,k);mRX(lean);gTint=e.flash>0?1:0;
@@ -88,11 +90,11 @@ mPush();mT(1.3,2.4,0);mRX(armR+wk*0.3);put(SPH,0.1,-0.55,0,0,0,-0.2,0.55,1.3,0.5
 for(let i=0;i<6;i++){const a=i*2.1;put(CONE,Math.cos(a)*0.22,1.0+i*0.24,Math.sin(a)*0.22,0,-a,-PI/2,0.16,0.3,0.16,C.gold)}mPop();
 mPush();mT(0,3.0,0.2);sph(0,0,0,0.95,0.9,0.9,C.skin);sph(0,0.25,-0.2,1.0,0.7,0.85,C.inkD);
 for(const d of[-1,1]){put(CONE,d*0.3,0.62,0.1,0.2,0,-d*0.3,0.22,0.6,0.22,C.gold,0,.6);put(SPH,d*0.2,0.05,0.4,0,0,d*0.3,0.24,0.13,0.1,hot?C.red:C.yellow,0,0,F_UNLIT);put(CONE,d*0.2,-0.2,0.42,0,0,0,0.1,0.26,0.1,C.white)}
-box(0,-0.3,0.4,0.5,0.08,0.1,C.inkD);mPop();gTint=0;mPop()}
+box(0,-0.3,0.4,0.5,0.08,0.1,C.inkD);mPop();if(ic){C.skin=s0;C.skinD=s1;if(e.ap){box(0,2.0,0.8,1.5,1.2,0.3,C.ice,0,1);for(const d of[-1,1]){put(CONE,d*1.1,3.5,0,0,0,-d*0.35,0.8,1.5,0.8,C.ice,0,1);put(CONE,d*0.5,2.9,-0.8,-0.7,0,-d*0.3,0.6,1.3,0.6,C.ice,0,1)}put(CONE,0,4.0,0.1,0,0,0,0.5,1.0,0.5,C.ice,0,1)}}gTint=0;mPop()}
 function drawBossArm(b,s){const h=s<0?b.hL:b.hR,sx=s*9.2+b.hx*2,sy=20.6+b.yo,sz=-26.5,mx=(sx+h.x)/2+s*2,my=Math.max(sy,h.y)+3,mz=(sz+h.z)/2,len=Math.hypot(h.x-sx,h.y-sy,h.z-sz),n=clamp(Math.ceil(len/1.7),5,26);gId=nid();
-for(let i=0;i<=n;i++){const u=i/n,a=(1-u)*(1-u),bb=2*u*(1-u),c=u*u,d=lerp(5.8,2.8,u);sph(a*sx+bb*mx+c*h.x,a*sy+bb*my+c*h.y,a*sz+bb*mz+c*h.z,d,d,d,BI,0,.6,0,1)}gId=0;
-mPush();mT(h.x,h.y,h.z);mRY(Math.atan2(h.x-sx,h.z-sz));sph(0,0,0,3.6,2.3,3.8,BI,0,.8,0,1);for(let i=0;i<4;i++)put(CONE,-1.2+i*0.8,-0.3,1.9,1.9,0,0,0.7,1.8,0.7,C.paper);put(CONE,-s*1.9,-0.2,0.6,1.6,-s*1.2,0,0.7,1.5,0.7,C.paper);mPop()}
-function drawBoss(b){const yo=b.yo,t=b.t,p2=b.phase>1,eye=p2?C.red:C.yellow;gTint=b.flash>0?0.45:0;
+for(let i=0;i<=n;i++){const u=i/n,a=(1-u)*(1-u),bb=2*u*(1-u),c=u*u,d=lerp(5.8,2.8,u);sph(a*sx+bb*mx+c*h.x,a*sy+bb*my+c*h.y,a*sz+bb*mz+c*h.z,d,d,d,b.bk==='nyudo'&&u<0.42?C.kim:BI,0,.6,0,1)}gId=0;
+mPush();mT(h.x,h.y,h.z);mRY(Math.atan2(h.x-sx,h.z-sz));if(b.bk){bkHand(b,s);mPop();return}sph(0,0,0,3.6,2.3,3.8,BI,0,.8,0,1);for(let i=0;i<4;i++)put(CONE,-1.2+i*0.8,-0.3,1.9,1.9,0,0,0.7,1.8,0.7,C.paper);put(CONE,-s*1.9,-0.2,0.6,1.6,-s*1.2,0,0.7,1.5,0.7,C.paper);mPop()}
+function drawBoss(b){if(b.bk==='nyudo'){drawNyudo(b);return}const yo=b.yo,t=b.t,p2=b.phase>1,eye=p2?C.red:C.yellow;gTint=b.flash>0?0.45:0;
 put(CYL,0,0.1,-21.5,0,0,0,27,0.1,13,C.inkD,0,0,F_NOCAST);for(let i=0;i<6;i++){const a=i*1.05+t*0.3;sph(Math.cos(a)*11.5,0.1,-21.5+Math.sin(a)*5.5,2.2+Math.sin(t*2+i)*0.6,0.9,2.2,C.inkD)}
 mPush();mT(0,yo,-27);mS(2.1,2.1,2.1);gId=nid();sph(0,4.2,0,11,10,8,BI,0,.6,0,1);sph(b.hx,8.6,0.2,9.5,6.5,6.5,BI,0,.6,0,1);sph(-4.4+b.hx,9.8,0.3,4.2,3.6,4,BI,0,.6,0,1);sph(4.4+b.hx,9.8,0.3,4.2,3.6,4,BI,0,.6,0,1);gId=0;
 for(let i=0;i<7;i++){const a=(i-3)*0.42;put(CONE,Math.sin(a)*3.4+b.hx,10.2-Math.abs(i-3)*0.12,Math.cos(a)*3.2,1.9,a,0,0.9,1.9,0.9,C.gold,0,.6)}
@@ -104,11 +106,11 @@ sph(0,1.35,2.35,1.3,1.45,0.8,C.white);sph(0,1.35,2.66,0.8,0.9,0.4,eye,0,0,F_UNLI
 const mo=0.25+b.mouth*0.9;box(0,-1.25-mo*0.3,2.45,2.5,mo,0.5,C.inkD);for(let i=0;i<6;i++){put(CONE,-1.0+i*0.4,-1.05,2.72,PI,0,0,0.3,0.5,0.25,C.white);put(CONE,-0.8+i*0.32,-1.45-mo*0.6,2.72,0,0,0,0.26,0.44,0.22,C.white)}
 if(p2){put(BOX,0.9,1.2,2.4,0,0,0.6,0.12,1.6,0.3,C.inkD);put(BOX,-0.5,-0.3,2.6,0,0,-0.5,0.12,1.3,0.3,C.inkD)}
 for(let i=0;i<5;i++)put(CONE,(i-2)*0.9,2.3-Math.abs(i-2)*0.3,-1.2,-0.9,0,-(i-2)*0.25,1.0,2.4,1.0,C.inkD);
-mPop();mPop();gTint=b.flash>0?0.45:0;drawBossArm(b,-1);drawBossArm(b,1);gTint=0;
+if(b.bk)bkHead(b,p2);mPop();if(b.bk)bkBody(b,p2);mPop();gTint=b.flash>0?0.45:0;drawBossArm(b,-1);drawBossArm(b,1);gTint=0;if(b.bk)bkTele(b);
 if(b.st==='up'){const s=6+Math.sin(t*20)*0.8;put(RING,b.tx,0.12,b.tz,0,0,0,s,1,s,C.red,0,0,F_UNLIT|F_NOCAST);put(RING,b.tx,0.12,b.tz,0,0,0,s*0.5,1,s*0.5,C.red,0,0,F_UNLIT|F_NOCAST)}}
-function drawEnemies(){BI=STG[G.stage].ink;for(const e of enemies){if(e.dead)continue;gIce=e.frz>0?1:0;if(e.type==='imp')drawImp(e);else if(e.type==='lan')drawLan(e);else if(e.type==='bru')drawBru(e);else if(e.monk)drawMonk(e);else drawBoss(e)
- if(gIce){gIce=0;const c=eCenter(e);for(let k=0;k<5;k++){const a=k*1.26+e.seed;put(CONE,c[0]+Math.cos(a)*c[3]*0.85,c[1]-c[3]*0.6+(k%3)*c[3]*0.45,c[2]+Math.sin(a)*c[3]*0.85,Math.sin(a)*0.7,0,-Math.cos(a)*0.7,0.28,0.8,0.28,C.cyan,0,1)}}}gIce=0;if(ices.length&&!(boss&&boss.monk))drawIces();
-for(const s of shots){if(s.k===0){sph(s.x,s.y,s.z,s.r*2,s.r*2,s.r*2,C.ink,0,1,0,1);sph(s.x-s.vx*0.03,s.y-s.vy*0.03,s.z-s.vz*0.03,s.r*1.3,s.r*1.3,s.r*1.3,C.purple,0,0,F_UNLIT|F_NOCAST)}
+function drawEnemies(){BI=STG[G.stage].ink;for(const e of enemies){if(e.dead)continue;gIce=e.frz>0?1:0;const F=FOE[e.type];if(F)F.draw(e);else if(e.type==='imp')drawImp(e);else if(e.type==='lan')drawLan(e);else if(e.type==='bru')drawBru(e);else if(e.monk)drawMonk(e);else drawBoss(e)
+ if(gIce){gIce=0;const c=eCenter(e);for(let k=0;k<5;k++){const a=k*1.26+e.seed;put(CONE,c[0]+Math.cos(a)*c[3]*0.85,c[1]-c[3]*0.6+(k%3)*c[3]*0.45,c[2]+Math.sin(a)*c[3]*0.85,Math.sin(a)*0.7,0,-Math.cos(a)*0.7,0.28,0.8,0.28,C.cyan,0,1)}}}gIce=0;if(ices.length&&!(boss&&boss.monk))drawIces();drawHaz();
+for(const s of shots){if(s.k>1){drawShot2(s);continue}if(s.k===0){sph(s.x,s.y,s.z,s.r*2,s.r*2,s.r*2,C.ink,0,1,0,1);sph(s.x-s.vx*0.03,s.y-s.vy*0.03,s.z-s.vz*0.03,s.r*1.3,s.r*1.3,s.r*1.3,C.purple,0,0,F_UNLIT|F_NOCAST)}
 else{sph(s.x,s.y,s.z,1.1,1.1,1.1,C.ink,0,1,0,1);bill(BURST,s.x,s.y+0.65,s.z,0.7,now*9,C.yellow,F_UNLIT|F_NOCAST);const r=3.4+Math.sin(now*18)*0.4;put(RING,s.tx,0.11,s.tz,0,0,0,r,1,r,C.red,0,0,F_UNLIT|F_NOCAST)}}}
 function drawGun(){if(pl.wp&&wpView())return;curLayer=2;mPush();M.set(CAMW);const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0);
 mT(0.30+bx,-0.27-by-dip*0.3,-0.5+pl.rec*0.09);mRY(0.05);mRX(pl.rec*0.26-dip*0.8);mRZ(-dip*0.5);mS(0.86,0.86,0.86);
