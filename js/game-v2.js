@@ -83,7 +83,7 @@ else if(mn==='lobby'){head(net.host?'ロビー（ホスト）':'ロビー');pane
  B(60,628,220,56,'退出する',()=>netLeave(),{size:26})}}
 function drawTags(){for(const o of others){const p=project(o.x,o.y+(o.dead?1.2:2.35),o.z);if(!p||p.w>80)continue;const s=clamp(16/p.w,0.55,1.1);ctx.save();ctx.translate(p.x,p.y);ctx.scale(s,s);para(-36,-16,64,30,8);ctx.fillStyle=PCSS[o.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('P'+(o.slot+1),0,0,22,'#fff',INK,5);
 if(G.mode!=='pvp'){ctx.fillStyle=INK;ctx.fillRect(-34,18,68,10);ctx.fillStyle=o.hp>40?'#35d06a':'#ff3b30';ctx.fillRect(-32,20,64*sat(o.hp/100),6);if(o.dead&&Math.sin(now*8)>-0.3)txt('ダウン！',0,-40,26,'#ff3b30',INK,6,'center','#fff',10)}ctx.restore()}}
-function drawHUD2(){B(30,108,46,40,'II',()=>{G.paused=!G.paused},{sk:0,size:22});B(84,108,62,40,SET.view===1?'3人称':'1人称',tpsToggle,{sk:0,size:17,col:SET.view===1?'#ffd91a':'#fff'});if(DEV&&G.mode!=='pvp'&&!isCli()&&G.wave<WAVESET[G.stage].length-1)B(30,158,130,40,'ボスへ',devSkipBoss,{sk:0,size:22,col:'#ff8a2b'});
+function drawHUD2(){B(30,108,46,40,'II',()=>{G.paused=!G.paused},{sk:0,size:22});B(84,108,62,40,['1人称','3人称','2人称'][SET.view|0],tpsToggle,{sk:0,size:17,col:SET.view?'#ffd91a':'#fff'});if(DEV&&G.mode!=='pvp'&&!isCli()&&G.wave<WAVESET[G.stage].length-1)B(30,158,130,40,'ボスへ',devSkipBoss,{sk:0,size:22,col:'#ff8a2b'});
 if(pl.pow>0){ctx.save();ctx.translate(160,128);const s=1+0.06*Math.sin(now*12);ctx.scale(s,s);burstPath(0,0,66,24,10,1.3,2);ctx.fillStyle='#ff8a2b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('攻撃×2',0,1,22,'#fff',INK,5);ctx.restore();ctx.fillStyle=INK;ctx.fillRect(236,120,104,14);ctx.fillStyle='#ffd91a';ctx.fillRect(238,122,100*sat(pl.pow/SK.pow),10)}
 if(G.mode==='pvp'){const t=Math.max(0,G.tm)|0;txt(((t/60)|0)+':'+String(t%60).padStart(2,'0'),W/2,44,40,t<20?'#ff3b30':'#fff',INK,8);const rs=net.roster.slice().sort((a,b)=>a.slot-b.slot);rs.forEach((r,i)=>{const x=W/2-rs.length*62+i*124+12;para(x,70,104,36,10);ctx.fillStyle=PCSS[r.slot];ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=r.id===net.id?6:3;ctx.stroke();txt('P'+(r.slot+1)+'  '+G.pk[r.slot],x+56,89,22,'#fff',INK,5)})}
 if(pl.dead&&net.on){ctx.fillStyle='rgba(22,18,31,.45)';ctx.fillRect(0,250,W,150);if(G.mode==='pvp'){txt('やられた！',W/2,300,64,'#ff3b30',INK,12,'center','#fff',20);txt('復活まで '+Math.max(0,Math.ceil(pl.respT)),W/2,364,30,'#fff',INK,6)}
@@ -119,15 +119,19 @@ let GDT=0;
 // boss defeat camera: cut away from the player, start a little above the boss and drift in while circling
 function killCam(dt){if(boss&&boss.monk)G.kcP=[boss.x,boss.y,boss.z,boss.yaw];const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
 cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty-cam.y,dz=tz-cam.z;cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.03;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.03;cam.roll=lerp(-0.06,0.02,u)+rnd(-1,1)*s*0.03;cam.fov=lerp(64,54,u)*PI/180}
-// ---- third-person camera (SET.view=1, toggled in the settings / the small HUD button / V key) ----
+// ---- third / second-person camera (SET.view 1 / 2, toggled in the settings / the small HUD button / V key) ----
 // Over the right shoulder. Walls pull the camera in at once and it eases back out; looking up from below,
 // the ground stops it and it slides along the boom towards the hero; too close and the hero is not drawn.
 const TPS_D=3.4,TPS_SH=0.62,TPS_UP=0.3,TPS_PAD=0.3;let tpsD=TPS_D,tpsS=TPS_SH;const tpsEye=[0,0,0];
 const tpsHero={slot:0,x:0,y:0,z:0,yaw:0,pitch:0,wt:0,mv:0,dead:false,flash:0,fireT:0,sp:0,gx:0,gy:0,gz:0};
-function tpsOn(){return SET.view===1&&G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()}
-function tpsToggle(){SET.view=SET.view===1?0:1;tpsD=0.2;tpsS=0;applySet();snd('ui')}
+function tpsOn(){return SET.view>=1&&G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()}
+function tpsSet(v){SET.view=v;tpsD=0.2;tpsS=0;applySet();snd('ui')}
+function tpsToggle(){SET.view=((SET.view|0)+1)%3;tpsD=0.2;tpsS=0;applySet();snd('ui')}
 function tpsCam(dt){const ex=cam.x,ey=cam.y,ez=cam.z,cp=Math.cos(cam.pitch),fx=-Math.sin(cam.yaw)*cp,fy=Math.sin(cam.pitch),fz=-Math.cos(cam.yaw)*cp,rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
 tpsEye[0]=ex;tpsEye[1]=ey;tpsEye[2]=ez;
+// second person (SET.view=2): the camera stands in front of the hero and looks back at them; aiming is still by pl.yaw / pl.pitch
+if(SET.view===2){const D2=3.2;let d=rayWorld(ex,ey,ez,fx,fy,fz,D2+TPS_PAD)-TPS_PAD;d=clamp(d,0.12,D2);tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
+ const cx=ex+fx*tpsD,cy=ey+fy*tpsD,cz=ez+fz*tpsD,tx=ex,ty=ey-0.15,tz=ez,dx=tx-cx,dy=ty-cy,dz=tz-cz;cam.x=cx;cam.y=Math.max(0.2,cy);cam.z=cz;cam.yaw=Math.atan2(-dx,-dz);cam.pitch=Math.atan2(ty-cam.y,Math.hypot(dx,dz));cam.roll=0;return}
 // shoulder offset: shrinks when a wall is right beside the hero
 // (and moves further out to the side while the boom is pulled in, so the hero blocks less of the view)
 const sw=TPS_SH+0.35*sat(1-tpsD/TPS_D),sh=clamp(rayWorld(ex,ey,ez,rx,0,rz,sw+TPS_PAD)-TPS_PAD,0,sw);tpsS=sh<tpsS?sh:lerp(tpsS,sh,Math.min(1,dt*3));
@@ -137,7 +141,7 @@ let d=rayWorld(sx,sy,sz,-fx,-fy,-fz,TPS_D+TPS_PAD)-TPS_PAD;if(fy>0.01)d=Math.min
 tpsD=d<tpsD?d:lerp(tpsD,d,Math.min(1,dt*2.5));
 cam.x=sx-fx*tpsD;cam.y=sy-fy*tpsD;cam.z=sz-fz*tpsD;cam.roll*=0.5}
 // ray origin for shooting: on the camera ray, level with the hero (so it goes through the crosshair but never hits what is behind the hero)
-function aimOrigin(){if(!tpsOn())return[cam.x,cam.y,cam.z];const d=aimDir(),t=Math.max(0,(tpsEye[0]-cam.x)*d[0]+(tpsEye[1]-cam.y)*d[1]+(tpsEye[2]-cam.z)*d[2]);return[cam.x+d[0]*t,cam.y+d[1]*t,cam.z+d[2]*t]}
+function aimOrigin(){if(!tpsOn())return[cam.x,cam.y,cam.z];if(SET.view===2)return[tpsEye[0],tpsEye[1],tpsEye[2]];const d=aimDir(),t=Math.max(0,(tpsEye[0]-cam.x)*d[0]+(tpsEye[1]-cam.y)*d[1]+(tpsEye[2]-cam.z)*d[2]);return[cam.x+d[0]*t,cam.y+d[1]*t,cam.z+d[2]*t]}
 function drawTpsHero(){if(!tpsOn())return;const o=tpsHero;o.slot=pl.slot||0;o.x=pl.x;o.y=pl.y||0;o.z=pl.z;o.yaw=pl.yaw;o.pitch=pl.pitch;o.dead=pl.dead;o.mv=pl.moving;o.wt+=GDT;o.fireT=pl.flashT;o.sp=pl.sp===2?1:0;o.flash=hurtA>0.5?1:0;
 if(tpsD<0.9){const cp=Math.cos(pl.pitch);muz[0]=pl.x+Math.cos(pl.yaw)*0.3-Math.sin(pl.yaw)*cp;muz[1]=tpsEye[1]-0.2+Math.sin(pl.pitch);muz[2]=pl.z-Math.sin(pl.yaw)*0.3-Math.cos(pl.yaw)*cp;return}
 drawHero(o);muz[0]=o.gx;muz[1]=o.gy;muz[2]=o.gz;

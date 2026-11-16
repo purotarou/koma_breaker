@@ -67,7 +67,7 @@ if(boss&&boss.st!=='rise'&&!(boss.monk&&boss.st==='drop')){const v=sat(boss.hp/b
 // ammo
 const na=SK.mag,st=Math.min(18,288/na),iw=st*0.67,bx=W/2-na*st/2;for(let i=0;i<na;i++){const x=bx+i*st,y=676,on=i<pl.ammo;ctx.beginPath();ctx.moveTo(x+iw/2,y-14);ctx.lineTo(x+iw,y-2);ctx.lineTo(x+iw,y+12);ctx.lineTo(x,y+12);ctx.lineTo(x,y-2);ctx.closePath();ctx.fillStyle=on?'#ffd91a':'rgba(22,18,31,.35)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
 if(pl.reload>0&&Math.sin(now*20)>-0.3)txt('装填中…',W/2,640,26,'#fff',INK,6);
-drawCross()}
+if(SET.view!==2||!tpsOn())drawCross()}
 function drawTouch(){if(!hasTouch)return;ctx.save();ctx.globalAlpha=0.8;const sx=touch.ox,sy=touch.oy;ctx.beginPath();ctx.arc(sx,sy,78,0,TAU);ctx.fillStyle='rgba(255,255,255,.28)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
 ctx.beginPath();ctx.arc(sx+touch.dx*70,sy+touch.dy*70,36,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();ctx.fillStyle=dotPat;ctx.fill();
 for(const k in BTN){const b=BTN[k];let held=false;for(const id in touch.hold)if(touch.hold[id]===k)held=true;const r=b.r*(held?0.9:1);ctx.beginPath();ctx.arc(b.x+4,b.y+6,r,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(b.x,b.y,r,0,TAU);

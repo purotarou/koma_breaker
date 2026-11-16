@@ -48,7 +48,7 @@ const tog=(y,label,opts,cur,cb)=>{txt(label,200,y+28,30,INK,null,0,'left');opts.
 tog(372,'ボタンの大きさ',['小','中','大'],[0.85,1,1.15].indexOf(SET.size),i=>{SET.size=[0.85,1,1.15][i];applySet()});
 tog(442,'ボタン配置',['右手で撃つ','左手で撃つ'],SET.lh,i=>{SET.lh=i;applySet()});
 tog(512,'視点の上下',['通常','反転'],SET.inv>0?0:1,i=>{SET.inv=i?-1:1;applySet()});
-tog(582,'視点',['1人称','3人称'],SET.view===1?1:0,i=>{if((SET.view===1?1:0)!==i)tpsToggle()});
+tog(582,'視点',['1人称','3人称','2人称'],SET.view|0,i=>{if((SET.view|0)!==i)tpsSet(i)});
 B(960,592,150,50,'全画面',()=>toggleFS(),{size:24});
 B(960,386,150,50,'自由に配置',()=>{layEdit=true;layDrag=null},{sk:8,size:22,col:'#59d8ff'});const px=960,py=478,pw=150,ph=84;ctx.fillStyle='#cfe6ff';ctx.fillRect(px,py,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(px,py,pw,ph);
 for(const k in BTN){const b=BTN[k];ctx.beginPath();ctx.arc(px+b.x/W*pw,py+b.y/H*ph,Math.max(3,b.r/W*pw),0,TAU);ctx.fillStyle=k==='fire'?'#ff4a3d':'#fff';ctx.fill();ctx.lineWidth=1.5;ctx.stroke()}
