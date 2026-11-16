@@ -23,15 +23,15 @@ const WPN=[
  d:['32発・威力24の速射銃','妖弾銃の上位版。反動がなく装填も速い'],s:'数秒間、弾が減らずに連射２倍。弾が敵を追う'},
 {id:'shotgun',name:'散華砲',type:'ショットガン',kind:'gun',btn:'撃',file:'weapon_shotgun',col:'#ff7aa8',bg:[1,.9,.93],ammo:1,mag:6,dmg:15,pel:8,cool:0.72,rel:1.5,kick:0.09,shk:0.22,snd:'sgun',g:1.5,sp:'大散華',spd:0.5,spMode:'once',muz:[0,0.055,-0.56],fore:0.3,
  d:['扇状に散弾を撃つ。近いほど強い','鎧鬼をのけぞらせる。必殺ゲージが早くたまる'],s:'超広範囲の散弾。全弾が壁も敵も貫通する'},
-{id:'rail',name:'氷魄砲',type:'レールガン',kind:'rail',btn:'撃',file:'weapon_railgun',col:'#5fd0ff',bg:[.85,.96,1],ammo:0,g:1,sp:'妖光・氷牢',spd:8,spMode:'mode',muz:[0,0.05,-0.87],fore:0.33,
- d:['長押しで、敵をつらぬく光線を連射','熱がたまりきると、しばらく冷却'],s:'８秒間、凍結光線を出しっぱなし。凍った敵は被ダメ1.5倍'},
+{id:'rail',name:'氷魄砲',type:'レールガン',kind:'rail',btn:'撃',file:'weapon_railgun',col:'#5fd0ff',bg:[.85,.96,1],ammo:0,g:1,sp:'妖光・氷牢',spd:4,spMode:'mode',muz:[0,0.05,-0.87],fore:0.33,
+ d:['長押しで、敵をつらぬく光線を連射','熱がたまりきると、しばらく冷却'],s:'４秒間、凍結光線を出しっぱなし。凍った敵は被ダメ1.5倍'},
 {id:'katana',name:'祓い刀',type:'刀',kind:'katana',btn:'斬',file:'weapon_katana',col:'#2f6fd8',bg:[.88,.92,1],ammo:0,g:1,sp:'一閃・天断ち',spd:0.6,spMode:'once',
  d:['弾切れなし。踏み込んで斬る','敵の墨弾も斬って消せる'],s:'画面を横切る巨大な斬撃。ボスにも届く'},
 {id:'hammer',name:'火消しの大槌',type:'大槌',kind:'hammer',btn:'叩',file:'weapon_hammer',col:'#f4b82e',bg:[1,.95,.82],ammo:0,g:1,sp:'駒砕き',spd:1.0,spMode:'once',
  d:['振り下ろして正面に衝撃波','長押しで溜めると範囲が広がる。鎧鬼を怯ませる'],s:'画面がコマ割りに割れ、広い範囲の敵を打ち砕く'},
 {id:'bomb',name:'焙烙火矢',type:'焙烙玉',kind:'bomb',btn:'投',file:'weapon_bomb',col:'#ff6a3d',bg:[1,.9,.84],ammo:0,g:1.5,sp:'大玉花火',spd:0.6,spMode:'once',
  d:['投げて爆発。３個まで持ち、時間で補充','ボスにも当たる。必殺ゲージが早くたまる'],s:'特大の爆発のあと、炎が約６秒燃え残る'}];
-const WB_RF=4;// seconds per bomb refill
+const WB_RF=4;// seconds after the last throw until all three bombs are back
 // ---- ownership / equip (localStorage koma_wpn: {eq: weapon id, got: 1 once the six were obtained}) ----
 const WS={eq:'gun',got:0};
 try{const s=JSON.parse(localStorage.getItem('koma_wpn')||'null');if(s)Object.assign(WS,s)}catch(e){}
@@ -67,7 +67,7 @@ function wpModel(i,col){const md=WMOD[WPN[i].id];if(!md)return;for(const it of m
 function drawYoGun(spin,lit){box(0,0.02,-0.1,0.075,0.11,0.34,C.gunM,0,.6);put(CYL,0,0.045,-0.36,PI/2,0,0,0.06,0.26,0.06,C.gunD,0,.8);box(0,0.085,-0.16,0.03,0.02,0.36,C.gunD);
 put(CONE,0,0.045,-0.55,-PI/2,0,0,0.085,0.16,0.085,C.gold,0,1);put(CYL,0,0.045,-0.47,PI/2,0,0,0.09,0.03,0.09,C.gold);
 put(CYL,0,0.02,-0.02,PI/2,0,spin,0.13,0.1,0.13,C.gunD,0,.7);put(CYL,0,0.02,-0.02,PI/2,0,0,0.136,0.025,0.136,C.red);
-sph(0,0.105,0.05,0.07,0.07,0.07,lit?C.cyan:C.cyanD,0,1,lit?F_UNLIT:0);box(0,0.105,-0.27,0.015,0.03,0.03,C.gold);box(0,0.1,0.1,0.02,0.05,0.04,C.gunD);put(BOX,0,-0.1,0.07,0.35,0,0,0.06,0.18,0.085,C.wood)}
+sph(0,0.105,0.05,0.07,0.07,0.07,lit?C.cyan:C.cyanD,0,1,lit?F_UNLIT:0);box(0,0.105,-0.27,0.015,0.03,0.03,C.gold);box(0,0.1,0.1,0.02,0.05,0.04,C.gunD);put(BOX,0,-0.1,0.07,0.35,0,0,0.06,0.18,0.085,C.wood);put(BOX,0,-0.062,-0.025,-0.3,0,0,0.016,0.05,0.016,C.gunD);box(0,-0.105,-0.03,0.03,0.012,0.1,C.gold);box(0,-0.072,-0.075,0.03,0.07,0.012,C.gold);}
 // weapon frame: grip P, tip direction f, up hint u, scale s -> WF (local -Z = f, local +Y ≈ u)
 function wpFrame(P,f,u,s){f=v3n(f);const d=u[0]*f[0]+u[1]*f[1]+u[2]*f[2],y=v3n([u[0]-f[0]*d,u[1]-f[1]*d,u[2]-f[2]*d]),z=[-f[0],-f[1],-f[2]],x=[y[1]*z[2]-y[2]*z[1],y[2]*z[0]-y[0]*z[2],y[0]*z[1]-y[1]*z[0]];
 WF.set([x[0]*s,x[1]*s,x[2]*s,0,y[0]*s,y[1]*s,y[2]*s,0,z[0]*s,z[1]*s,z[2]*s,0,P[0],P[1],P[2],1])}
@@ -94,11 +94,11 @@ else if(c===2){if(e.type==='bru'&&e.st!=='stun'&&e.st!=='spawn'&&now-(e.stunAt||
 else if(c===3){if(e.type==='boss')e.slw=Math.max(e.slw||0,v)}}
 // ================= ATTACKS =================
 function wpUpdate(dt,cine){const w=wpW(),f=inp.fire&&!cine;pl.at+=dt;
-if(w.kind==='bomb'&&pl.bombs<3){pl.bombT+=dt;if(pl.bombT>=WB_RF){pl.bombT=0;pl.bombs++}}
+if(w.kind==='bomb'&&pl.bombs<3){pl.bombT+=dt;if(pl.bombT>=WB_RF){pl.bombT=0;pl.bombs=3;snd('reload')}}
 if(pl.slamT>0){pl.slamT-=dt;if(pl.slamT<=0)hammerHit(pl.slamC)}
 if(pl.kkT>0){pl.kkT-=dt;if(pl.kkT<=0)komaCrush()}
 if(w.kind==='rail'){railUpdate(dt,f);return}
-if(w.kind==='gun'){const buff=pl.sp===2&&w.spMode==='buff';if(f&&pl.cool<=0&&(pl.reload<=0||buff)&&(!pl.sp||buff)){if(pl.ammo>0||buff){pl.reload=0;shoot()}else startReload()}return}
+if(w.kind==='gun'){const buff=pl.sp===2&&w.spMode==='buff';if(f&&pl.cool<=0&&(pl.reload<=0||buff)&&(!pl.sp||buff)){if(pl.ammo>0||buff){if(buff&&pl.reload>0){pl.reload=0;pl.ammo=SK.mag}shoot()}else startReload()}return}
 if(w.kind==='katana'){if(f&&pl.cool<=0&&!pl.sp&&pl.lgT<=0)katanaSlash();return}
 if(w.kind==='hammer'){if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt/1.1);if(c0<1&&pl.hc>=1){snd('item');addText('ズオオッ',W*0.68,H*0.6,{size:52,st:'boom',life:0.4})}
   if(pl.sp)pl.hon=0;else if(!f){pl.hon=0;pl.slamT=0.12;pl.slamC=pl.hc;pl.cool=0.5;wpAct(4);snd('whoosh')}}
@@ -123,10 +123,10 @@ for(const[e,k]of bru)if(k>=3)wpEffect(e,2);
 if(!big)addText(pick(['ズドン！','ドゴン！','バン！']),W*0.72+rnd(-40,60),H*0.62+rnd(-40,30),{size:pw>1?62:54,st:pw>1?'boom':'fire',life:0.25,grow:0.12})}
 // ---- 氷魄砲: held beam, ticks every 0.06 s through every enemy up to the first wall; heat ----
 function railUpdate(dt,f){let on=0;
-if(pl.sp===2)on=2;else if(f&&!pl.ovh&&!pl.sp){on=1;pl.heat+=dt/3.2;if(pl.heat>=1){pl.heat=1;pl.ovh=1;on=0;snd('reload');addText('シューッ',W*0.7,H*0.62,{size:54,st:'cyan',life:0.5})}}
+if(pl.sp===2)on=2;else if(f&&!pl.ovh&&!pl.sp){on=1;pl.heat+=dt/4.7;if(pl.heat>=1){pl.heat=1;pl.ovh=1;on=0;snd('reload');addText('シューッ',W*0.7,H*0.62,{size:54,st:'cyan',life:0.5})}}
 if(on!==1){pl.heat=Math.max(0,pl.heat-dt*(pl.ovh?0.5:0.75));if(pl.ovh&&pl.heat<=0){pl.ovh=0;snd('reload')}}
 pl.rOn=on;if(on){pl.rt-=dt;let n=0;while(pl.rt<=0&&n<3){pl.rt+=0.06;n++;railTick(on===2)}pl.flashT=0.03;pl.rec=Math.max(pl.rec,0.25)}else pl.rt=0}
-function railTick(ice){const pw=pl.pow>0?2:1,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),as?0.06:0.02,as?0.6:0.3),wallT=rayWorld(ox,oy,oz,d[0],d[1],d[2],120),dm=(ice?12*SK.spw:9)*pw,rr=ice?0.45:0.15;let hit=0;
+function railTick(ice){const pw=pl.pow>0?2:1,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),as?0.06:0.02,as?0.6:0.3),wallT=rayWorld(ox,oy,oz,d[0],d[1],d[2],120),dm=(ice?1.7*SK.spw:1.32)*pw,rr=ice?0.45:0.15;let hit=0;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]+rr);if(t>0&&t<tm)tm=t}
  if(tm<wallT){const hx=ox+d[0]*tm,hy=oy+d[1]*tm,hz=oz+d[2]*tm;wpDmg(e,dm,hx,hy,hz,{quiet:1});if(ice)wpEffect(e,e.type==='boss'?3:1,e.type==='boss'?0.35:3);hit++;if(lim('rs'+e.id,0.1))fxSparks(hx,hy,hz,3,5,ice?C.white:C.cyan)}}
 for(const s of shots)if(!s.dead){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.3);if(t>0&&t<wallT){popShot(s);if(isCli())net.q.ps.push(s.id)}}
@@ -140,7 +140,7 @@ let lx=fx,lz=fz,dist=1.3;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hyp
 pl.cool=0.42;pl.slN=pl.slN?0:1;wpAct(1+pl.slN);pl.lgx=lx;pl.lgz=lz;pl.lgT=0.12;pl.lgV=pl.frz>0?0:dist/0.12;pl.lgP=1;snd('slash');
 addText(pick(['ザンッ！','ズバッ！','シュバッ']),W*0.62+rnd(-60,80),H*0.58+rnd(-30,30),{size:56,st:'cyan',life:0.3})}
 function wpLunge(dt){if(pl.lgT<=0)return;const s=Math.min(dt,pl.lgT);pl.x+=pl.lgx*pl.lgV*s;pl.z+=pl.lgz*pl.lgV*s;pl.lgT-=dt;if(pl.lgT<=0&&pl.lgP){pl.lgP=0;katanaHit()}}
-function katanaHit(){const R=3.5,A=1.22,pw=pl.pow>0?2:1;let n=0,cut=0;wslash.push({x:pl.x,y:pl.y+1.15,z:pl.z,yaw:pl.yaw,dir:pl.slN?1:-1,t:0});
+function katanaHit(){const R=3.5,A=1.22,pw=pl.pow>0?2:1;let n=0,cut=0;wslash.push({x:pl.x,y:pl.y+1.15,z:pl.z,yaw:pl.yaw,dir:pl.slN?-1:1,t:0});
 const inArc=(x,y,z,r)=>{const dx=x-pl.x,dz=z-pl.z,dh=Math.hypot(dx,dz)-r;if(dh>R||y-r>pl.y+3.4||y+r<pl.y-0.4)return false;return dh<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<A};
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(inArc(s[0],s[1],s[2],s[3])){wpDmg(e,62*pw,s[0],s[1],s[2],{quiet:n>1});n++;break}}
 for(const s of shots)if(!s.dead&&inArc(s.x,s.y,s.z,s.r+0.6)){popShot(s);if(isCli())net.q.ps.push(s.id);fxStar(s.x,s.y,s.z,1.6,C.cyan,0.1);cut++}
@@ -171,7 +171,7 @@ fxDebris(x,0.3,z,14,12,C.stoneD,0.25);decals.push({x,z,r:9,life:8});shake(own?1:
 // ---- 焙烙火矢 ----
 function throwBomb(big){const d=aimDir(),AO=aimOrigin(),rx=Math.cos(pl.yaw),rz=-Math.sin(pl.yaw),sp=big?17:21,x=AO[0]+d[0]*0.8+rx*0.22,y=AO[1]-0.1+d[1]*0.8,z=AO[2]+d[2]*0.8+rz*0.22;
 const b={x,y,z,vx:d[0]*sp+pl.vx*0.3,vy:d[1]*sp+(big?6:4.5),vz:d[2]*sp+pl.vz*0.3,big:big?1:0,own:1,t:0,rot:0};wbombs.push(b);wxPush(['b',r2(x),r2(y),r2(z),r2(b.vx),r2(b.vy),r2(b.vz),b.big]);
-if(!big){pl.bombs--;pl.cool=0.5}wpAct(big?6:5);snd('whoosh');addText(big?'ヒュルル…':'シュッ',W*0.66+rnd(-40,40),H*0.6,{size:big?70:46,st:big?'boom':'cyan',life:0.35})}
+if(!big){pl.bombs--;pl.bombT=0;pl.cool=0.5}wpAct(big?6:5);snd('whoosh');addText(big?'ヒュルル…':'シュッ',W*0.66+rnd(-40,40),H*0.6,{size:big?70:46,st:big?'boom':'cyan',life:0.35})}
 function bombBoom(b,he){const big=b.big,R=big?9:4.3,x=b.x,y=Math.max(0.4,b.y),z=b.z;explode(x,y,z,big?3.6:1.5,{text:big?'ドォォォン！':'ドカァン！'});decals.push({x,z,r:big?6:2.6,life:big?8:5});
 if(big)for(let k=0;k<7;k++){const c=[C.red,C.yellow,C.cyan,C.pink,C.white,C.orange,C.sakura][k],px=x+rnd(-6,6),py=y+rnd(5,11),pz=z+rnd(-6,6);fxStar(px,py,pz,rnd(2.5,4.5),c,0.5);fxSparks(px,py,pz,8,9,c)}
 if(b.own){const pw=pl.pow>0?2:1,base=(big?520*SK.spw:130)*pw,fx=x-b.vx*0.12,fz=z-b.vz*0.12;let n=0;
@@ -213,7 +213,7 @@ case'h':hammerFx(a[1],a[2],a[3],a[4]);break;
 case'H':komaFx(a[1],a[2],0);break}}
 // another player's action counter changed: replay the pose from the start (and the sword trail)
 function wpOtherAct(o,an,ak){if(o.an===an)return;const first=o.an==null;o.an=an;if(first)return;o.ak=ak;o.at=0;
-if(ak===1||ak===2){wslash.push({x:o.x,y:o.y+1.15,z:o.z,yaw:o.yaw,dir:ak===2?1:-1,t:0});const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd('slash');sndVol=v}}
+if(ak===1||ak===2){wslash.push({x:o.x,y:o.y+1.15,z:o.z,yaw:o.yaw,dir:ak===2?-1:1,t:0});const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd('slash');sndVol=v}}
 // ================= SPECIALS (pl.sp 1 = cut-in, 2 = active for spDur()) =================
 function wpSpStart(){const w=wpW();pl.hon=0;switch(w.id){
 case'gun':snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1;break;
@@ -247,7 +247,7 @@ function wpDrawLate(){if(G.state!=='play'&&!(G.state==='title'&&G.demoOn))return
 function wpOtherBeam(o){const cp=Math.cos(o.pitch),d=[-Math.sin(o.yaw)*cp,Math.sin(o.pitch),-Math.cos(o.yaw)*cp],t=rayWorld(o.gx,o.gy,o.gz,d[0],d[1],d[2],60);railBeam([o.gx,o.gy,o.gz],[o.gx+d[0]*t,o.gy+d[1]*t,o.gz+d[2]*t],!!(o.rb&16))}
 // ================= DRAW: first-person view model (camera space, layer 2) =================
 const KV_I=[0.3,-0.34,-0.5,0.25,0.95,0.35],KV_A=[[0,KV_I],[0.07,[0.42,-0.12,-0.45,-0.9,0.6,0.9]],[0.17,[-0.32,-0.42,-0.55,1.25,-0.25,-0.6]],[0.42,[-0.25,-0.45,-0.55,1.1,-0.2,-0.5]],[0.65,KV_I]],
-KV_B=[[0,KV_I],[0.07,[-0.3,-0.45,-0.5,1.0,-0.3,-0.6]],[0.17,[0.42,-0.1,-0.5,-1.1,0.7,0.8]],[0.42,[0.4,-0.12,-0.5,-1.0,0.65,0.7]],[0.65,KV_I]],
+KV_B=[[0,KV_I],[0.07,[-0.4,-0.12,-0.45,0.9,0.6,-0.9]],[0.17,[0.34,-0.42,-0.55,-1.25,-0.25,0.6]],[0.42,[0.27,-0.45,-0.55,-1.1,-0.2,0.5]],[0.65,KV_I]],
 KV_S=[[0,KV_I],[0.2,[0.5,-0.2,-0.35,-1.6,0.15,1.4]],[0.32,[-0.5,-0.25,-0.5,1.6,0.05,-1.4]],[0.7,[-0.4,-0.3,-0.5,1.4,0,-1.2]],[1,KV_I]],
 HV_I=[0.42,-0.52,-0.55,-0.15,1.15,-0.2],HV_R=[0.3,-0.22,-0.38,-0.1,2.15,-0.1],HV_D=[0.1,-0.36,-0.72,0,-0.3,0],
 HV_S=[[0,HV_R],[0.11,HV_D],[0.45,HV_D],[0.8,HV_I]],HV_SP=[[0,HV_I],[0.3,HV_R],[0.4,[0.25,-0.1,-0.3,-0.05,2.5,0]],[0.47,HV_D],[0.95,HV_D],[1.3,HV_I]],
@@ -270,7 +270,7 @@ if(pl.sp===1){const k=0.15+pl.spT*0.6;bill(BURST,muz[0],muz[1],muz[2],k,now*20,C
 mPop();curLayer=1;return true}
 // ================= DRAW: hero poses with a weapon (model space: up +Y, faces +Z, the hero's right is -X) =================
 const KH_I=[-0.17,1.2,0.3,0.3,0.95],KH_A=[[0,KH_I],[0.07,[-0.36,1.55,0.08,1.7,0.7]],[0.18,[0.2,1.06,0.36,-1.5,-0.35]],[0.42,[0.18,1.08,0.34,-1.4,-0.3]],[0.65,KH_I]],
-KH_B=[[0,KH_I],[0.07,[0.16,1.03,0.32,-1.0,-0.4]],[0.18,[-0.38,1.55,0.12,1.5,0.65]],[0.42,[-0.36,1.53,0.12,1.4,0.6]],[0.65,KH_I]],
+KH_B=[[0,KH_I],[0.07,[0.12,1.55,0.15,-1.5,0.7]],[0.18,[-0.32,1.06,0.36,1.5,-0.35]],[0.42,[-0.3,1.08,0.34,1.4,-0.3]],[0.65,KH_I]],
 KH_S=[[0,KH_I],[0.2,[-0.4,1.35,-0.05,2.3,0.15]],[0.32,[0.33,1.3,0.25,-2.0,0]],[0.75,[0.31,1.3,0.25,-1.9,0]],[1,KH_I]],
 HH_I=[-0.2,1.18,0.28,0.35,1.95],HH_R=[-0.1,1.72,0.12,0.15,2.45],HH_D=[-0.04,1.02,0.42,0.05,-0.8],
 HH_S=[[0,HH_R],[0.12,HH_D],[0.45,HH_D],[0.8,HH_I]],HH_SP=[[0,HH_I],[0.3,HH_R],[0.4,[-0.08,1.8,0.08,0.1,2.6]],[0.47,HH_D],[0.95,HH_D],[1.3,HH_I]],
@@ -287,7 +287,7 @@ if(k==='gun'||k==='rail'){const R=m3axis(HX,-pit),r=m3v(R,[HERO_GUN_X+0.02,-0.12
 else if(k==='katana'){const K=ak===1?KH_A:ak===2?KH_B:ak===7?KH_S:[[0,KH_I]],v=kf(K,at),v2=kf(K,at+0.03);P=[v[0],v[1]+Math.sin(now*2)*0.01,v[2]];f=dirYE(v[3],v[4]);const f2=dirYE(v2[3],v2[4]),m=[f2[0]-f[0],f2[1]-f[1],f2[2]-f[2]];
  u=Math.hypot(m[0],m[1],m[2])>0.02?[-m[0],-m[1],-m[2]]:[0,0.3,-1];pr=[-1,-0.6,0];lp=[1,-0.6,0];tr=-0.5;tl=0.5;tip=[0,0,-0.76]}
 else if(k==='hammer'){let v;if(ak===3&&o.hc!=null){v=HH_I.map((a,j)=>a+(HH_R[j]-a)*sat(at/0.2));v[1]+=Math.sin(now*40)*0.008*(o.hc||0)}else v=kf(ak===4?HH_S:ak===8?HH_SP:[[0,HH_I]],at);
- P=[v[0],v[1],v[2]];f=dirYE(v[3],v[4]);u=[1,0,0];pr=[-1,-0.5,0];lp=[1,-0.5,0];tip=[0,0,-0.84]}
+ P=[v[0],v[1],v[2]];f=dirYE(v[3],v[4]);u=[0,f[2],-f[1]];/* head axis = local Y in the swing plane, striking face (-Y) leading */pr=[-1,-0.5,0];lp=[1,-0.5,0];tip=[0,0,-0.84]}
 else{const th=ak===5||ak===6;P=th?kf(HB_T,at):HB_I;f=[0,0,1];u=[0,1,0];L=[0.24,1.12,0.2];lp=[1,-0.8,0.2];
  show=(!th||at<0.24||at>0.75)&&(o.bombs==null||o.bombs>0||(ak===6&&at<0.24));s=ak===6&&at<0.24?2.6:1.5;tip=[0.035,0.19,0]}
 heroArm('R',P,pr,tr);P=Hh.GT[Hh.bi.hand_R].slice();
@@ -301,7 +301,7 @@ o.gx=M[0]*t[0]+M[4]*t[1]+M[8]*t[2]+M[12];o.gy=M[1]*t[0]+M[5]*t[1]+M[9]*t[2]+M[13
 // ================= HUD / overlays =================
 function wpHUD(w){if(w.kind==='rail'){const v=pl.heat||0;gauge(W/2-110,662,250,18,v,pl.ovh?(Math.sin(now*16)>0?'#ff3b30':'#ffd91a'):v>0.75?'#ff8a2b':'#59d8ff','熱');if(pl.ovh)txt('冷却中…',W/2+15,634,24,'#fff',INK,6)}
 else if(w.kind==='bomb'){for(let i=0;i<3;i++){const x=W/2-60+i*60,y=672,on=i<pl.bombs;ctx.beginPath();ctx.arc(x+3,y+4,19,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(x,y,19,0,TAU);ctx.fillStyle=on?'#e5402b':'rgba(255,255,255,.55)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();
-  if(!on&&i===pl.bombs){ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,16,-PI/2,-PI/2+TAU*sat(pl.bombT/WB_RF));ctx.closePath();ctx.fillStyle='#ff9a7a';ctx.fill()}ctx.fillStyle=INK;ctx.fillRect(x-4,y-27,8,9)}}
+  if(!on){ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,16,-PI/2,-PI/2+TAU*sat(pl.bombT/WB_RF));ctx.closePath();ctx.fillStyle='#ff9a7a';ctx.fill()}ctx.fillStyle=INK;ctx.fillRect(x-4,y-27,8,9)}}
 else if(w.kind==='hammer'&&pl.hon)gauge(W/2-100,662,230,18,pl.hc,pl.hc>=1?(Math.sin(now*16)>0?'#fff':'#ffc21a'):'#ffc21a','溜')}
 // special timer for the timed ones (珠時雨 / 妖光・氷牢)
 function wpSpHUD(w){if(pl.sp!==2||(w.spMode!=='buff'&&w.spMode!=='mode'))return;const r=sat(1-pl.spT/spDur());txt(w.sp,W/2,588,24,'#fff',INK,6);gauge(W/2-90,604,220,14,r,'#35e0ff','')}
@@ -343,10 +343,15 @@ B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});
 B(X+PW-300,628,300,62,!ok?'未入手':isEq?'装備中':'装備する',()=>{if(ok&&!isEq){WS.eq=w.id;wsSave();snd('item');eqPop=now}},{col:!ok?'#d8d8e0':isEq?'#ffd91a':'#ff4a3d',tc:ok&&!isEq?'#fff':INK,size:30});
 if(now-eqPop<0.7){const u=now-eqPop,k=easeBack(sat(u/0.15));ctx.save();ctx.globalAlpha=sat((0.7-u)/0.2);ctx.translate(X+PW-150,612);ctx.rotate(-0.1);ctx.scale(k*0.7,k*0.7);burstPath(4,5,120,44,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,120,44,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('装備！',0,2,44,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
 // 3D preview inside the equip window (camera space, layer 2): a light backdrop and the weapon turning slowly
+// largest half-extents on screen (x, y) of the centred box over every angle the preview turns through (cached per weapon)
+const WFIT={};
+function wpFit(w,mn,mx){if(WFIT[w.id])return WFIT[w.id];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=8;k++)rots.push([PI/2+0.4*Math.sin(k/8*TAU),0.15]);
+let X=0.01,Y=0.01;for(const[ry,rx]of rots){const cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);for(let k=0;k<8;k++){const p=[(k&1?mx[0]:mn[0])-c[0],(k&2?mx[1]:mn[1])-c[1],(k&4?mx[2]:mn[2])-c[2]],y1=p[1]*cx-p[2]*sx,z1=p[1]*sx+p[2]*cx,x2=p[0]*cy+z1*sy;X=Math.max(X,Math.abs(x2));Y=Math.max(Y,Math.abs(y1))}}
+if(w.file&&WMOD[w.id])WFIT[w.id]=[X,Y];return[X,Y]}
 function wpPreview(){if(G.state!=='menu'||G.menu!=='equip')return;const i=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[i],ok=wpOwn(i);curLayer=2;mPush();M.set(CAMW);
 const tn=Math.tan(cam.fov/2),asp=W/H,D=1.3,cx=((EQ.px+EQ.pw/2)/W*2-1)*tn*asp,cy=(1-(EQ.py+EQ.ph/2)/H*2)*tn,hw=EQ.pw/W*tn*asp,hh=EQ.ph/H*tn,D2=D*1.5;
 mPush();mT(cx*D2,cy*D2,-D2);mS(hw*2*D2+0.06,hh*2*D2+0.06,1);emit(QUAD,ok?w.bg:[.78,.8,.88],0,0,F_UNLIT|F_NOCAST,0);mPop();
-mT(cx*D,cy*D-0.02,-D);const md=w.file&&WMOD[w.id],mn=md?md.mn:[-0.08,-0.19,-0.63],mx=md?md.mx:[0.08,0.12,0.12],lz=mx[2]-mn[2],ly=mx[1]-mn[1],sc=Math.min(hw*2*D*0.8/Math.max(lz,0.25),hh*2*D*0.72/Math.max(ly,0.05));
+mT(cx*D,cy*D-0.02,-D);const md=w.file&&WMOD[w.id],mn=md?md.mn:[-0.08,-0.19,-0.63],mx=md?md.mx:[0.08,0.12,0.12],ex=wpFit(w,mn,mx),sc=Math.min(hw*D*0.86/ex[0],hh*D*0.8/ex[1]);
 if(w.kind==='bomb')mRY(now*0.8);else{mRY(PI/2+0.4*Math.sin(now*0.7));mRX(0.15)}mS(sc,sc,sc);mT(-(mn[0]+mx[0])/2,-(mn[1]+mx[1])/2,-(mn[2]+mx[2])/2);
-if(md)wpModel(i,ok?null:C.inkD);else if(!w.file){if(ok)drawYoGun(now*2,1);else{mPush();drawYoGun(0,0);mPop()}}
+if(md)wpModel(i,ok?null:C.inkD);else if(!w.file){if(ok)drawYoGun(0,1);else{mPush();drawYoGun(0,0);mPop()}}
 mPop();curLayer=1}

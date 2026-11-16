@@ -88,7 +88,7 @@ mPush();mT(o.x,o.y,o.z);mRY(o.yaw+PI);if(o.dead){mT(0,0.3,0);mRX(-1.45)}gTint=o.
 gId=nid();emit(pi[0],C.white,10,0,0,0);emit(pi[1],PCOL[o.slot],11,0,0,0);
 // gun (aim frame): body, grip under the right hand, barrel and a gold muzzle
 if(wfr)wpHeroDraw(o,wp,wfr);else{mPush();mT(A[0],A[1],A[2]);mRX(-pit);const gx=HERO_GUN_X,gy=-0.06;
-box(gx,gy,0.3,0.09,0.13,0.5,C.gunM);box(gx,gy-0.1,0.15,0.07,0.16,0.08,C.gunD);box(gx,gy-0.09,0.36,0.07,0.12,0.06,C.gunD);
+box(gx,gy,0.3,0.09,0.13,0.5,C.gunM);box(gx,gy-0.1,0.15,0.07,0.16,0.08,C.gunD);put(BOX,gx,gy-0.085,0.22,0.3,0,0,0.02,0.06,0.02,C.gunD);box(gx,gy-0.13,0.23,0.035,0.014,0.11,C.gold);box(gx,gy-0.095,0.285,0.035,0.08,0.014,C.gold);box(gx,gy-0.09,0.36,0.07,0.12,0.06,C.gunD);
 put(CYL,gx,gy+0.01,0.66,PI/2,0,0,0.07,0.26,0.07,C.gunD);put(CONE,gx,gy+0.01,0.84,PI/2,0,0,0.09,0.12,0.09,C.gold);
 const mz=[gx,gy+0.01,0.92];o.gx=M[0]*mz[0]+M[4]*mz[1]+M[8]*mz[2]+M[12];o.gy=M[1]*mz[0]+M[5]*mz[1]+M[9]*mz[2]+M[13];o.gz=M[2]*mz[0]+M[6]*mz[1]+M[10]*mz[2]+M[14];mPop()}
 gId=0;gTint=0;mPop()}
