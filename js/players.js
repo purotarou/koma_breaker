@@ -189,16 +189,18 @@ function pickItems(dt){for(let i=items.length-1;i>=0;i--){const it=items[i];it.t
 fxStar(it.x,1.2,it.z,3,C.white,0.12);fxRing(it.x,0.1,it.z,4,C.yellow,0.3);snd('item');flash(0.15);
 if(it.k===0){pl.hp=Math.min(SK.hp,pl.hp+40*SK.heal);addText('カイフク！',W/2,H*0.36,{size:76,st:'cyan',life:0.8,rot:-0.06})}else if(it.k===1){pl.pow=SK.pow;addText('パワー！',W/2,H*0.36,{size:84,st:'boom',life:0.8,rot:-0.06})}else{pl.gauge=Math.min(100,pl.gauge+50);addText('キラッ',W/2,H*0.36,{size:76,st:'fire',life:0.8,rot:-0.06})}}}
 // ---- draw: heroes, items, shockwaves ----
-function drawHero(o){const c=PCOL[o.slot],wk=Math.sin(o.wt*11)*o.mv;mPush();mT(o.x,o.y,o.z);mRY(o.yaw+PI);if(o.dead){mT(0,0.3,0);mRX(-1.45)}gTint=o.flash>0?1:0;
+function drawHero(o){if(HERO.ready)drawHeroGlb(o);else drawHeroBox(o);drawHeroFx(o)}
+// box-built hero (used until / unless assets/hero_kakeru.glb is loaded, see hero.js)
+function drawHeroBox(o){const c=PCOL[o.slot],wk=Math.sin(o.wt*11)*o.mv;mPush();mT(o.x,o.y,o.z);mRY(o.yaw+PI);if(o.dead){mT(0,0.3,0);mRX(-1.45)}gTint=o.flash>0?1:0;
 for(const d of[-1,1]){put(CYL,d*0.17,0.44,0,d*wk*0.7,0,0,0.25,0.88,0.25,C.navy);box(d*0.17,0.06,0.06+d*wk*0.15,0.26,0.12,0.42,C.inkD)}
 box(0,1.14,0,0.64,0.68,0.38,c);box(0,0.84,0,0.66,0.1,0.4,C.inkD);box(0,1.2,0.2,0.2,0.5,0.04,C.white);box(0,1.45,0,0.52,0.13,0.44,C.white);put(BOX,0.12,1.42,-0.38,0.5+wk*0.3,0,0,0.16,0.08,0.6,C.white);
 sph(0,1.72,0,0.46,0.48,0.46,C.skinH);sph(0,1.82,-0.06,0.52,0.4,0.5,C.inkD);for(let i=0;i<3;i++)put(CONE,(i-1)*0.16,2.0,0.1,0.9,0,-(i-1)*0.4,0.18,0.34,0.18,C.inkD);
 for(const d of[-1,1])box(d*0.1,1.72,0.21,0.07,0.1,0.05,C.inkD);box(0,1.9,0.16,0.5,0.07,0.2,c);
 mPush();mT(0,1.3,0.12);mRX(-o.pitch);put(BOX,0.3,0,0.3,0,0,0,0.17,0.17,0.62,c);put(BOX,-0.24,0,0.3,0,0.5,0,0.17,0.17,0.56,c);box(0.22,0.06,0.78,0.1,0.16,0.5,C.gunM);put(CYL,0.22,0.1,1.1,PI/2,0,0,0.08,0.3,0.08,C.gunD);put(CONE,0.22,0.1,1.3,PI/2,0,0,0.1,0.14,0.1,C.gold);
-o.gx=M[0]*0.22+M[4]*0.1+M[8]*1.4+M[12];o.gy=M[1]*0.22+M[5]*0.1+M[9]*1.4+M[13];o.gz=M[2]*0.22+M[6]*0.1+M[10]*1.4+M[14];mPop();gTint=0;mPop();
-if(o.fireT>0){bill(BURST,o.gx,o.gy,o.gz,0.7,now*30,C.yellow,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,0.36,0,C.white,F_UNLIT|F_NOCAST)}
+o.gx=M[0]*0.22+M[4]*0.1+M[8]*1.4+M[12];o.gy=M[1]*0.22+M[5]*0.1+M[9]*1.4+M[13];o.gz=M[2]*0.22+M[6]*0.1+M[10]*1.4+M[14];mPop();gTint=0;mPop()}
+function drawHeroFx(o){if(o.fireT>0){bill(BURST,o.gx,o.gy,o.gz,0.7,now*30,C.yellow,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,0.36,0,C.white,F_UNLIT|F_NOCAST)}
 if(o.sp){const cp=Math.cos(o.pitch),dx=-Math.sin(o.yaw)*cp,dy=Math.sin(o.pitch),dz=-Math.cos(o.yaw)*cp;mPush();mT(o.gx+dx*45,o.gy+dy*45,o.gz+dz*45);orient(dx,dy,dz);mRX(PI/2);mS(1.3,90,1.3);emit(CYL,C.white,0,0,F_UNLIT|F_NOCAST,0);mPop();bill(BURST,o.gx,o.gy,o.gz,2.4,now*25,C.cyan,F_UNLIT|F_NOCAST)}}
-function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);
+function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawHeroTest();
 for(const it of items){const y=1.05+Math.sin(it.t*3)*0.15,col=[C.heart,C.orange,C.cyan][it.k],rs=1.7+Math.sin(it.t*5)*0.15,sc=Math.min(1,it.t*4);put(RING,it.x,0.12,it.z,0,0,0,rs,1,rs,col,0,0,NF);
 mPush();mT(it.x,y,it.z);mRY(it.t*2.2);mS(sc,sc,sc);if(it.k===0){sph(-0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);sph(0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);put(CONE,0,-0.2,0,PI,0,0,0.7,0.56,0.34,C.heart,0,1)}
 else if(it.k===1){put(SPIKE,0,0,0,it.t*3,0,0,0.9,0.9,0.9,C.orange,0,0,F_UNLIT);put(SPIKE,0,0,0,0,it.t*4,0.6,0.55,0.55,0.55,C.yellow,0,0,F_UNLIT)}

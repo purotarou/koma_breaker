@@ -23,5 +23,8 @@
 | `assets/weapon_katana.glb` | 祓い刀 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_hammer.glb` | 火消しの大槌 のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
 | `assets/weapon_bomb.glb` | 焙烙火矢（ボム） のゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 自作（第三者素材なし） |
+| `blender/src/komabure_chara_kakeru.glb` | 主人公カケルの元モデル（Tripo の出力そのまま。12部品に分割済み、テクスチャ付き） | ユーザーが Tripo AI で生成（2026-11-16） | **要確認**: Tripo の利用規約（プランによって商用利用の可否・表記義務・公開の扱いが違う）。確認したらここに書く |
+| `blender/hero_kakeru.blend` | 主人公カケルのゲーム用元データ | 上記を Blender に取り込み、6部品にまとめ・減面（約4,500三角面）・テクスチャの色を単色マテリアルに置き換え・関節に原点を移したもの | 上記の Tripo の規約に従う |
+| `assets/hero_kakeru.glb` | 主人公カケルのゲーム用モデル | 上記から `tools/blender_export_stage.py` で書き出し | 上記の Tripo の規約に従う |
 
 ステージ1・2の小物（しめ縄・絵馬掛け・散った花びら・草・提灯・陣幕・槍掛け・砲弾など）、手描き風の模様（葉・木の皮・水面）、揺れ・はためき・炎・雲の動きもすべて本プロジェクトで自作。外部からダウンロードした素材は使っていない。
