@@ -70,16 +70,14 @@ for(let b=0;b<4;b++){const mk=(c,a,l,par,c0,tier,lb,fl)=>SKN.push({id:b+c,b,c,ln
  for(const r of SKROWS)mk(r[0],SKCOL[r[1]],r[2]*SKRW,r[3],r[4],r[5],r[6],r[7]);
  for(const t of SKTWIG){const par=SKROWS.find(r=>r[0]===t[2]);mk(t[0],SKCOL[5],par[2]*SKRW+t[1]*90,t[2],5,4,'枝')}
 }
-// 複合: a diagonal ladder between neighbouring arms q and q+1 (攻×速, 速×守, 守×技, 技×攻). The first two rungs (and the cap) are tied to the outer rows
-// of both arms and need both of them (plus the rung before); the others only continue the chain.
+// 複合: between neighbouring arms q and q+1 (攻×速, 速×守, 守×技, 技×攻) sits ONE compound panel in the corner (only the 複合極み entry of SKXD is used).
 const SKXD=[
 [['疾風撃ち','動いている間の与ダメージ＋10％',6],['残像撃ち','回避のあと2秒間、与ダメージ＋20％',8],['怒濤','連続で倒すほど与ダメージ最大＋12％',10],['複合極み：神風','与ダメージ＋25％・弱点ダメージ＋20％・移動中さらに＋10％',18],['追い風','移動の速さ＋8％・回避の待ち時間－15％',12],['覇：疾風迅雷','与ダメージ＋30％・移動中さらに＋15％・ボスへ＋10％',22]],
 [['空の盾','空中にいる間、受けるダメージ－12％',6],['空蝉','敵の攻撃を8％の確率で無効化',8],['天駆け','空中の与ダメージ＋15％・受けるダメージ－5％',10],['複合極み：天衣無縫','受けるダメージ－20％・空中で受けるダメージ さらに－15％',18],['残心','やられた後の無敵時間＋50％・空中にいられる時間＋10％',12],['覇：羽衣','敵の攻撃を さらに7％無効化・受けるダメージ－10％',22]],
 [['養生','回復アイテムを取るとゲージ＋20％',6],['気力の泉','ゲージのたまり方＋10％・必殺ゲージが さらに自然にたまる',8],['傷は浅い','受けたダメージの半分がゲージになる',10],['複合極み：命燃ゆ','敵を倒すと体力＋3・最大体力＋30',18],['血の気','敵を倒すとゲージ＋2・回復アイテム＋20％',12],['覇：不滅の灯','最大体力＋40・受けるダメージ－10％・自動回復 さらに強く',22]],
 [['乱れ撃ち','必殺技の威力＋8％・装填時間－10％',6],['弾幕の気迫','敵を倒すと弾が1発戻る・連射＋8％',8],['連弾','必殺技の時間＋10％・連射＋8％',10],['複合極み：万雷','必殺技の威力＋30％・時間＋25％',18],['無尽','弾を使わない確率10％・必殺技の後ゲージ＋10％',12],['覇：天雷乱舞','必殺技の威力＋30％・弾を使わない確率＋10％・装弾数＋8発',22]]];
-const SKRG=[[300,'Bo3','Ao3'],[374,'Bo4','Ao4'],[458,'',''],[542,'Bo6','Ao6'],[600,'',''],[668,'','']],SKRK=['3','4','5','6','7','8'];
-for(let q=0;q<4;q++){const a=(q+1)%4;SKXD[q].forEach((x,i)=>{const r=SKRG[i],sx=SKRK[i],par=i?[q+'X'+SKRK[i-1]]:[];if(r[1]){par.push(q+r[1]);par.push(a+r[2])}
-  SKN.push({id:q+'X'+sx,b:q,b2:a,cmp:true,q,u:r[0],v:r[0],k:sx,c:'X'+sx,ln:'X',d:r[0],sv:0,cap:false,fin:false,orb:false,big:sx==='6'||sx==='8',c0:x[2],n:x[0],e:x[1],par,x:[],tier:0,lb:({'3':'三段','4':'四段','5':'五段','6':'極み','7':'七段','8':'覇'})[sx]})})}
+for(let q=0;q<4;q++){const a=(q+1)%4,x=SKXD[q][3];// one 複合 panel per corner, tied to the 四段 of the outer rows of both arms (it needs both)
+ SKN.push({id:q+'X',b:q,b2:a,cmp:true,q,u:374,v:374,k:'X',c:'X',ln:'X',d:374,sv:0,cap:false,fin:false,orb:false,big:true,c0:x[2],n:x[0],e:x[1],par:[q+'Bo4',a+'Ao4'],x:[],tier:0,lb:'極み'})}
 const SKI={};for(const n of SKN)SKI[n.id]=n;
 for(const n of SKN)if(n.cmp)n.tier=Math.max(...n.par.map(p=>SKI[p].tier));
 for(let b=0;b<4;b++)for(const[x,y]of SKLINK){SKI[b+x].x.push(b+y);SKI[b+y].x.push(b+x)}
@@ -95,7 +93,7 @@ try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
   for(let i=0;i<5;i++)SKS.clr[i]=s&&s.clr?(s.clr[i]?1:0):(+(localStorage.getItem('koma_hi'+i)||0)>0?1:0);
   const n=SKS.clr.filter(v=>v).length;SKS.pt=n*3;SKS.lv=1+n*3;skSave()}}catch(e){}
 // the tree changed shape: panels that no longer exist, or that are cut off from the start, are given back (their points are refunded)
-(function(){let ch=0;const OLD={A7:10,A8:16,B7:10,B8:16,Cl1:4,Cl2:5,Cr1:4,Cr2:5,Xm:11,Xn:12};
+(function(){let ch=0;const OLD={A7:10,A8:16,B7:10,B8:16,Cl1:4,Cl2:5,Cr1:4,Cr2:5,Xm:11,Xn:12,X3:6,X4:8,X5:10,X6:18,X7:12,X8:22};
  for(const id of Object.keys(SKS.own))if(!SKI[id]){SKS.pt+=OLD[id.slice(1)]||0;delete SKS.own[id];ch=1}
  const R=skReach();for(const n of SKN)if(SKS.own[n.id]&&!R[n.id]){SKS.pt+=n.c0;delete SKS.own[n.id];ch=1}
  if(ch)try{localStorage.setItem('koma_skill',JSON.stringify(SKS))}catch(e){}})();
@@ -141,15 +139,7 @@ if(h('1Ao5')){s.spd*=1.08;s.dash*=0.85}if(h('1Ao6')){s.spd*=1.1;s.dinv=0.75}if(h
 if(h('2Ao5')){s.def*=0.92;s.hinv*=1.5}if(h('2Ao6')){s.def*=0.85;s.hp+=40;s.cap=s.cap?Math.min(s.cap,0.3):0.3}if(h('2Bo5')){s.heal*=1.3;s.regen+=1}if(h('2Bo6')){s.rev=2;s.vamp+=1}if(h('2C5'))s.vamp+=2;
 if(h('3Ao5')){s.gauge*=1.2;s.gKill+=2}if(h('3Ao6'))s.gKeep=Math.max(s.gKeep,50);if(h('3Bo5')){s.spw*=1.15;s.beam*=1.15}if(h('3Bo6')){s.spw*=1.25;s.beam*=1.2}if(h('3C5'))s.xpk*=1.15;
 // 複合（攻×速 / 速×守 / 守×技 / 技×攻）
-if(h('0X3'))s.run+=0.1;if(h('0X4'))s.dB=Math.max(s.dB,0.2);if(h('0X5'))s.combo=0.004;if(h('0X6')){s.atk*=1.25;s.crit*=1.2;s.run+=0.1}if(h('0X7')){s.spd*=1.08;s.dash*=0.85}if(h('0X8')){s.atk*=1.3;s.run+=0.15;s.boss*=1.1}
-if(h('1X3'))s.airDef*=0.88;if(h('1X4'))s.dodge+=0.08;if(h('1X5')){s.air+=0.15;s.def*=0.95}if(h('1X6')){s.def*=0.8;s.airDef*=0.85}if(h('1X7')){s.hinv*=1.5;s.grav/=1.1}if(h('1X8')){s.dodge+=0.07;s.def*=0.9}
-if(h('2X3'))s.gItem=20;if(h('2X4')){s.gauge*=1.1;s.gReg+=0.3}if(h('2X5'))s.gHit=0.5;if(h('2X6')){s.vamp+=3;s.hp+=30}if(h('2X7')){s.gKill+=2;s.heal*=1.2}if(h('2X8')){s.hp+=40;s.def*=0.9;s.regen+=1}
-if(h('3X3')){s.spw*=1.08;s.rel*=0.9}if(h('3X4')){s.aKill+=1;s.cool/=1.08}if(h('3X5')){s.beam*=1.1;s.cool/=1.08}if(h('3X6')){s.spw*=1.3;s.beam*=1.25}if(h('3X7')){s.save+=0.1;s.gAfter+=10}if(h('3X8')){s.spw*=1.3;s.save+=0.1;s.mag+=8}
-// 広がった枝（中間・中央線とその枝）
-if(h('0Am'))s.cool/=1.08;if(h('0An'))s.rel*=0.88;if(h('0Bm'))s.crit*=1.1;if(h('0Bn'))s.atk*=1.06;if(h('0C6'))s.low+=0.1;if(h('0C7')){s.atk*=1.1;s.def*=1.08}if(h('0Ao3')){s.cool/=1.06;s.rel*=0.94}if(h('0Ao4'))s.mag+=3;if(h('0Bo3')){s.crit*=1.08;s.atk*=1.03}if(h('0Bo4'))s.boss*=1.08;
-if(h('1Am'))s.spd*=1.04;if(h('1An'))s.dash*=0.9;if(h('1Bm'))s.air+=0.05;if(h('1Bn'))s.airDef*=0.92;if(h('1C6'))s.ddist*=1.1;if(h('1C7'))s.dodge+=0.05;if(h('1Ao3')){s.spd*=1.03;s.run+=0.04}if(h('1Ao4'))s.dB=Math.max(s.dB,0.1);if(h('1Bo3')){s.air+=0.05;s.grav/=1.05}if(h('1Bo4'))s.airDef*=0.92;
-if(h('2Am'))s.hp+=10;if(h('2An'))s.def*=0.96;if(h('2Bm'))s.heal*=1.1;if(h('2Bn'))s.regen+=0.5;if(h('2C6'))s.cap=s.cap?Math.min(s.cap,0.5):0.5;if(h('2C7')){s.def*=0.95;s.hp+=10}if(h('2Ao3'))s.hp+=10;if(h('2Ao4'))s.hinv*=1.2;if(h('2Bo3'))s.heal*=1.1;if(h('2Bo4'))s.vamp+=1;
-if(h('3Am'))s.gauge*=1.06;if(h('3An'))s.gKill+=1;if(h('3Bm'))s.spw*=1.05;if(h('3Bn'))s.beam*=1.08;if(h('3C6'))s.xpk*=1.1;if(h('3C7'))s.gReg+=0.2;if(h('3Ao3'))s.gauge*=1.05;if(h('3Ao4'))s.gAfter+=10;if(h('3Bo3'))s.gKeep=Math.max(s.gKeep,15);if(h('3Bo4')){s.spw*=1.08;s.beam*=1.05}
+if(h('0X')){s.atk*=1.25;s.crit*=1.2;s.run+=0.1}if(h('1X')){s.def*=0.8;s.airDef*=0.85}if(h('2X')){s.vamp+=3;s.hp+=30}if(h('3X')){s.spw*=1.3;s.beam*=1.25}
 if(h('0At')){s.rel*=0.94;s.mag+=2}if(h('0Bt')){s.crit*=1.06;s.boss*=1.05}if(h('1At')){s.dash*=0.94;s.spd*=1.02}if(h('1Bt')){s.air+=0.04;s.airDef*=0.96}if(h('2At')){s.hp+=8;s.def*=0.98}if(h('2Bt')){s.heal*=1.08;s.regen+=0.2}if(h('3At')){s.gauge*=1.04;s.gKill+=1}if(h('3Bt')){s.spw*=1.04;s.beam*=1.04}
 s.dodge=Math.min(s.dodge,0.3);s.save=Math.min(s.save,0.4);
 SK=s;if(DEV&&G.mode!=='pvp')Object.assign(SK,{atk:20,rel:0.15,mag:40,cool:0.7,hp:99999,heal:3,def:1,rev:1,dash:0.2,dj:1,gauge:3,spinv:1,spd:1.3,crit:2,beam:2,regen:2});if(typeof wpApply==='function')wpApply(SK)}// weapon numbers (weapons.js)
