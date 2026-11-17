@@ -108,17 +108,13 @@ let acc=0,ci=0,fill=sg[0].a;for(let i=0;i<sg.length;i++){const w=sg[i].b-sg[i].a
 if(k<=0){ci=0;fill=sg[0].a}
 if(ci>r.lu){while(r.lu<ci){r.lu++;snd('item');shake(0.25);flash(0.12)}r.lt=t}
 const lvT=r.lt!=null?t-r.lt:9,pop=lvT<0.5?1+0.7*Math.sin(Math.min(1,lvT/0.5)*PI)*(1-lvT/0.5):1,s0=easeBack(sat(t/0.25)),done=k>=1,lv=sg[ci].lv;
-ctx.save();ctx.translate(1120,654);ctx.rotate(-0.03);ctx.scale(s0,s0);const pw=300,ph=84;
+ctx.save();ctx.translate(1118,654);ctx.rotate(-0.03);ctx.scale(s0,s0);const pw=268,ph=76;
 ctx.fillStyle=INK;ctx.fillRect(-pw/2+7,-ph/2+8,pw,ph);ctx.fillStyle='#ffd91a';ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(-pw/2,-ph/2,pw,ph);
-const lx=-pw/2+14,pt=Math.max(0,SKS.pt-r.up+r.lu);
-ctx.save();ctx.translate(lx,-16);ctx.scale(pop,pop);txt('Lv',0,6,20,INK,null,0,'left');txt(String(lv),30,0,38,'#e5402b','#fff',7,'left');ctx.restore();
-txt('スキルP',lx,22,17,INK,null,0,'left');txt(String(pt),lx+78,20,30,'#e5402b','#fff',6,'left');
-const bx=-pw/2+142,by=-6,bw=pw-156,bh=16;
-txt('経験値 ＋'+r.xp,bx+bw/2,-ph/2+15,15,INK);
-ctx.fillStyle=INK;ctx.fillRect(bx-3,by-3,bw+6,bh+6);ctx.fillStyle='#fff';ctx.fillRect(bx,by,bw,bh);
+txt('経験値 ＋'+r.xp,-pw/2+14,-ph/2+17,18,INK,null,0,'left');
+ctx.save();ctx.translate(-pw/2+46,ph/2-26);ctx.scale(pop,pop);txt('Lv',-24,8,20,INK,null,0,'center');txt(String(lv),12,0,38,'#e5402b','#fff',7,'center');ctx.restore();
+const bx=-pw/2+88,by=ph/2-36,bw=pw-104,bh=20;ctx.fillStyle=INK;ctx.fillRect(bx-3,by-3,bw+6,bh+6);ctx.fillStyle='#fff';ctx.fillRect(bx,by,bw,bh);
 ctx.save();ctx.beginPath();ctx.rect(bx,by,bw,bh);ctx.clip();ctx.fillStyle=lvT<0.4?'#fff27a':'#2ea8e8';ctx.fillRect(bx,by,bw*fill,bh);ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(bx,by,bw*fill,bh*0.35);
 if(lvT<0.5){ctx.fillStyle='rgba(255,255,255,'+(0.8*(1-lvT/0.5))+')';ctx.fillRect(bx,by,bw,bh)}ctx.restore();
-txt('次のLvまで '+Math.ceil(skNeed(lv)*(1-fill)),bx+bw/2,ph/2-17,15,INK);
 ctx.restore()}
 function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;const i=G.stage;
 if(cl&&!SKS.clr[i])SKS.clr[i]=1;const xp=skExp(cl),lv0=SKS.lv,xp0=SKS.xp,up=skGain(xp);
