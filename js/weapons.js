@@ -450,7 +450,7 @@ ctx.fillStyle=INK;ctx.fillRect(X+PW,Y+10,9,PH);ctx.fillRect(X+9,Y+PH,PW,10);ctx.
 if(!ok)txt('？',X+PW-50,Y+50,64,'#fff',INK,10);
 // info
 panel(X,Y+PH+18,PW,170);const iy=Y+PH+18;para(X+16,iy-26,Math.min(PW-40,60+w.name.length*34),48,14);ctx.fillStyle=ok?w.col:'#4d5370';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();
-txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');
+txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');txt(ok?w.type:'',X+PW-24,iy+22,18,'#555a70',null,0,'right');
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 if(ok){tag(X+18,iy+50,'通常',INK);fitTxt(w.d[0],X+92,iy+50,21,PW-110,INK);fitTxt(w.d[1],X+92,iy+80,18,PW-110,'#3a3f55');
  tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');if(w.id!=='gun'){const ul=WS.own[w.id]&&(WS.up[w.id]|0)>0&&wpLv(w.id)<WLV;txt('必殺Lv'+wpLv(w.id)+(ul?'（「強化」で上げられる）':''),X+PW-24,iy+120,18,'#e5402b',null,0,'right')}fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
