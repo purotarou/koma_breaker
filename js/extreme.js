@@ -48,13 +48,13 @@ function exRows(b,dt,hands){const u=b.stT,tel=1.0;b.mouth=1;for(let i=0;i<2;i++)
  return u>tel+5.4}
 // stage 4 鐘の僧: an extra attack on a timer, on top of his own moves
 function exMonk(b,dt){if(b.st==='drop'||b.st==='trans'||b.st==='die'||(typeof monkCine==='function'&&monkCine()))return;b.exT=(b.exT==null?6:b.exT)-dt;if(b.exT>0)return;b.exT=rnd(6.5,8.5)-(b.phase>1?1.5:0);
- ev('mring',r1(b.x),r1(b.z));for(const P of allP())if(!P.dead){ev('e1',r1(P.x),r1(P.z),3,0.9);for(let i=0;i<3;i++){const a=rnd(0,TAU),d=rnd(3,5.5);ev('e1',r1(P.x+Math.sin(a)*d),r1(P.z+Math.cos(a)*d),3,1.1+i*0.15)}}}
+ ev('exring',r1(b.x),r1(b.z));for(const P of allP())if(!P.dead){ev('e1',r1(P.x),r1(P.z),3,0.9);for(let i=0;i<3;i++){const a=rnd(0,TAU),d=rnd(3,5.5);ev('e1',r1(P.x+Math.sin(a)*d),r1(P.z+Math.cos(a)*d),3,1.1+i*0.15)}}}
 Object.assign(FXE,{
 e1(x,z,c,dl){addErupt(x,z,c,dl)},
 epil(a0,nl){snd('roar',0.5);addText('ズズズ…',W/2,H*0.28,{size:96,st:'ink',life:0.8});for(let j=0;j<nl;j++){const a=a0+(j-(nl-1)/2)*0.32;for(let i=0;i<14;i++){const d=4+i*2.7;addErupt(Math.sin(a)*d,-12+Math.cos(a)*d,0,0.75+i*0.09)}}},
 erip(n,o){addText('ゴゴゴッ',W/2,H*0.28,{size:96,st:'boom',life:0.8});for(let k=0;k<n;k++){const R=6+k*6,m=Math.max(8,Math.round(PI*R/3.2));for(let i=0;i<=m;i++){if((i+k*2+Math.round(o*4))%4===0)continue;const a=-PI/2+PI*i/m;addErupt(Math.sin(a)*R,-12+Math.cos(a)*R,2,0.6+k*0.5)}}},
 erow(gaps){snd('roar',0.7);addText('墨ノ段波！',W/2,H*0.26,{size:96,st:'ink',life:1});gaps.forEach((g,r)=>{const z=-11+r*3.9;for(let x=-BX+1.5;x<=BX-1.5;x+=3.1)if(Math.abs(x-g)>3.3)addErupt(x,z,0,0.9+r*0.42)})},
-mring(x,z){snd('gong');fxRing(x,0.2,z,16,C.cyan,0.5);sfxAt('リィィン…',x,6,z,{size:80,st:'cyan',life:0.8})}});
+exring(x,z){snd('gong');fxRing(x,0.2,z,16,C.cyan,0.5);sfxAt('リィィン…',x,6,z,{size:80,st:'cyan',life:0.8})}});
 // ---- 墨鴉 (crow): circles high over you, warns with a red ring, then dives through it: step aside ----
 FOE.crow={sc:220,g:9,
  init(e){e.hp=FT.crow.hp;e.r=0.6;e.y=FT.crow.high;e.cd=rnd(1.5,3);e.oa=Math.atan2(e.x-T.x,e.z-T.z);e.dir=Math.random()<.5?-1:1;e.tx=e.x;e.tz=e.z},
