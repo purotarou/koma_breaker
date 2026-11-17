@@ -192,7 +192,7 @@ const spt=A.res.reduce((n,r)=>n+(r.pt|0),0);if(t>0.6){if(ups)txt('重なった�
 // a real demo play on stage 1 (G.demoOn, the AI of the title demo, the player cannot be hurt in the menu) shown in the three views in turn,
 // 1st person → 3rd person → 2nd person, each with normal attacks first and then the special (forced at GA_SPAT s), and then back to the turntable.
 // The demo pauses while the draw animation or the settings are open.
-const GA_SPIN=3.5,GA_SPAT=4.5,GA_SEG=13,GA_SPIN_R={px:640,py:236,pw:580,ph:350},GA_VPR={x:640,y:236,w:580,h:350};
+const GA_SPIN=4.5,GA_SPAT=4.5,GA_SEG=13,GA_SPIN_R={px:640,py:236,pw:580,ph:350},GA_VPR={x:640,y:236,w:580,h:350};
 const GA_VIEWS=[0,1,2],GA_VNAME=['1人称','3人称','2人称'];// SET.view values in the order they are shown
 const gaD={ph:'spin',t:0,id:null,view:null,seg:0,spOn:0,spT:9};
 let gaDemoWp=null;// weapon index the demo hero holds (wpCur)
@@ -232,9 +232,9 @@ if(!demo){para(R.px-6,R.py-22,220,40,12);ctx.fillStyle=INK;ctx.fill();txt('武�
 para(R.px-6,R.py-22,300,40,12);ctx.fillStyle=INK;ctx.fill();txt('ハイライト　'+GA_VNAME[gaD.seg]+'視点',R.px+144,R.py-1,20,'#ffd91a');
 for(let i=0;i<GA_VIEWS.length;i++){ctx.fillStyle=INK;ctx.fillRect(R.px+R.pw-92+i*30,R.py-16,24,12);ctx.fillStyle=i<=gaD.seg?'#ffd91a':'#8a8fa6';ctx.fillRect(R.px+R.pw-90+i*30,R.py-14,20,8)}
 if(gaD.seg===0&&!(G.kcT>=0)){ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.lineWidth=2;const cx=R.px+R.pw/2,cy=R.py+R.ph/2;ctx.beginPath();ctx.moveTo(cx-9,cy);ctx.lineTo(cx-3,cy);ctx.moveTo(cx+3,cy);ctx.lineTo(cx+9,cy);ctx.moveTo(cx,cy-9);ctx.lineTo(cx,cy-3);ctx.moveTo(cx,cy+3);ctx.lineTo(cx,cy+9);ctx.stroke()}
-const sp=gaD.spOn&&gaD.spT<Math.max(3,spDur()+0.8),pre=!gaD.spOn&&gaD.t>GA_SPAT-1.2;
+const sp=gaD.spOn&&gaD.spT<1.5,pre=!gaD.spOn&&gaD.t>GA_SPAT-1.2;
 ctx.save();ctx.beginPath();ctx.rect(R.px,R.py,R.pw,R.ph);ctx.clip();
-if(sp){ctx.translate(R.px+135,R.py+78);ctx.rotate(-0.08);const k=easeBack(sat(gaD.spT/0.25)),s=k*(1+0.04*Math.sin(now*10))*0.85;ctx.scale(s,s);burstPath(5,7,190,56,14,1.25,6);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,190,56,14,1.25,6);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
+if(sp){ctx.translate(R.px+135,R.py+78);ctx.rotate(-0.08);const k=easeBack(sat(gaD.spT/0.25))*sat((1.5-gaD.spT)/0.2),s=k*(1+0.04*Math.sin(now*10))*0.85;ctx.scale(s,s);burstPath(5,7,190,56,14,1.25,6);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,190,56,14,1.25,6);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
  txt('必殺技！',0,-18,34,'#ffd91a',INK,8);txt(w.sp,0,24,w.sp.length>5?26:32,'#fff',INK,7)}
 else{ctx.translate(R.px+148,R.py+R.ph-50);ctx.rotate(-0.03);ctx.scale(0.8,0.8);para(-170,-36,330,72,18);ctx.fillStyle=INK;ctx.fill();para(-164,-30,318,60,15);ctx.fillStyle=pre?'#ffd91a':'#fff';ctx.fill();
  txt(pre?'必殺技 まもなく…':'通常攻撃',-4,-8,pre?26:32,INK);fitTxt(pre?w.sp:w.d[0],-150,20,15,300,'#3a3f55')}
