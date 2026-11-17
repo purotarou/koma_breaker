@@ -50,8 +50,6 @@ for(const[x,y,c]of cap){ctx.save();ctx.translate(x,y);ctx.rotate(x*0.05);ctx.beg
 ctx.restore();ctx.beginPath();ctx.arc(0,-40,52,0,TAU);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.stroke();ctx.beginPath();ctx.arc(-6,-48,34,PI*1.08,PI*1.42);ctx.strokeStyle='#fff';ctx.lineWidth=7;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
 ctx.fillStyle='#e5402b';ctx.fillRect(-52,-2,104,92);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(-52,-2,104,92);ctx.fillStyle='#ffd91a';ctx.fillRect(-58,-8,116,16);ctx.strokeRect(-58,-8,116,16);
 ctx.save();ctx.translate(0,36);ctx.rotate(now*1.5);ctx.beginPath();ctx.arc(0,0,20,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=5;ctx.stroke();ctx.fillStyle=INK;ctx.fillRect(-18,-5,36,10);ctx.restore();
-// coin slot plate (right of the knob): metal plate, vertical slit, small coin mark
-ctx.fillStyle='#d9dde6';ctx.fillRect(27,16,18,24);ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(27,16,18,24);ctx.fillStyle=INK;ctx.fillRect(34,21,4,14);
 // prize outlet: dark opening, hinged flap in front
 ctx.fillStyle=INK;ctx.fillRect(-30,62,60,26);
 ctx.beginPath();ctx.moveTo(-30,62);ctx.lineTo(30,62);ctx.lineTo(27,72);ctx.lineTo(-27,72);ctx.closePath();ctx.fillStyle='#c4c9d6';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke();ctx.beginPath();ctx.moveTo(-20,66);ctx.lineTo(-8,66);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore()}
