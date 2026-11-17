@@ -280,10 +280,13 @@ for(const s of wspk){if(!s.big){spkTri(s);continue}
  for(let i=0;i<8;i++){const a=i*TAU/8+s.t*5,ln=[1.6,1.2,1.9,1.1,1.5,2.1,1.3,1.7][i];w2SegW(off(at(ln),a,w*(0.9+0.4*ln)),off(at(0.4),a,w*0.5),big?0.06:0.03,C.white)}
  // the flash at the tip
  bill(STAR,P[0],P[1],P[2],w*(0.55+0.15*Math.sin(now*40)),now*25,C.white,NF)}
-// a plain thrust (not the special): a modest flat white triangle with a yellow middle, point leading
-function spkTri(s){if(s.d<1.3)return;const L=Math.min(s.k===2?2:1.6,s.d-1),w=0.5*(0.6+0.4*sat(s.d/4))*(0.6+0.4*sat((s.R-s.d)/4)),P=[s.x+s.dx*(s.d-L/2),s.y+s.dy*(s.d-L/2),s.z+s.dz*(s.d-L/2)],
- roll=[-0.5,0.15,0.55][s.k|0];mPush();mT(P[0],P[1],P[2]);orient(s.dx,s.dy,s.dz);mRZ(roll);mRX(PI/2);mS(w,L,0.03);emit(CONE,C.white,0,0,F_UNLIT|F_NOCAST,0);
- mT(0,0.08,0);mS(0.45,0.75,1.4);emit(CONE,C.yellow,0,0,F_UNLIT|F_NOCAST|F_NOEDGE,0);mPop()}
+// a plain thrust (not the special): a modest flat white triangle with a yellow middle, point leading.
+// Your own thrusts widen as they fly off, so from behind they keep about the same size on screen
+function spkTri(s){if(s.d<1.3)return;const L=Math.min(s.k===2?2:1.6,s.d-1),w=0.75*(0.6+0.4*sat(s.d/4))*(s.own?clamp(s.d/5,1,2.2):1)*(0.6+0.4*sat((s.R-s.d)/4)),P=[s.x+s.dx*(s.d-L/2),s.y+s.dy*(s.d-L/2),s.z+s.dz*(s.d-L/2)],
+ roll=[-0.5,0.15,0.55][s.k|0];
+ // two fins crossed at right angles: from the side it still reads as one triangle, from behind (the thrower's own view) as a sharp cross instead of a thin line
+ for(const[r,f]of[[roll,1],[roll+PI/2,0.85]]){mPush();mT(P[0],P[1],P[2]);orient(s.dx,s.dy,s.dz);mRZ(r);mRX(PI/2);mS(w*f,L,0.06);emit(CONE,C.white,0,0,F_UNLIT|F_NOCAST,0);
+  mT(0,0.08,0);mS(0.45,0.75,1.4);emit(CONE,C.yellow,0,0,F_UNLIT|F_NOCAST|F_NOEDGE,0);mPop()}}
 // arrows
 for(const a of warrows)w2Arrow(a.x-a.dx*0.45,a.y-a.dy*0.45,a.z-a.dz*0.45,a.dx,a.dy,a.dz,0.9,a.c>=1);
 for(const a of warrows)if(!a.stk&&a.c>=0.5)bill(STAR,a.x,a.y,a.z,0.25+0.2*a.c,now*30,W2_GLOW,NF);
