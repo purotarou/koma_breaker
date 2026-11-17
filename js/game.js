@@ -20,10 +20,10 @@ for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&(e.st==='ri
 for(const s of shots)if(s.k===1){const dx=s.x-ox,dy=s.y-oy,dz=s.z-oz,d=Math.hypot(dx,dz);if(d<14&&d-3<best){best=d-3;tgt=s;tp=[dx,dy,dz,d]}}
 let wy=boss?0:pl.yaw,wp=0.05;if(tp){wy=Math.atan2(-tp[0],-tp[2]);wp=Math.atan2(tp[1],tp[3])}
 const dyaw=angDiff(wy,pl.yaw),dp=wp-pl.pitch,k=1-Math.exp(-dt*10);if(G.cine<=0){pl.yaw+=clamp(dyaw*k,-4.5*dt,4.5*dt);pl.pitch+=clamp(dp*k,-3.5*dt,3.5*dt)}
-inp.fire=!!tgt&&Math.abs(dyaw)<0.09&&Math.abs(dp)<0.09;
+inp.fire=!!tgt&&Math.abs(dyaw)<0.09&&Math.abs(dp)<0.09;w2Ai(dt);
 ai.stT-=dt;if(ai.stT<=0){ai.st=-ai.st;ai.stT=rnd(0.8,1.9)}let mx=ai.st*0.85,mz=0;const nd=tp?tp[3]:20;
 if(tgt&&tgt.type==='imp'||tgt&&tgt.type==='bru'){if(nd<7)mz=-1;else if(nd>13)mz=0.7}
-let cd=99;for(const e of enemies)if(e.type==='imp'||e.type==='bru')cd=Math.min(cd,Math.hypot(e.x-ox,e.z-oz));if(cd<5.5)mz=-1;{const mk=wpW().kind;if(mk==='katana'||mk==='hammer')mz=nd>2.4?1:nd<1.4?-0.5:0}// melee weapons close in
+let cd=99;for(const e of enemies)if(e.type==='imp'||e.type==='bru')cd=Math.min(cd,Math.hypot(e.x-ox,e.z-oz));if(cd<5.5)mz=-1;{const mk=wpW().kind;if(mk==='katana'||mk==='hammer'||mk==='spear'||mk==='shield')mz=nd>2.4?1:nd<1.4?-0.5:0}// melee weapons close in
 const sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw),wx=-sy*mz+cy*mx,wz=-cy*mz-sy*mx,nx=pl.x+wx*3,nz=pl.z+wz*3,lz0=boss?-7:-21;
 if(Math.abs(nx)>17||nz>18||nz<lz0){const cxv=-pl.x,czv=(boss?5:0)-pl.z,l=Math.hypot(cxv,czv)||1,tx=cxv/l,tz=czv/l;mx=tx*cy-tz*sy;mz=-tx*sy-tz*cy;ai.st=mx>0?1:-1;ai.stT=1}
 inp.mx=mx;inp.mz=mz;let dz_=false;
@@ -33,7 +33,7 @@ if(dz_&&pl.dashCd<=0){inp.dash=true;if(Math.abs(inp.mx)<0.3)inp.mx=ai.st}
 if(spReady()&&tgt&&Math.abs(dyaw)<0.12&&(tgt.type==='bru'||tgt.type==='boss'||enemies.length>=3))inp.special=true;if(pl.ammo<=0)inp.reload=true;for(const s of shocks){const dd=Math.hypot(pl.x-s.x,pl.z-s.z)-s.r;if(dd>0&&dd<2.8)inp.jump=true}}
 // ================= INPUT =================
 function evPos(t){const r=uic.getBoundingClientRect();return{x:(t.clientX-r.left)/r.width*W,y:(t.clientY-r.top)/r.height*H}}
-addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m');skTouch('u',null,'m');ssTouch('u',null,'m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m');if(!touchMode){const p=evPos(e);skTouch('m',p,'m');ssTouch('m',p,'m')}});uic.addEventListener('wheel',e=>{if(skWheel(evPos(e),e.deltaY)||ssWheel(e))e.preventDefault()},{passive:false});uic.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mouseup',()=>{mouseFire=false;if(layEdit)layUp('m');skTouch('u',null,'m');ssTouch('u',null,'m');eqTouch('u',null,'m')});addEventListener('mousemove',e=>{if(layEdit&&!touchMode)layMove(evPos(e),'m');if(!touchMode){const p=evPos(e);skTouch('m',p,'m');ssTouch('m',p,'m');eqTouch('m',p,'m')}});uic.addEventListener('wheel',e=>{if(skWheel(evPos(e),e.deltaY)||ssWheel(e)||eqWheel(e))e.preventDefault()},{passive:false});uic.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousemove',e=>{if(touchMode||G.state!=='play')return;if(document.pointerLockElement===uic||mouseFire){inp.lx+=(e.movementX||0)*0.0024*SET.sens;inp.ly+=(e.movementY||0)*0.0024*SET.sens*SET.inv}});
 addEventListener('keyup',e=>{keys[e.code]=false});
 // ================= UI =================
@@ -93,19 +93,25 @@ function drawCutBoss(){const t=3.2-cutBoss,u=sat(t/0.25)*sat(cutBoss/0.3);ctx.fi
 if(t>0.5){const k=easeBack(sat((t-0.5)/0.25));ctx.save();ctx.translate(60,H-74);ctx.rotate(-0.045);ctx.scale(k,k);const bc=STG[G.stage].cut;if(bc[0])txt(bc[0],0,-10,54,'#fff',null,0,'left');txt(bc[1],bc[0]?250:0,-4,92,'#ff2e2e','#fff',10,'left');ctx.restore()}}
 function drawWipe(){const t=wipe.t,c=easeOut(t<0.5?t*2:(1-t)*2);ctx.fillStyle=INK;const n=7,bw=W/n+60;for(let i=0;i<n;i++){const x=i*(W/n)-30,w=bw*c*1.02;ctx.beginPath();const o=t<0.5?0:bw-w;ctx.moveTo(x+o+70,-10);ctx.lineTo(x+o+w+70,-10);ctx.lineTo(x+o+w-70,H+10);ctx.lineTo(x+o-70,H+10);ctx.fill()}}
 // ================= MAIN =================
-function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawTempleDoor(GDT);drawParts();if(G.state!=='menu'&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()&&!tpsOn())drawGun();wpPreview();gaDraw3d();wpDrawLate();
+function render3d(){beginDynamic();drawPetals(GDT);drawEnemies();drawExtra();drawTempleDoor(GDT);drawParts();if((G.state!=='menu'||gaDemo())&&!(G.state==='title'&&!G.demoOn)&&!(G.kcT>=0)&&!monkCine()&&!tpsOn())drawGun();wpPreview();gaDraw3d();wpDrawLate();
 gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthRange(0,1);
 gl.bindFramebuffer(gl.FRAMEBUFFER,shFbo);gl.viewport(0,0,SHN,SHN);gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(pS.p);gl.uniformMatrix4fv(pS.u.uLVP,false,LVP);gl.uniform1f(pS.u.uT,now);flushLayer(0);flushLayer(1);
-gl.bindFramebuffer(gl.FRAMEBUFFER,gFbo);gl.viewport(0,0,W,H);gl.clearBufferfv(gl.COLOR,0,[0,0,0,1]);gl.clearBufferfv(gl.COLOR,1,[0.5,0.5,0,0]);gl.clearBufferfv(gl.DEPTH,0,[1]);
+// the gacha highlight (gaFrame) goes into the weapon frame: first the orbiting stage over the whole screen (static layer only), then the demo camera into the frame
+const hr=gaFrame();
+if(hr){const sv=[cam.x,cam.y,cam.z,cam.yaw,cam.pitch,cam.roll,cam.fov];orbitCam();vpR=VPR_FULL;camUpdate();scenePass(null,true);cam.x=sv[0];cam.y=sv[1];cam.z=sv[2];cam.yaw=sv[3];cam.pitch=sv[4];cam.roll=sv[5];cam.fov=sv[6];vpR=hr;camUpdate();scenePass(hr,false)}
+else{if(vpR!==VPR_FULL){vpR=VPR_FULL;camUpdate()}scenePass(null,false)}}
+// one deferred pass (G-buffer → outlines/tones → FXAA). R = the screen rect {x,y,w,h} it goes into (null = the whole screen); stat = static layer only
+function scenePass(R,stat){const rw=R?R.w:W,rh=R?R.h:H;gl.enable(gl.DEPTH_TEST);
+gl.bindFramebuffer(gl.FRAMEBUFFER,gFbo);gl.viewport(0,0,rw,rh);gl.clearBufferfv(gl.COLOR,0,[0,0,0,1]);gl.clearBufferfv(gl.COLOR,1,[0.5,0.5,0,0]);gl.clearBufferfv(gl.DEPTH,0,[1]);
 gl.useProgram(pG.p);gl.uniformMatrix4fv(pG.u.uVP,false,VP);gl.uniform1f(pG.u.uT,now);gl.uniformMatrix4fv(pG.u.uLVP,false,LVP);gl.uniformMatrix4fv(pG.u.uV,false,VIEW);gl.uniform3f(pG.u.uLD,LD[0],LD[1],LD[2]);gl.uniform3f(pG.u.uCam,cam.x,cam.y,cam.z);
-gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shTex);gl.uniform1i(pG.u.uSh,0);flushLayer(0);flushLayer(1);gl.depthRange(0,0.08);flushLayer(2);gl.depthRange(0,1);
+gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shTex);gl.uniform1i(pG.u.uSh,0);flushLayer(0);if(!stat){flushLayer(1);gl.depthRange(0,0.08);flushLayer(2);gl.depthRange(0,1)}
 gl.disable(gl.DEPTH_TEST);gl.bindVertexArray(quadVao);gl.bindFramebuffer(gl.FRAMEBUFFER,pFbo);gl.useProgram(pP.p);const u=pP.u;
 gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,gCol);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,gNrm);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,gDep);
-gl.uniform1i(u.uC,0);gl.uniform1i(u.uN,1);gl.uniform1i(u.uD,2);gl.uniform2f(u.uPx,1/W,1/H);const tn=Math.tan(cam.fov/2);gl.uniform2f(u.uTan,tn*W/H,tn);
-let fx=0.5,fy=0.62;if(boss){const p=boss.monk?project(boss.x,boss.y+4.5,boss.z):project(0,26+boss.yo,-26);if(p){fx=p.x/W;fy=1-p.y/H}}gl.uniform2f(u.uFocus,fx,fy);
+gl.uniform1i(u.uC,0);gl.uniform1i(u.uN,1);gl.uniform1i(u.uD,2);gl.uniform2f(u.uPx,1/W,1/H);gl.uniform2f(u.uVS,rw/W,rh/H);const tn=Math.tan(cam.fov/2);gl.uniform2f(u.uTan,tn*rw/rh,tn);
+let fx=0.5,fy=0.62;if(boss){const p=boss.monk?project(boss.x,boss.y+4.5,boss.z):project(0,26+boss.yo,-26);if(p){fx=(p.x-vpR.x)/vpR.w;fy=1-(p.y-vpR.y)/vpR.h}}gl.uniform2f(u.uFocus,fx,fy);
 gl.uniform1f(u.uNear,NEAR);gl.uniform1f(u.uFar,FAR);gl.uniform1f(u.uTime,now);gl.uniform1f(u.uMood,G.mood);gl.uniform1f(u.uFlash,Math.min(1,flashA));gl.uniform1f(u.uInv,invA>0.3?1:0);gl.uniform1f(u.uMono,monoA);gl.uniform1f(u.uHurt,hurtA);const sg=STG[curStage];gl.uniform3fv(u.uS0,sg.s0);gl.uniform3fv(u.uS1,sg.s1);gl.uniform3fv(u.uS2,sg.s2);gl.uniform3fv(u.uFogC,sg.fog);gl.uniform3fv(u.uGrade,sg.grade);gl.uniform1f(u.uNight,sg.night);gl.uniform3fv(u.uShade,sg.shade||[0.50,0.46,0.74]);gl.uniform3fv(u.uFogR,sg.fogR||[45,420,0.8]);
 gl.uniform3f(u.uCR,cR[0],cR[1],cR[2]);gl.uniform3f(u.uCU,cU[0],cU[1],cU[2]);gl.uniform3f(u.uCF,cF[0],cF[1],cF[2]);gl.drawArrays(gl.TRIANGLES,0,3);
-gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(pF.p);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,pTex);gl.uniform1i(pF.u.uT,0);gl.uniform2f(pF.u.uPx,1/W,1/H);gl.drawArrays(gl.TRIANGLES,0,3);gl.bindVertexArray(null)}
+gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(R?R.x:0,R?H-R.y-R.h:0,rw,rh);gl.useProgram(pF.p);gl.uniform2f(pF.u.uVS,rw/W,rh/H);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,pTex);gl.uniform1i(pF.u.uT,0);gl.uniform2f(pF.u.uPx,1/W,1/H);gl.drawArrays(gl.TRIANGLES,0,3);gl.bindVertexArray(null);gl.viewport(0,0,W,H)}
 let last=performance.now();
 function frame(t){requestAnimationFrame(frame);const dt=Math.min(0.05,Math.max(0.001,(t-last)/1000));last=t;update(dt);render3d();drawUI(dt)}
 window.__koma={net,others,items,shots,inp,netHost,netJoin,hostStart,beginGame,setStage,G,pl,startGame,startWave,demoStart,enemies,update,get boss(){return boss}};

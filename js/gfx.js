@@ -92,7 +92,7 @@ precision highp float;
 in vec2 vUv;out vec4 oC;
 uniform sampler2D uC,uN;uniform highp sampler2D uD;
 uniform vec2 uPx,uTan,uFocus;uniform float uNear,uFar,uTime,uMood,uFlash,uInv,uMono,uHurt;
-uniform vec3 uCR,uCU,uCF,uS0,uS1,uS2,uFogC,uGrade,uShade,uFogR;uniform float uNight;
+uniform vec3 uCR,uCU,uCF,uS0,uS1,uS2,uFogC,uGrade,uShade,uFogR;uniform float uNight;uniform vec2 uVS;
 const vec2 OFF[4]=vec2[4](vec2(1.,0.),vec2(0.,1.),vec2(.7071,.7071),vec2(.7071,-.7071));
 const mat2 R45=mat2(.7071,-.7071,.7071,.7071);
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
@@ -116,7 +116,7 @@ vec3 sky(vec2 uv,vec2 fc){
   col=mix(col,vec3(0.09,0.02,0.10),step(0.42,hs2)*smoothstep(inner,inner+0.015,rr)*uMood*0.9);}
  return col;}
 void main(){
- vec2 uv=vUv,fc=gl_FragCoord.xy;
+ vec2 uv0=vUv,uv=vUv*uVS,fc=gl_FragCoord.xy;// uv0: 0..1 over the viewport, uv: where to read the (W x H) buffers (a smaller viewport = the gacha highlight frame)
  vec4 c=texture(uC,uv),n=texture(uN,uv);float d=texture(uD,uv).r;float dm=d;
  for(int i=0;i<2;i++){vec2 o=OFF[i]*2.2*uPx;dm=min(dm,min(texture(uD,uv+o).r,texture(uD,uv-o).r));}
  float z=linZ(d),zm=linZ(dm);
@@ -130,7 +130,7 @@ void main(){
  float e=max(smoothstep(0.5,2.2,eI),smoothstep(0.8,2.0,eN))*(1.0-noE);
  vec3 fogC=mix(uFogC,vec3(1.0,0.80,0.50),uMood);
  vec3 col;
- if(n.b<0.001&&d>0.99999){col=sky(uv,fc);}
+ if(n.b<0.001&&d>0.99999){col=sky(uv0,fc);}
  else{
   vec3 base=c.rgb;float a=c.a;float L=a/0.85;
   vec3 shc=base*mix(uShade,vec3(0.60,0.36,0.52),uMood);
@@ -146,7 +146,7 @@ void main(){
  }
  float lf=1.0-smoothstep(60.0,400.0,zm)*0.6;
  col=mix(col,vec3(0.07,0.05,0.10),e*lf);
- if(uHurt>0.0){float vg=length((uv-0.5)*vec2(1.25,1.0));float d2=length(fract(fc/7.0)-0.5);float r2=smoothstep(0.28,0.72,vg)*uHurt*0.95;
+ if(uHurt>0.0){float vg=length((uv0-0.5)*vec2(1.25,1.0));float d2=length(fract(fc/7.0)-0.5);float r2=smoothstep(0.28,0.72,vg)*uHurt*0.95;
   col=mix(col,vec3(0.93,0.08,0.13),(1.0-smoothstep(r2-0.05,r2+0.05,d2))*step(0.01,r2));}
  float lum=dot(col,vec3(0.299,0.587,0.114));
  col=mix(col,vec3(lum)*vec3(1.0,0.98,0.94),uMono);
@@ -156,16 +156,16 @@ void main(){
  oC=vec4(col,1.0);}`;
 const FS_F=`#version 300 es
 precision highp float;
-in vec2 vUv;out vec4 oC;uniform sampler2D uT;uniform vec2 uPx;
-void main(){vec3 lu=vec3(0.299,0.587,0.114);
-vec3 nw=texture(uT,vUv+vec2(-1.,-1.)*uPx).rgb,ne=texture(uT,vUv+vec2(1.,-1.)*uPx).rgb,sw=texture(uT,vUv+vec2(-1.,1.)*uPx).rgb,se=texture(uT,vUv+vec2(1.,1.)*uPx).rgb,mm=texture(uT,vUv).rgb;
+in vec2 vUv;out vec4 oC;uniform sampler2D uT;uniform vec2 uPx,uVS;
+void main(){vec2 U=vUv*uVS;vec3 lu=vec3(0.299,0.587,0.114);
+vec3 nw=texture(uT,U+vec2(-1.,-1.)*uPx).rgb,ne=texture(uT,U+vec2(1.,-1.)*uPx).rgb,sw=texture(uT,U+vec2(-1.,1.)*uPx).rgb,se=texture(uT,U+vec2(1.,1.)*uPx).rgb,mm=texture(uT,U).rgb;
 float lnw=dot(nw,lu),lne=dot(ne,lu),lsw=dot(sw,lu),lse=dot(se,lu),lm=dot(mm,lu);
 float mn=min(lm,min(min(lnw,lne),min(lsw,lse))),mx=max(lm,max(max(lnw,lne),max(lsw,lse)));
 vec2 dir=vec2(-((lnw+lne)-(lsw+lse)),((lnw+lsw)-(lne+lse)));
 float rd=max((lnw+lne+lsw+lse)*0.03125,0.0078125);float rc=1.0/(min(abs(dir.x),abs(dir.y))+rd);
 dir=clamp(dir*rc,vec2(-8.0),vec2(8.0))*uPx;
-vec3 A=0.5*(texture(uT,vUv+dir*(1.0/3.0-0.5)).rgb+texture(uT,vUv+dir*(2.0/3.0-0.5)).rgb);
-vec3 B=A*0.5+0.25*(texture(uT,vUv+dir*-0.5).rgb+texture(uT,vUv+dir*0.5).rgb);
+vec3 A=0.5*(texture(uT,U+dir*(1.0/3.0-0.5)).rgb+texture(uT,U+dir*(2.0/3.0-0.5)).rgb);
+vec3 B=A*0.5+0.25*(texture(uT,U+dir*-0.5).rgb+texture(uT,U+dir*0.5).rgb);
 float lb=dot(B,lu);oC=vec4((lb<mn||lb>mx)?A:B,1.0);}`;
 const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT','uHT']);
 // textured models (kb_mat 10/11) sample uHT on texture unit 3 (units 0-2 are the shadow map / G-buffer). A 1x1 white stands in until a texture loads,
@@ -176,8 +176,8 @@ function setModelTex(img){const t=gl.createTexture();gl.activeTexture(gl.TEXTURE
 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.activeTexture(gl.TEXTURE0);gl.deleteTexture(modelTex);modelTex=t}
 const pS=mkProg(VS_S,FS_S,['uLVP','uT']);
-const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight','uShade','uFogR']);
-const pF=mkProg(VS_Q,FS_F,['uT','uPx']);
+const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight','uShade','uFogR','uVS']);
+const pF=mkProg(VS_Q,FS_F,['uT','uPx','uVS']);
 // ---- render targets ----
 function mkTex(w,h,ifmt,fmt,type,filt){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,ifmt,w,h,0,fmt,type,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filt);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filt);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t}
 const gCol=mkTex(W,H,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.NEAREST),gNrm=mkTex(W,H,gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE,gl.NEAREST),gDep=mkTex(W,H,gl.DEPTH_COMPONENT24,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,gl.NEAREST);
@@ -239,6 +239,8 @@ function flushLayer(l){for(const p of prims){const b=p.b[l];if(!b.n)continue;gl.
 function beginDynamic(){for(const p of prims){p.b[1].n=0;p.b[2].n=0}idD=0;curLayer=1;mReset();gTint=0;gId=0;gIce=0}
 // ---- camera ----
 const cam={x:0,y:1.62,z:16,yaw:0,pitch:0,roll:0,fov:80*PI/180};
+// the screen rectangle the 3D view is drawn into (the whole screen; the gacha highlight frame while it plays, see render3d)
+const VPR_FULL={x:0,y:0,w:W,h:H};let vpR=VPR_FULL;
 const VIEW=m4(),PROJ=m4(),VP=m4(),CAMW=m4(),LV=m4(),LP=m4(),LVP=m4();
 const cR=[1,0,0],cU=[0,1,0],cF=[0,0,-1],NEAR=0.05,FAR=900;
 function camUpdate(){const cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch),cy=Math.cos(cam.yaw),sy=Math.sin(cam.yaw),cr=Math.cos(cam.roll),sr=Math.sin(cam.roll);
@@ -248,8 +250,8 @@ const ex=cam.x,ey=cam.y,ez=cam.z;
 VIEW[0]=cR[0];VIEW[4]=cR[1];VIEW[8]=cR[2];VIEW[12]=-(cR[0]*ex+cR[1]*ey+cR[2]*ez);VIEW[1]=cU[0];VIEW[5]=cU[1];VIEW[9]=cU[2];VIEW[13]=-(cU[0]*ex+cU[1]*ey+cU[2]*ez);
 VIEW[2]=-fx;VIEW[6]=-fy;VIEW[10]=-fz;VIEW[14]=fx*ex+fy*ey+fz*ez;VIEW[3]=VIEW[7]=VIEW[11]=0;VIEW[15]=1;
 CAMW[0]=cR[0];CAMW[1]=cR[1];CAMW[2]=cR[2];CAMW[3]=0;CAMW[4]=cU[0];CAMW[5]=cU[1];CAMW[6]=cU[2];CAMW[7]=0;CAMW[8]=-fx;CAMW[9]=-fy;CAMW[10]=-fz;CAMW[11]=0;CAMW[12]=ex;CAMW[13]=ey;CAMW[14]=ez;CAMW[15]=1;
-m4persp(PROJ,cam.fov,W/H,NEAR,FAR);m4mul(VP,PROJ,VIEW)}
-function project(x,y,z){const cx=VP[0]*x+VP[4]*y+VP[8]*z+VP[12],cy=VP[1]*x+VP[5]*y+VP[9]*z+VP[13],cw=VP[3]*x+VP[7]*y+VP[11]*z+VP[15];if(cw<0.05)return null;return{x:(cx/cw*.5+.5)*W,y:(1-(cy/cw*.5+.5))*H,w:cw}}
+m4persp(PROJ,cam.fov,vpR.w/vpR.h,NEAR,FAR);m4mul(VP,PROJ,VIEW)}
+function project(x,y,z){const cx=VP[0]*x+VP[4]*y+VP[8]*z+VP[12],cy=VP[1]*x+VP[5]*y+VP[9]*z+VP[13],cw=VP[3]*x+VP[7]*y+VP[11]*z+VP[15];if(cw<0.05)return null;return{x:vpR.x+(cx/cw*.5+.5)*vpR.w,y:vpR.y+(1-(cy/cw*.5+.5))*vpR.h,w:cw}}
 function bill(pi,x,y,z,s,rot,c,fl){mPush();const cr=Math.cos(rot)*s,sr=Math.sin(rot)*s;M[0]=cR[0]*cr+cU[0]*sr;M[1]=cR[1]*cr+cU[1]*sr;M[2]=cR[2]*cr+cU[2]*sr;M[4]=-cR[0]*sr+cU[0]*cr;M[5]=-cR[1]*sr+cU[1]*cr;M[6]=-cR[2]*sr+cU[2]*cr;M[8]=-cF[0]*s;M[9]=-cF[1]*s;M[10]=-cF[2]*s;M[12]=x;M[13]=y;M[14]=z;emit(pi,c,0,0,fl,0);mPop()}
 const LD=(()=>{const v=[0.52,0.76,0.40],l=Math.hypot(v[0],v[1],v[2]);return[v[0]/l,v[1]/l,v[2]/l]})();
 m4look(LV,LD[0]*90,LD[1]*90,LD[2]*90-2,0,0,-2,0,1,0);m4ortho(LP,-44,44,-44,44,10,175);m4mul(LVP,LP,LV);

@@ -14,9 +14,9 @@ if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.
 if(e.type==='bru')return[[e.x,1.0,e.z,0.95,1],[e.x,2.0,e.z,1.1,1],[e.x+fx*0.2,3.0,e.z+fz*0.2,0.55,2]];
 if(e.monk)return monkSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
 function updateEnemies(dt){for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.dead){enemies.splice(i,1);if(e===boss)boss=null;continue}
-if(e.monk){const sl=e.slw>0;if(sl)e.slw-=dt;updMonk(e,sl?dt*0.5:dt);if(G.ex)exMonk(e,sl?dt*0.5:dt);continue}
-if(e.frz>0&&e.type!=='boss'){e.frz-=dt;e.flash-=dt;continue}// frozen by 妖光・氷牢 (weapons.js): no moves, no attacks
-T=pickT(e.x,e.z);e.t+=dt;e.stT+=dt;e.flash-=dt;if(e.type==='boss'){const k=e.slw>0?0.5:1;if(k<1){e.slw-=dt;e.t-=dt*0.5;e.stT-=dt*0.5}updBoss(e,dt*k);continue}
+if(e.monk){if(e.stn>0){e.stn-=dt;e.flash-=dt;continue}const sl=e.slw>0;if(sl)e.slw-=dt;updMonk(e,sl?dt*0.5:dt);if(G.ex)exMonk(e,sl?dt*0.5:dt);continue}
+if(e.frz>0&&e.type!=='boss'){e.frz-=dt;e.flash-=dt;continue}if(e.stn>0&&e.type!=='boss'){e.stn-=dt;e.flash-=dt;continue}// 雷 / 盾で押された (weapons2.js)// frozen by 妖光・氷牢 (weapons.js): no moves, no attacks
+T=pickT(e.x,e.z);e.t+=dt;e.stT+=dt;e.flash-=dt;if(e.type==='boss'){if(e.stn>0){e.stn-=dt;e.t-=dt;e.stT-=dt;continue}const k=e.slw>0?0.5:1;if(k<1){e.slw-=dt;e.t-=dt*0.5;e.stT-=dt*0.5}updBoss(e,dt*k);continue}
 if(e.st==='spawn'){if(e.stT>0.7){e.st='chase';e.stT=0}continue}
 if(G.ex&&e.cd>0)e.cd-=dt*(1/EXK.cd-1);// 極: attacks come round sooner
 e.x+=e.kx*dt;e.z+=e.kz*dt;const f=Math.exp(-8*dt);e.kx*=f;e.kz*=f;

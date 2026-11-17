@@ -98,5 +98,5 @@ const HERO_Q=new URLSearchParams(location.search),HERO_TEST=HERO_Q.get('hero')==
 function drawHeroTest(){if(!HERO_TEST)return;const fx=-Math.sin(cam.yaw),fz=-Math.cos(cam.yaw),rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
 HERO_TEST.forEach((o,i)=>{const s=(i-1.5)*1.9;o.x=cam.x+fx*5.2+rx*s;o.z=cam.z+fz*5.2+rz*s;o.y=0;
  o.yaw=cam.yaw+PI+[0,PI/2,PI,0.5][i];if(i===3){o.wt+=GDT;o.mv=1}
- if(HERO_Q.get('act')==='1'&&WPN[o.wp]){const k=WPN[o.wp].kind,c=(now+i*0.35)%1.6;o.ak=k==='katana'?(((now+i*0.35)/1.6|0)%2?2:1):k==='hammer'?(c<0.7?3:4):k==='bomb'?5:0;o.at=k==='hammer'&&c>=0.7?c-0.7:c;o.hc=1;o.fireT=(k==='gun'||k==='rail')&&c%0.2<0.05?0.05:0}
+ if(HERO_Q.get('act')==='1'&&WPN[o.wp]){const k=WPN[o.wp].kind,c=(now+i*0.35)%1.6;o.ak=k==='katana'?(((now+i*0.35)/1.6|0)%2?2:1):k==='hammer'?(c<0.7?3:4):k==='bomb'?5:0;o.at=k==='hammer'&&c>=0.7?c-0.7:c;o.hc=1;if(W2K[k])w2HeroTest(o,k,i);o.fireT=(k==='gun'||k==='rail')&&c%0.2<0.05?0.05:0}
  drawHero(o)})}

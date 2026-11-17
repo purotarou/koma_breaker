@@ -1,3 +1,4 @@
 .claude/*
 !.claude/skills/
 *.blend1
+.DS_Store

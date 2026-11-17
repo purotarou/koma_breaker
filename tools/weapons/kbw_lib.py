@@ -217,3 +217,57 @@ def surf_patch(fn, nu, nv):
     for i in range(nu):
         for j in range(nv): bm.faces.new((V[i][j], V[i + 1][j], V[i + 1][j + 1], V[i][j + 1]))
     return bm
+
+# ---------- added for bow / shield / flail / staff / spear ----------
+def helix_band(rz, z0, z1, turns, w, t, phase=0.0, n=240, inset=0.0006):
+    """flat band wound round the Z axis on a lathe surface of radius rz(z): axial width w, standing out by t."""
+    bm = bmesh.new(); S = []
+    for i in range(n + 1):
+        f = i / n; z = z0 + (z1 - z0) * f; a = phase + 2 * math.pi * turns * f
+        ca, sa = math.cos(a), math.sin(a)
+        prof = [(rz(z - w / 2) - inset, z - w / 2), (rz(z - w / 2) + t * 0.6, z - w / 2), (rz(z) + t, z - w * 0.3),
+                (rz(z) + t, z + w * 0.3), (rz(z + w / 2) + t * 0.6, z + w / 2), (rz(z + w / 2) - inset, z + w / 2)]
+        S.append([bm.verts.new((r * ca, r * sa, zz)) for r, zz in prof])
+    k = len(S[0])
+    for i in range(n):
+        for j in range(k):
+            bm.faces.new((S[i][j], S[i][(j + 1) % k], S[i + 1][(j + 1) % k], S[i + 1][j]))
+    bm.faces.new(S[0]); bm.faces.new(list(reversed(S[-1])))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+def gem_rhomb(mat, hh, hw, d, base=0.0):
+    """rhombus gem (height 2hh along local Y, width 2hw along local X) raised d along local Z, then mat."""
+    bm = bmesh.new()
+    C = [bm.verts.new(p) for p in ((0, hh, base), (-hw, 0, base), (0, -hh, base), (hw, 0, base))]
+    E = [bm.verts.new(p) for p in ((0, hh * 0.45, base + d * 0.75), (-hw * 0.45, 0, base + d * 0.75), (0, -hh * 0.45, base + d * 0.75), (hw * 0.45, 0, base + d * 0.75))]
+    top = bm.verts.new((0, 0, base + d))
+    for i in range(4):
+        j = (i + 1) % 4
+        bm.faces.new((C[i], C[j], E[j], E[i])); bm.faces.new((E[i], E[j], top))
+    bm.faces.new(list(reversed(C)))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return xf(bm, mat)
+
+def star4(R, r, n=10, curve=0.55):
+    """4-point star outline (points on +-Y and +-Z of the (y,z) plane): concave sides sampled as quadratic curves."""
+    pts = []
+    for k in range(4):
+        a0 = k * math.pi / 2; a1 = a0 + math.pi / 2
+        p0 = (R[k % 2] * math.cos(a0), R[k % 2] * math.sin(a0)); p1 = (R[(k + 1) % 2] * math.cos(a1), R[(k + 1) % 2] * math.sin(a1))
+        m = (r * math.cos(a0 + math.pi / 4), r * math.sin(a0 + math.pi / 4))
+        for i in range(n):
+            t = i / n; u = 1 - t
+            pts.append((u * u * p0[0] + 2 * u * t * m[0] + t * t * p1[0], u * u * p0[1] + 2 * u * t * m[1] + t * t * p1[1]))
+    return pts
+
+def raise_poly(pts, x0, x1, both=True):
+    """flat polygon pts (y,z) at x0 with a fan up to an apex at x1 (pyramid-faceted gem / stud); both = mirrored too."""
+    bm = bmesh.new()
+    cy = sum(p[0] for p in pts) / len(pts); cz = sum(p[1] for p in pts) / len(pts)
+    for s in ((1,) + ((-1,) if both else ())):
+        V = [bm.verts.new((s * x0, y, z)) for y, z in pts]; ap = bm.verts.new((s * x1, cy, cz))
+        for i in range(len(V)): bm.faces.new((V[i], V[(i + 1) % len(V)], ap))
+        bm.faces.new(list(reversed(V)))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
