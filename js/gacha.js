@@ -107,14 +107,14 @@ if(gaMsg&&now-gaMsg.t<2.6){const a=sat((2.6-(now-gaMsg.t))/0.3);ctx.globalAlpha=
 if(gaDet)gaDetail(w,id)}
 // details: what the weapon does + 必殺Lv table (right side, over the highlight)
 // 詳細の中身は縦スクロール（ドラッグ・スワイプ・ホイール）。枠の外はクリップする
-const gaDS={y:0,v:0,id:null,py:0,k:'',t:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=742;
-const gaDMax=()=>Math.max(0,GA_DCH-GA_DH);
-function gaDetTouch(ph,p,id){if(!(G.menu==='gacha'&&gaDet===1&&!gaA)){gaDS.id=null;return false}
+const gaDS={y:0,v:0,id:null,py:0,k:'',t:0,ch:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=742;
+const gaDMax=()=>Math.max(0,(gaDet===2?gaDS.ch:GA_DCH)-GA_DH);
+function gaDetTouch(ph,p,id){if(!(G.menu==='gacha'&&gaDet&&!gaA)){gaDS.id=null;return false}
 if(ph==='d'){if(p.x<GA_DX||p.x>GA_DX+GA_DW||p.y<GA_DY+22||p.y>GA_DY+GA_DH)return false;gaDS.id=id;gaDS.py=p.y;gaDS.v=0;return true}
 if(gaDS.id!==id)return false;
 if(ph==='m'){const dy=p.y-gaDS.py;gaDS.py=p.y;gaDS.y=clamp(gaDS.y-dy,-50,gaDMax()+50);gaDS.v=lerp(gaDS.v,-dy*60,0.5);return true}
 gaDS.id=null;return true}
-function gaDetWheel(e){if(!(G.menu==='gacha'&&gaDet===1&&!gaA))return false;gaDS.v+=e.deltaY*6;return true}
+function gaDetWheel(e){if(!(G.menu==='gacha'&&gaDet&&!gaA))return false;gaDS.v+=e.deltaY*6;return true}
 function gaDetail(w,id){const X=GA_DX,Y=GA_DY,PW=GA_DW,PH=GA_DH;btns.push({x:X,y:Y,w:PW,h:PH,cb:()=>{}});panel(X,Y,PW,PH);
 const k=gaSel+':'+gaDet,dt=Math.min(0.05,Math.max(0,now-gaDS.t));gaDS.t=now;if(gaDS.k!==k){gaDS.k=k;gaDS.y=0;gaDS.v=0;gaDS.id=null}
 if(gaDS.id===null){gaDS.y+=gaDS.v*dt;gaDS.v*=Math.exp(-5*dt);const c=clamp(gaDS.y,0,gaDMax());if(c!==gaDS.y){gaDS.y=lerp(gaDS.y,c,Math.min(1,dt*12));gaDS.v=0}}
@@ -129,7 +129,7 @@ ctx.restore();
 const m=gaDMax();if(m>0){const th=PH*PH/GA_DCH,ty=Y+(PH-th)*clamp(sy/m,0,1);ctx.fillStyle='rgba(22,18,31,.35)';ctx.fillRect(X+PW-9,ty,5,th);if(sy<m-20){txt('▼ 下にスクロール',X+PW-24,Y+PH-14,15,'#555a70',null,0,'right')}}}
 para(X+16,Y-24,280,46,14);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の詳細',X+40,Y,24,'#fff',INK,6,'left');
 B(X+PW-176,Y-24,150,40,'性能表',()=>{gaDet=gaDet===2?1:2},{size:20,sk:8,col:gaDet===2?'#59d8ff':'#fff'});
-if(gaDet===2)drawEqDet(w,X,Y,PW,PH-70)}
+if(gaDet===2)drawEqDet(w,X,Y,PW,PH,true)}
 // ================= DRAW ANIMATION =================
 // one result at a time: a sealed manga panel (コマ) shakes and cracks (glow = gold for the pickup, rainbow for a new weapon), shatters,
 // and the weapon is revealed; 6 pulls end on a summary page. Tap = speed up / next.
