@@ -134,7 +134,9 @@ if(pl.sp===2)on=2;else if(f&&!pl.ovh&&!pl.sp){on=1;pl.heat+=dt/4.7;if(pl.heat>=1
 if(on!==1){pl.heat=Math.max(0,pl.heat-dt*(pl.ovh?0.5:0.75));if(pl.ovh&&pl.heat<=0){pl.ovh=0;snd('reload')}}
 pl.rOn=on;if(on){pl.rt-=dt;let n=0;while(pl.rt<=0&&n<3){pl.rt+=0.06;n++;railTick(on===2)}pl.flashT=0.03;pl.rec=Math.max(pl.rec,0.25)}else pl.rt=0}
 function railTick(ice){const pw=pl.pow>0?2:1,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),as?0.06:0.02,as?0.6:0.3),wallT=rayWorld(ox,oy,oz,d[0],d[1],d[2],120),dm=(ice?RAIL_ICE*SK.spw:RAIL_DM)*pw,rr=ice?0.45:0.15;let hit=0;
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]+rr);if(t>0&&t<tm)tm=t}
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,tb=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]+rr);if(t>0){if(t<tm)tm=t;if(e.monk&&s[5]==='bell'&&t<tb)tb=t}}
+ // the bell monk: a beam that touches the bell wears the bell down whatever side it comes from (like rayHit), the pierce goes on to the body
+ if(tb<wallT&&e.monk&&e.bell){monkBellHit(e,dm*0.5,ox+d[0]*tb,oy+d[1]*tb,oz+d[2]*tb,true);hit++;if(lim('rs'+e.id,0.1))fxSparks(ox+d[0]*tb,oy+d[1]*tb,oz+d[2]*tb,3,5,ice?C.white:C.cyan);if(tb<=tm+1.6)continue}
  if(tm<wallT){const hx=ox+d[0]*tm,hy=oy+d[1]*tm,hz=oz+d[2]*tm;wpDmg(e,dm,hx,hy,hz,{quiet:1});if(ice)wpEffect(e,e.type==='boss'?3:1,e.type==='boss'?0.35:3);hit++;if(lim('rs'+e.id,0.1))fxSparks(hx,hy,hz,3,5,ice?C.white:C.cyan)}}
 for(const s of shots)if(!s.dead){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.3);if(t>0&&t<wallT){popShot(s);if(isCli())net.q.ps.push(s.id)}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const t=raySph(ox,oy,oz,d,o.x,o.y+1.1,o.z,0.7);if(t>0&&t<wallT&&lim('rpv'+o.slot,0.12))pvHit(o,(ice?18:12)*pw,false,ox+d[0]*t,oy+d[1]*t,oz+d[2]*t)}
