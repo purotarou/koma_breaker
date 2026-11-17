@@ -175,7 +175,7 @@ mland(x,z,p2,intro){explode(x,0.6,z,intro?2.6:1.8,{ink:1,text:intro?'ズドォ�
  decals.push({x,z,r:intro?5:4,life:6});shake(intro?1:0.6);snd('boom',intro?1:0.7);
  if(!intro){ices.push({x,z,r:p2?3.4:4.2,life:1})}},
 mring(x,z){snd('gong');fxRing(x,4,z,16,C.yellow,0.5);fxRing(x,0.2,z,24,C.gold,0.6);shake(0.6);sfxAt('ゴォォォン！',x,8,z,{size:96,st:'boom',life:0.8,grow:0.14});
- shocks.push({x,z,r:1.4,v:17,max:48,d:14,hit:false,mk:1},{x,z,r:-5,v:17,max:48,d:14,hit:false,mk:1})},// huge rings that cross the whole arena, the second trails the first
+ shocks.push({x,z,r:1.4,v:17,max:24,d:14,hit:false,mk:1},{x,z,r:-5,v:17,max:24,d:14,hit:false,mk:1})},// big rings, the second trails the first
 mslam(x,z){explode(x,0.5,z,1.3,{ink:1,quiet:1});fxRing(x,0.1,z,6,C.white,0.3);fxDebris(x,0.4,z,6,7,C.snow,0.4);decals.push({x,z,r:2.6,life:5});shake(0.45);snd('boom',0.6);
  sfxAt('ドガァン！',x,2.5,z,{size:66,st:'boom',life:0.45});},
 mbreak(x,z,quiet){snd('gong');snd('boom',1);shake(1);const b=boss;if(!quiet){flash(0.7);stopT(0.18);invA=1;addText('バキィッ！',W/2,H*0.3,{size:150,st:'boom',life:1.1,rot:-0.08,grow:0.12})}
