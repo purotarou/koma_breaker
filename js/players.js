@@ -84,6 +84,7 @@ function bossT(b){let p=null;if(b.ti!=null)p=allP().find(q=>q.slot===b.ti);if(!p
 function hurtT(p,d,x,z,fz){if(p===pl){const h=pl.hp;hurtPlayer(d,x,z);if(fz&&pl.hp<h)plFreeze(fz)}else net.hq.push(fz?[p.slot,d,r1(x),r1(z),fz]:[p.slot,d,r1(x),r1(z)])}
 // frozen solid (bell monk's striker): can't move, jump or dash for t seconds
 function plFreeze(t){if(SK.steady)t*=0.5;pl.frz=t;pl.vx=pl.vz=0;pl.dashT=0;snd('clank');shake(0.3);addText('カチーン！',W/2,H*0.4,{size:100,st:'cyan',life:0.7})}
+function jumpHeld(){if(keys.Space)return true;for(const id in touch.hold)if(touch.hold[id]==='jump')return true;return false}
 function areaHurt(x,z,r,d,jump){for(const p of allP())if(Math.hypot(p.x-x,p.z-z)<r&&!(jump&&p.y>0.7))hurtT(p,d,x,z)}
 function eCenter(e){const F=FOE[e.type];if(F)return F.ctr(e);if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
 function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)return;const f=H/2/Math.tan(cam.fov/2),er=Math.min(280,c[3]*f/p.w),size=o.size||44,w=size*0.9*str.length;sideFlip=-sideFlip;let x=p.x+sideFlip*(er+w/2+20);if(x<w/2+50||x>W-w/2-50)x=p.x-sideFlip*(er+w/2+20);addText(str,x,p.y-er*0.5-rnd(0,24),o)}
@@ -135,8 +136,9 @@ if(pl.frz>0){pl.frz-=dt;wx=wz=0;pl.vx=pl.vz=0;inp.jump=inp.dash=false}
 const icy=pl.y<=0&&ices.length&&onIce(pl.x,pl.z),spd=spLock()?2.5:6.6*SK.spd*(pl.hon?0.6:1),k=1-Math.exp(-(pl.y>0?(SK.airc?10:5):icy?1.3:12)*dt);pl.vx+=(wx*spd-pl.vx)*k;pl.vz+=(wz*spd-pl.vz)*k;
 if(inp.dash&&pl.dashCd<=0&&!cine){let dx=wx,dz=wz;if(wl<0.2){dx=sy;dz=cy}const l=Math.hypot(dx,dz)||1;pl.ddx=dx/l;pl.ddz=dz/l;pl.dashT=0.18;if(SK.dash2&&!pl.dq){pl.dq=1;pl.dqT=1.2;pl.dashCd=0.22}else{pl.dq=0;pl.dashCd=0.7*SK.dash}pl.inv=Math.max(pl.inv,SK.dinv);lines(0.85,'#fff');snd('dash');addText(pick(['シュバッ','ザッ！','シュッ']),W/2+rnd(-220,220),H*0.74,{size:62,st:'cyan',life:0.4})}
 inp.dash=false;if(pl.dashT>0){pl.dashT-=dt;pl.x+=pl.ddx*24*SK.ddist*dt;pl.z+=pl.ddz*24*SK.ddist*dt;if(icy){pl.vx=pl.ddx*15;pl.vz=pl.ddz*15;if(lim('slip',0.8))addText('ツルッ！',W/2+rnd(-160,160),H*0.7,{size:58,st:'cyan',life:0.45})}}
-wpLunge(dt);if(inp.jump&&!cine){if(pl.y<=0.001){pl.vy=8.4*SK.jump;pl.aj=0;snd('jump');addText('タンッ',W*0.3+rnd(-60,60),H*0.78,{size:54,st:'cyan',life:0.35})}
+wpLunge(dt);if(inp.jump&&!cine){if(pl.y<=0.001){pl.vy=8.4*SK.jump;pl.aj=0;pl.jt=0;snd('jump');addText('タンッ',W*0.3+rnd(-60,60),H*0.78,{size:54,st:'cyan',life:0.35})}
  else if(SK.dj&&!pl.aj){pl.aj=1;pl.vy=11*SK.jump;snd('jump');fxRing(pl.x,pl.y,pl.z,1.8,C.white,0.2);fxStar(pl.x,pl.y+0.2,pl.z,1.2,C.white,0.1);addText('タタンッ',W*0.3+rnd(-60,60),H*0.74,{size:60,st:'cyan',life:0.4})}}inp.jump=false;
+if(pl.jt>=0){pl.jt+=dt;if(!G.demoOn&&!jumpHeld()){if(pl.jt<0.14)pl.vy=Math.min(pl.vy,4.6*SK.jump);pl.jt=-1}else if(pl.jt>=0.14)pl.jt=-1}// short tap = small jump, normal press = full jump
 if(pl.y>0||pl.vy>0){pl.vy-=22*SK.grav*dt;pl.y+=pl.vy*dt;if(pl.y<=0){pl.y=0;pl.aj=0;if(pl.vy<-4){pl.land=1;fxSmoke(pl.x,0.2,pl.z,4,0.5,C.smoke,2.5);fxRing(pl.x,0.1,pl.z,2.6,C.white,0.2);snd('land');shake(0.12)}pl.vy=0}}
 pl.x+=pl.vx*dt;pl.z+=pl.vz*dt;collide(pl,0.5);if(boss){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.5:7.5,dx=pl.x-cx,dz=pl.z-cz,d=Math.hypot(dx,dz)||1;if(d<R&&!(mk&&(boss.y>2||boss.st==='drop'))){pl.x=cx+dx/d*R;pl.z=cz+dz/d*R}}
 pl.moving=lerp(pl.moving,pl.y>0?0:Math.min(1,Math.hypot(pl.vx,pl.vz)/5),k);pl.bob+=dt*9*pl.moving;
