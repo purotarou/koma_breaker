@@ -106,12 +106,28 @@ B(60,628,200,56,'もどる',closeGacha,{size:26});
 if(gaMsg&&now-gaMsg.t<2.6){const a=sat((2.6-(now-gaMsg.t))/0.3);ctx.globalAlpha=a;para(560,560,700,40,12);ctx.fillStyle=INK;ctx.fill();fitTxt(gaMsg.s,900,581,20,640,'#fff','center');ctx.globalAlpha=1}
 if(gaDet)gaDetail(w,id)}
 // details: what the weapon does + 必殺Lv table (right side, over the highlight)
-function gaDetail(w,id){const X=600,Y=232,PW=640,PH=362;btns.push({x:X,y:Y,w:PW,h:PH,cb:()=>{}});panel(X,Y,PW,PH);para(X+16,Y-24,280,46,14);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の詳細',X+40,Y,24,'#fff',INK,6,'left');
+// 詳細の中身は縦スクロール（ドラッグ・スワイプ・ホイール）。枠の外はクリップする
+const gaDS={y:0,v:0,id:null,py:0,k:'',t:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=700;
+const gaDMax=()=>Math.max(0,GA_DCH-GA_DH);
+function gaDetTouch(ph,p,id){if(!(G.menu==='gacha'&&gaDet===1&&!gaA)){gaDS.id=null;return false}
+if(ph==='d'){if(p.x<GA_DX||p.x>GA_DX+GA_DW||p.y<GA_DY+22||p.y>GA_DY+GA_DH)return false;gaDS.id=id;gaDS.py=p.y;gaDS.v=0;return true}
+if(gaDS.id!==id)return false;
+if(ph==='m'){const dy=p.y-gaDS.py;gaDS.py=p.y;gaDS.y=clamp(gaDS.y-dy,-50,gaDMax()+50);gaDS.v=lerp(gaDS.v,-dy*60,0.5);return true}
+gaDS.id=null;return true}
+function gaDetWheel(e){if(!(G.menu==='gacha'&&gaDet===1&&!gaA))return false;gaDS.v+=e.deltaY*6;return true}
+function gaDetail(w,id){const X=GA_DX,Y=GA_DY,PW=GA_DW,PH=GA_DH;btns.push({x:X,y:Y,w:PW,h:PH,cb:()=>{}});panel(X,Y,PW,PH);
+const k=gaSel+':'+gaDet,dt=Math.min(0.05,Math.max(0,now-gaDS.t));gaDS.t=now;if(gaDS.k!==k){gaDS.k=k;gaDS.y=0;gaDS.v=0;gaDS.id=null}
+if(gaDS.id===null){gaDS.y+=gaDS.v*dt;gaDS.v*=Math.exp(-5*dt);const c=clamp(gaDS.y,0,gaDMax());if(c!==gaDS.y){gaDS.y=lerp(gaDS.y,c,Math.min(1,dt*12));gaDS.v=0}}
+const sy=gaDS.y;
+if(gaDet===1){ctx.save();ctx.beginPath();ctx.rect(X,Y,PW,PH);ctx.clip();ctx.translate(0,-sy);
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 tag(X+20,Y+48,'通常',INK);fitTxt(w.d[0],X+94,Y+48,21,PW-114,INK);fitTxt(w.d[1],X+94,Y+80,18,PW-114,'#3a3f55');
 tag(X+20,Y+126,'必殺','#e5402b');txt(w.sp,X+94,Y+124,26,'#e5402b',null,0,'left');fitTxt(w.s,X+94,Y+156,18,PW-114,INK);
-const lv=WS.own[id]?wpLv(id):0;ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+20,Y+184,PW-40,2);txt('凸（★＝大幅強化）',X+24,Y+210,20,INK,null,0,'left');txt('重なると上げられる（装備の「強化」で）・最大のあとはスキルP',X+PW-20,Y+210,13,'#555a70',null,0,'right');
-for(let l=1;l<=WLV;l++){const c=l>5?1:0,y=Y+236+((l-1)%5)*27,x=X+20+c*300,on=l===lv,big=SPLV_BIG(l);if(on||big){ctx.fillStyle=on?'#fff3b0':'#ffe9a8';ctx.fillRect(x,y-12,290,25)}txt('Lv'+l,x+8,y,17,on?'#e5402b':INK,null,0,'left');if(big)txt('★',x+60,y,15,'#e5402b');fitTxt(SPLV_T[l-1],x+80,y,14,194,INK);if(on)txt('今',x+280,y,13,'#e5402b',null,0,'right')}
+const lv=WS.own[id]?wpLv(id):0;ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+20,Y+184,PW-40,2);txt('凸（★＝大幅強化）',X+24,Y+210,22,INK,null,0,'left');txt('重なると装備の「強化」で上げられる・最大のあとはスキルP',X+24,Y+240,15,'#555a70',null,0,'left');
+for(let l=1;l<=WLV;l++){const y=Y+284+(l-1)*46,x=X+20,on=l===lv,big=SPLV_BIG(l);if(on||big){ctx.fillStyle=on?'#fff3b0':'#ffe9a8';ctx.fillRect(x,y-20,PW-40,40)}txt('Lv'+l,x+12,y,24,on?'#e5402b':INK,null,0,'left');if(big)txt('★',x+84,y,22,'#e5402b');fitTxt(SPLV_T[l-1],x+120,y,21,PW-190,INK);if(on)txt('今',x+PW-52,y,20,'#e5402b',null,0,'right')}
+ctx.restore();
+const m=gaDMax();if(m>0){const th=PH*PH/GA_DCH,ty=Y+(PH-th)*clamp(sy/m,0,1);ctx.fillStyle='rgba(22,18,31,.35)';ctx.fillRect(X+PW-9,ty,5,th);if(sy<m-20){txt('▼ 下にスクロール',X+PW-24,Y+PH-14,15,'#555a70',null,0,'right')}}}
+para(X+16,Y-24,280,46,14);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の詳細',X+40,Y,24,'#fff',INK,6,'left');
 B(X+PW-176,Y-24,150,40,'性能表',()=>{gaDet=gaDet===2?1:2},{size:20,sk:8,col:gaDet===2?'#59d8ff':'#fff'});
 if(gaDet===2)drawEqDet(w,X,Y,PW,PH-70)}
 // ================= DRAW ANIMATION =================

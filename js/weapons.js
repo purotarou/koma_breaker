@@ -398,13 +398,13 @@ const eqRows=()=>Math.ceil(WPN.length/EQL.cols),eqMax=()=>Math.max(0,eqRows()*EQ
 function eqShow(i){const r=(i/EQL.cols)|0,t=r*EQL.pitch;if(t<EQL.y)EQL.y=t;else if(t+EQL.ch>EQL.y+EQL.vh-6)EQL.y=t+EQL.ch-EQL.vh+6;EQL.y=clamp(EQL.y,0,eqMax());EQL.v=0}
 function openEquip(back){G.menu='equip';G.eqBack=back||'main';eqSel=wpIdx(WS.eq);eqDet=0;EQL.id=null;eqShow(eqSel)}
 function eqOn(){return G.state==='menu'&&G.menu==='equip'&&!setOpen&&!wipe.on}
-function eqTouch(ph,p,id){if(!eqOn()){EQL.id=null;return false}
+function eqTouch(ph,p,id){if(gaDetTouch(ph,p,id))return true;if(!eqOn()){EQL.id=null;return false}
 if(ph==='d'){if(p.x<EQL.x0-10||p.x>EQL.x0+EQL.cols*(EQL.cw+EQL.gap)||p.y<EQL.vy-6||p.y>EQL.vy+EQL.vh)return false;EQL.id=id;EQL.py=p.y;EQL.mv=0;EQL.v=0;EQL.lp=p;return true}
 if(EQL.id!==id)return false;
 if(ph==='m'){const dy=p.y-EQL.py;EQL.py=p.y;EQL.mv+=Math.abs(dy);EQL.y=clamp(EQL.y-dy,-60,eqMax()+60);EQL.v=lerp(EQL.v,-dy*60,0.5);EQL.lp=p;return true}
 EQL.id=null;if(EQL.mv<14&&EQL.lp){EQL.v=0;const lx=EQL.lp.x-EQL.x0,ly=EQL.lp.y-EQL.vy+EQL.y,c=Math.floor(lx/(EQL.cw+EQL.gap)),r=Math.floor(ly/EQL.pitch),i=r*EQL.cols+c;
  if(lx>=0&&ly>=0&&c>=0&&c<EQL.cols&&lx-c*(EQL.cw+EQL.gap)<EQL.cw&&ly-r*EQL.pitch<EQL.ch&&i<WPN.length){eqSel=i;snd('ui')}}return true}
-function eqWheel(e){if(!eqOn())return false;EQL.v+=e.deltaY*6;return true}
+function eqWheel(e){if(gaDetWheel(e))return true;if(!eqOn())return false;EQL.v+=e.deltaY*6;return true}
 // 詳細: the numbers behind each weapon (no skills / power-ups); [label, value] rows, '' label = section heading
 const eqF1=v=>(Math.round(v*10)/10).toString(),eqR0=v=>Math.round(v).toString();
 function wpStats(w){const gun=(dm,cool,n)=>[['威力',dm+(n?' × '+n+'粒':'')],['連射','毎秒 '+eqF1(1/cool)+' 発'],['装弾数',w.mag+' 発'],['装填',eqF1(w.rel)+' 秒']],gp=['必殺ゲージ','たまり方 ×'+w.g];
