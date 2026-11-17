@@ -261,20 +261,24 @@ function drawW2World(){const NF=F_UNLIT|F_NOCAST;
 for(const e of enemies){if(e.dead||!(e.stn>0))continue;const c=eCenter(e),r=Math.min(c[3],3);
  if(e.zapT>now-1||e.stnZ){for(let k=0;k<3;k++){let p=[c[0]+rnd(-r,r),c[1]+r*0.9,c[2]+rnd(-r,r)];for(let j=0;j<3;j++){const q=[p[0]+rnd(-0.5,0.5),p[1]-rnd(0.3,0.7)*r,p[2]+rnd(-0.5,0.5)];w2SegW(p,q,0.07,j%2?C.white:C.yellow);p=q}}bill(STAR,c[0]+rnd(-r,r)*0.6,c[1]+rnd(-r,r)*0.6,c[2],0.5*r,now*20,C.yellow,NF)}
  else for(let k=0;k<3;k++){const a=now*5+k*TAU/3;bill(STAR,c[0]+Math.cos(a)*r*0.6,c[1]+r*0.8,c[2]+Math.sin(a)*r*0.6,0.28,now*8,C.yellow,NF)}}
-// spear thrust-slash: a lance of light with its tip leading (it grows out of the spear point), speed lines and shock rings
-for(const s of wspk){const big=s.big,Ln=big?8:3.4*(s.k===2?1.25:1),L=Math.min(Ln,s.d+0.4),w=(big?2.2:1)*(0.4+0.6*L/Ln),dx=s.dx,dy=s.dy,dz=s.dz,
+// spear thrust-slash: a diamond spear-head of light (tip leading; it grows out of the spear point) with a lightning core,
+// shock rings left hanging in the air along its path (they spread and fade), speed lines and a flash at the tip
+for(const s of wspk){const big=s.big,sp=big?70:48,Ln=big?8:3.4*(s.k===2?1.25:1),L=Math.max(0.2,Math.min(Ln,s.d-1)),end=sat((s.R-s.d)/(sp*0.08)),
+ w=(big?2.2:1)*(0.25+0.75*sat(s.d/(big?8:4)))*(0.55+0.45*end),dx=s.dx,dy=s.dy,dz=s.dz,
  P=[s.x+dx*s.d,s.y+dy*s.d,s.z+dz*s.d],h=Math.hypot(dx,dz),rt=h>0.01?[dz/h,0,-dx/h]:[1,0,0],up=[dy*rt[2]-dz*rt[1],dz*rt[0]-dx*rt[2],dx*rt[1]-dy*rt[0]],
- at=(f)=>[P[0]-dx*L*f,P[1]-dy*L*f,P[2]-dz*L*f];
- // the blade (a cone, base at the tail, tip at P)
- const M0=at(0.5);mPush();mT(M0[0],M0[1],M0[2]);orient(dx,dy,dz);mRX(PI/2);mS(w,L,w);emit(CONE,C.white,0,0,NF,0);mPop();
- // a bright core line running through it, and out behind it
- w2SegW(at(1.7),at(0.05),big?0.09:0.05,C.yellow);
- // shock rings around the blade
- for(const[f,m,c]of[[0.3,1.7,C.white]]){const Q=at(f);mPush();mT(Q[0],Q[1],Q[2]);orient(dx,dy,dz);mRX(PI/2);mS(w*m,0.05,w*m);emit(CYL,c,0,0,NF|F_NOEDGE,0);mPop()}
- // speed lines drawn in toward the tip
- for(let i=0;i<6;i++){const a=i*TAU/6+s.t*5,ca=Math.cos(a),sa=Math.sin(a),o1=w*1.5,o2=w*0.45,
-  A=at(1.35),B=at(0.35);const q=(P0,o)=>[P0[0]+(rt[0]*ca+up[0]*sa)*o,P0[1]+(rt[1]*ca+up[1]*sa)*o,P0[2]+(rt[2]*ca+up[2]*sa)*o];
-  w2SegW(q(A,o1),q(B,o2),big?0.06:0.035,C.white)}}
+ fb=s.d/L,at=f=>(f=Math.min(f,fb),[P[0]-dx*L*f,P[1]-dy*L*f,P[2]-dz*L*f]),off=(Q,a,o)=>{const c=Math.cos(a),n=Math.sin(a);return[Q[0]+(rt[0]*c+up[0]*n)*o,Q[1]+(rt[1]*c+up[1]*n)*o,Q[2]+(rt[2]*c+up[2]*n)*o]},
+ cone=(f0,f1,ww,col)=>{const Q=at((f0+f1)/2);mPush();mT(Q[0],Q[1],Q[2]);orient(dx,dy,dz);mRX(f1<f0?PI/2:-PI/2);mS(ww,L*Math.abs(f1-f0),ww);emit(CONE,col,0,0,NF,0);mPop()};
+ // the head: a long point forward, a short one back (a diamond), and a yellow inner blade
+ if(s.d>1.3){cone(0.72,0,w,C.white);cone(0.72,1,w,C.white);cone(0.6,-0.04,w*0.42,C.yellow)}
+ // lightning (雷鳴) running along it: a new zigzag every frame
+ for(let z=0;z<2;z++){let p=at(1.5);const a0=rnd(0,TAU);for(let j=1;j<=5;j++){const f=1.5-1.45*j/5,q=j<5?off(at(f),a0+rnd(-1,1),w*rnd(0.3,0.75)):at(0.05);w2SegW(p,q,big?0.06:0.035,j%2?C.yellow:C.white);p=q}}
+ // shock rings left in the air every few metres: they spread out and thin as they age
+ const stp=big?4.5:2.6,rw=big?0.16:0.09;for(let r=stp*1.2;r<s.d-L*0.6;r+=stp){const age=(s.d-r)/sp;if(age>0.22)continue;const k=age/0.22,Q=[s.x+dx*r,s.y+dy*r,s.z+dz*r],rad=w*(0.7+1.8*k),n=12;
+  for(let j=0;j<n;j++)w2SegW(off(Q,j*TAU/n,rad),off(Q,(j+1)*TAU/n,rad),rw*(1-0.8*k),k<0.5?C.white:C.yellow,NF|F_NOEDGE)}
+ // speed lines drawn in toward the tip (uneven lengths)
+ for(let i=0;i<8;i++){const a=i*TAU/8+s.t*5,ln=[1.6,1.2,1.9,1.1,1.5,2.1,1.3,1.7][i];w2SegW(off(at(ln),a,w*(0.9+0.4*ln)),off(at(0.4),a,w*0.5),big?0.06:0.03,C.white)}
+ // the flash at the tip
+ bill(STAR,P[0],P[1],P[2],w*(0.55+0.15*Math.sin(now*40)),now*25,C.white,NF)}
 // arrows
 for(const a of warrows)w2Arrow(a.x-a.dx*0.45,a.y-a.dy*0.45,a.z-a.dz*0.45,a.dx,a.dy,a.dz,0.9,a.c>=1);
 for(const a of warrows)if(!a.stk&&a.c>=0.5)bill(STAR,a.x,a.y,a.z,0.25+0.2*a.c,now*30,W2_GLOW,NF);
