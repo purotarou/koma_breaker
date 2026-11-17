@@ -4,7 +4,7 @@
 //  流星鎚 flail : 長押し = 頭上で振り回す（近くの敵に当たる）、離す = 前へ投げる（溜め3段階で 10 / 20 / 40 m、伸びきると戻る）。
 //                 鎖は GLB の輪（Flail_Link_* の2つの形）をコードで並べて描く（flChain）。必殺 = まわりに4回 + 前方遠くへ1回の
 //                 叩きつけ（鉄球の落ちた所だけに当たる）。最後の1回は溜め投げと同じく向いている方向（上下も）へまっすぐ飛ぶ。
-//  雷鳴の槍 spear : 3連突き（右上・正面下・左中段）、突きごとに小さな斬撃（wspk）が中距離まで飛ぶ。当たった敵は雷でしびれる
+//  雷鳴の槍 spear : 3連突き（右上・正面下・左中段）、突きごとに「突く斬撃」（光の槍。wspk）が中距離まで飛ぶ。当たった敵は雷でしびれる
 //                 （wpEffect 4 → e.stn、ボスは短い）。必殺 = 一定時間、長い突き＋遠くまで飛んで何体でも貫く斬撃。
 //  波雲の長弓 bow  : 長押しで溜め（1.5 秒で威力3倍・貫通5体）、離して射る（warrows）。必殺 = 前方の円に矢の雨（wrains）、
 //                 地面に残った矢の中では溜めが速い。
@@ -261,9 +261,20 @@ function drawW2World(){const NF=F_UNLIT|F_NOCAST;
 for(const e of enemies){if(e.dead||!(e.stn>0))continue;const c=eCenter(e),r=Math.min(c[3],3);
  if(e.zapT>now-1||e.stnZ){for(let k=0;k<3;k++){let p=[c[0]+rnd(-r,r),c[1]+r*0.9,c[2]+rnd(-r,r)];for(let j=0;j<3;j++){const q=[p[0]+rnd(-0.5,0.5),p[1]-rnd(0.3,0.7)*r,p[2]+rnd(-0.5,0.5)];w2SegW(p,q,0.07,j%2?C.white:C.yellow);p=q}}bill(STAR,c[0]+rnd(-r,r)*0.6,c[1]+rnd(-r,r)*0.6,c[2],0.5*r,now*20,C.yellow,NF)}
  else for(let k=0;k<3;k++){const a=now*5+k*TAU/3;bill(STAR,c[0]+Math.cos(a)*r*0.6,c[1]+r*0.8,c[2]+Math.sin(a)*r*0.6,0.28,now*8,C.yellow,NF)}}
-// spear slashes
-for(const s of wspk){const sc=s.big?5.5:2.2,fx=s.x+s.dx*s.d,fy=s.y+s.dy*s.d,fz=s.z+s.dz*s.d,yaw=Math.atan2(-s.dx,-s.dz);
- mPush();mT(fx-s.dx*sc*0.5,fy,fz-s.dz*sc*0.5);mRY(yaw);mRZ([-0.7,0.15,0.75][s.k|0]);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mT(0,0.012,0.03);mS(0.9,1,0.9);emit(SLASH,C.yellow,0,0,NF,0);mPop()}
+// spear thrust-slash: a lance of light with its tip leading (it grows out of the spear point), speed lines and shock rings
+for(const s of wspk){const big=s.big,Ln=big?8:3.4*(s.k===2?1.25:1),L=Math.min(Ln,s.d+0.4),w=(big?2.2:1)*(0.4+0.6*L/Ln),dx=s.dx,dy=s.dy,dz=s.dz,
+ P=[s.x+dx*s.d,s.y+dy*s.d,s.z+dz*s.d],h=Math.hypot(dx,dz),rt=h>0.01?[dz/h,0,-dx/h]:[1,0,0],up=[dy*rt[2]-dz*rt[1],dz*rt[0]-dx*rt[2],dx*rt[1]-dy*rt[0]],
+ at=(f)=>[P[0]-dx*L*f,P[1]-dy*L*f,P[2]-dz*L*f];
+ // the blade (a cone, base at the tail, tip at P)
+ const M0=at(0.5);mPush();mT(M0[0],M0[1],M0[2]);orient(dx,dy,dz);mRX(PI/2);mS(w,L,w);emit(CONE,C.white,0,0,NF,0);mPop();
+ // a bright core line running through it, and out behind it
+ w2SegW(at(1.7),at(0.05),big?0.09:0.05,C.yellow);
+ // shock rings around the blade
+ for(const[f,m,c]of[[0.3,1.7,C.white]]){const Q=at(f);mPush();mT(Q[0],Q[1],Q[2]);orient(dx,dy,dz);mRX(PI/2);mS(w*m,0.05,w*m);emit(CYL,c,0,0,NF|F_NOEDGE,0);mPop()}
+ // speed lines drawn in toward the tip
+ for(let i=0;i<6;i++){const a=i*TAU/6+s.t*5,ca=Math.cos(a),sa=Math.sin(a),o1=w*1.5,o2=w*0.45,
+  A=at(1.35),B=at(0.35);const q=(P0,o)=>[P0[0]+(rt[0]*ca+up[0]*sa)*o,P0[1]+(rt[1]*ca+up[1]*sa)*o,P0[2]+(rt[2]*ca+up[2]*sa)*o];
+  w2SegW(q(A,o1),q(B,o2),big?0.06:0.035,C.white)}}
 // arrows
 for(const a of warrows)w2Arrow(a.x-a.dx*0.45,a.y-a.dy*0.45,a.z-a.dz*0.45,a.dx,a.dy,a.dz,0.9,a.c>=1);
 for(const a of warrows)if(!a.stk&&a.c>=0.5)bill(STAR,a.x,a.y,a.z,0.25+0.2*a.c,now*30,W2_GLOW,NF);
