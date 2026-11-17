@@ -101,9 +101,25 @@ function skReset(){let r=0,k=0;for(const n of SKN)if(skOwn(n.id)){r+=n.c0-SKRESP
 const XPK=[[1.25,1.2],[1.5,1.4],[1.8,1.6],[2.15,1.85],[2.6,2.15]];
 function skExp(cl){const i=G.stage,d=XPK[Math.min(i,XPK.length-1)],k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round((k*10*d[0]+(cl?150*d[1]+60*(i+1):0))*(G.ex?EXK.xp:1))}
 function skGain(x){SKS.xp+=x;let up=0;while(SKS.xp>=skNeed(SKS.lv)){SKS.xp-=skNeed(SKS.lv);SKS.lv++;SKS.pt++;up++}return up}
+// result screen level bar: the gauge fills from the old EXP, and wraps round at each level-up (one segment per level passed)
+function skSegs(l,x,rem){const g=[];for(let n=0;n<200;n++){const need=skNeed(l),room=need-x;if(rem>=room){g.push({lv:l,a:x/need,b:1});rem-=room;l++;x=0}else{g.push({lv:l,a:x/need,b:(x+rem)/need});break}}return g}
+function drawLvBar(t){const r=G.rew;if(!r||!r.xp||!r.segs||t<0)return;const sg=r.segs,L=sg.reduce((a,q)=>a+q.b-q.a,0),D=Math.min(4.2,1.0+0.6*(sg.length-1)+0.8*Math.min(1,L)),k=sat((t-0.45)/D),pos=(k<=0?0:1-Math.pow(1-k,1.8))*L;
+let acc=0,ci=0,fill=sg[0].a;for(let i=0;i<sg.length;i++){const w=sg[i].b-sg[i].a;if(pos<=acc+w||i===sg.length-1){ci=i;fill=sg[i].a+Math.max(0,Math.min(w,pos-acc));break}acc+=w}
+if(k<=0){ci=0;fill=sg[0].a}
+if(ci>r.lu){while(r.lu<ci){r.lu++;snd('item');shake(0.25);flash(0.12)}r.lt=t}
+const lvT=r.lt!=null?t-r.lt:9,pop=lvT<0.5?1+0.7*Math.sin(Math.min(1,lvT/0.5)*PI)*(1-lvT/0.5):1,s0=easeBack(sat(t/0.25)),done=k>=1,lv=sg[ci].lv;
+ctx.save();ctx.translate(1118,654);ctx.rotate(-0.03);ctx.scale(s0,s0);const pw=268,ph=76;
+ctx.fillStyle=INK;ctx.fillRect(-pw/2+7,-ph/2+8,pw,ph);ctx.fillStyle='#fff7d6';ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(-pw/2,-ph/2,pw,ph);
+txt('経験値 ＋'+r.xp,-pw/2+14,-ph/2+17,18,INK,null,0,'left');
+ctx.save();ctx.translate(-pw/2+46,ph/2-26);ctx.scale(pop,pop);txt('Lv',-24,8,20,INK,null,0,'center');txt(String(lv),12,0,38,lvT<0.5?'#e5402b':INK,'#fff',8,'center');ctx.restore();
+const bx=-pw/2+88,by=ph/2-36,bw=pw-104,bh=20;ctx.fillStyle=INK;ctx.fillRect(bx-3,by-3,bw+6,bh+6);ctx.fillStyle='#fff';ctx.fillRect(bx,by,bw,bh);
+ctx.save();ctx.beginPath();ctx.rect(bx,by,bw,bh);ctx.clip();ctx.fillStyle=lvT<0.4?'#ffd91a':'#ff5aa8';ctx.fillRect(bx,by,bw*fill,bh);ctx.fillStyle='rgba(255,255,255,.45)';ctx.fillRect(bx,by,bw*fill,bh*0.35);
+if(lvT<0.5){ctx.fillStyle='rgba(255,255,255,'+(0.8*(1-lvT/0.5))+')';ctx.fillRect(bx,by,bw,bh)}ctx.restore();
+if(r.up&&r.lu>0){const a=easeBack(sat(lvT<9?lvT/0.25:1));ctx.save();ctx.translate(pw/2-12,-ph/2+17);ctx.scale(Math.max(0.01,a),Math.max(0.01,a));txt('スキルＰ＋'+r.lu,0,0,20,'#e5402b','#fff',4,'right');ctx.restore()}
+ctx.restore()}
 function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;const i=G.stage;
-if(cl&&!SKS.clr[i])SKS.clr[i]=1;const xp=skExp(cl),up=skGain(xp);
-G.rew={xp,up,lv:SKS.lv};skSave();gaReward(cl)}// コマ札 (gacha.js)
+if(cl&&!SKS.clr[i])SKS.clr[i]=1;const xp=skExp(cl),lv0=SKS.lv,xp0=SKS.xp,up=skGain(xp);
+G.rew={xp,up,lv:SKS.lv,lv0,xp0,segs:skSegs(lv0,xp0,xp),lu:0};skSave();gaReward(cl)}// コマ札 (gacha.js)
 // ---- skill tree screen: a manga panel with the cross (pan / zoom) ----
 // The cross is drawn in "world" coords around SKC and shown through a view (SKVR) that can be dragged, pinched and wheel-zoomed.
 const SKC=[380,394],SKST=62,SKSW=48,SKO=[[0,-1],[1,0],[0,1],[-1,0]],SKSD=[[1,0],[0,1],[-1,0],[0,-1]];

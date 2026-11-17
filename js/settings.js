@@ -97,7 +97,6 @@ if(cl&&t>RS){const u2=t-RS,s=u2<0.16?lerp(2.6,1,easeOut(u2/0.16)):1+0.03*Math.si
  txt('RANK',0,-100,28,INK);txt(rk,0,14,rk.length>1?132:168,RKC[rk],INK,14,'center','#ffd91a',rk[0]==='S'?28:0);ctx.restore();
  if(u2>0.35){const a=easeBack(sat((u2-0.35)/0.25));ctx.save();ctx.translate(985,580);ctx.rotate(-0.04);ctx.scale(a,a);para(-150,-24,300,48,14);ctx.fillStyle=INK;ctx.fill();txt(RKM[rk],8,1,26,'#fff');ctx.restore()}}
 if(cl&&t>1.7)gaRewardCard(t-1.7);// コマ札 (gacha.js)
-if(G.rew&&G.rew.xp&&t>1.5){const r=G.rew,s=easeBack(sat((t-1.5)/0.25)),hh=r.up?48:34;ctx.save();ctx.translate(1110,r.up?640:652);ctx.rotate(-0.06);ctx.scale(s,s);burstPath(3,4,124,hh,12,1.25,6);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,124,hh,12,1.25,6);ctx.fillStyle=r.up?'#ffd91a':'#ff9ad0';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();
- if(r.up){if(!(G.rs&128)&&t>1.75){G.rs|=128;snd('item')}txt('レベルアップ！ Lv'+r.lv,0,-14,24,'#e5402b','#fff',5);txt('経験値＋'+r.xp+'・スキルＰ＋'+r.up,0,16,18,INK)}else txt('経験値 ＋'+r.xp,0,1,26,INK);ctx.restore()}
+if(G.rew&&G.rew.xp&&t>1.5)drawLvBar(t-1.5);
 if(t>1.5){if(net.on){if(net.host)B(440,628,400,62,'ロビーへもどる',()=>hostLobby(),{col:'#ffd91a',size:32});else txt('ホストの操作を待っています…',W/2,652,26,'#fff',INK,6);B(60,632,200,54,'退出する',()=>netLeave(),{size:24})}
 else{B(330,628,300,62,'もう一度',()=>startWipe(startGame),{col:'#ffd91a',size:34});B(660,628,300,62,'メニューへ',()=>startWipe(toMenu),{size:34})}}}
