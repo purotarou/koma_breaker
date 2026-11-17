@@ -295,10 +295,11 @@ else if(fx==='crack'&&t>0.14){const r=mulberry(31),g=sat((t-0.14)/0.06);for(cons
  for(let k=0;k<3;k++){let x=-700+k*460+r()*120,y=-160;ctx.moveTo(x,y);for(let i=0;i<6&&y<160*g*2-160;i++){x+=(r()-0.5)*120;y+=60+r()*20;ctx.lineTo(x,y)}}ctx.stroke()}}
 else if(fx==='beads'&&t>0.1){ctx.save();ctx.globalAlpha=0.9;for(let i=0;i<3;i++){const y=-60+i*60,x=((t*2600+i*500)%1900)-950;ctx.fillStyle='#fff';ctx.fillRect(x-160,y-3,160,6);ctx.beginPath();ctx.arc(x,y,12,0,TAU);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}ctx.restore()}}
 function drawCutSp(){const w=wpW(),S=CUTS[w.id]||CUTS.gun,t=0.6-cutSp,u=t<0.1?t/0.1:cutSp<0.1?cutSp/0.1:1,m=S.mir?-1:1;
+ctx.save();if(gaDemo()){const k=GA_VPR.w/W;ctx.translate(GA_VPR.x+GA_VPR.w/2,GA_VPR.y+GA_VPR.h/2);ctx.scale(k,k);ctx.translate(-W/2,-H/2)}// gacha highlight: shrink the whole-screen cut-in into the frame
 ctx.save();ctx.translate(W/2,330);ctx.rotate(S.rot);const h=150*u;ctx.beginPath();ctx.rect(-800,-h,1600,h*2);ctx.fillStyle=S.bg;ctx.fill();ctx.save();ctx.clip();
 cutBack(S.fx,t);ctx.save();ctx.scale(m,1);ctx.translate(-250+t*60,10);cutEye(S.iris);ctx.restore();cutFront(S.fx,t);ctx.restore();
 ctx.strokeStyle=INK;ctx.lineWidth=8;ctx.strokeRect(-800,-h,1600,h*2);
-if(u>0.9){txt('必殺！',260*m,-38,96,S.tc||'#ffd91a',INK,16,'center','#fff',28);const nm=w.sp,lv=w.id==='gun'?1:wpLv(w.id);txt(nm,300*m,62,Math.min(84,440/nm.length),'#fff',INK,16);if(lv>1){ctx.save();ctx.translate(260*m+182,-82);ctx.rotate(0.12);txt('Lv'+lv,0,0,44,'#fff',INK,10,'center','#e5402b',18);ctx.restore()}}ctx.restore()}
+if(u>0.9){txt('必殺！',260*m,-38,96,S.tc||'#ffd91a',INK,16,'center','#fff',28);const nm=w.sp,lv=w.id==='gun'?1:wpLv(w.id);txt(nm,300*m,62,Math.min(84,440/nm.length),'#fff',INK,16);if(lv>1){ctx.save();ctx.translate(260*m+182,-82);ctx.rotate(0.12);txt('Lv'+lv,0,0,44,'#fff',INK,10,'center','#e5402b',18);ctx.restore()}}ctx.restore();ctx.restore()}
 // ================= DRAW: world =================
 function railBeam(a,b,ice){const NF=F_UNLIT|F_NOCAST,dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz);if(l<0.2)return;const w=ice?0.26:0.13;
 mPush();mT((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);orient(dx,dy,dz);mRX(PI/2);mS(w,l,w);emit(CYL,ice?C.white:C.cyan,0,0,NF,0);mPop();
