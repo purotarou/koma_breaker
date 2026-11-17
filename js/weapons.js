@@ -41,7 +41,7 @@ const WPN=[
  d:['長押しで溜めて、離して射る（1.5 秒で威力３倍）','溜めるほど貫通する敵が増える（最大５体）'],s:'前方の広い範囲に矢の雨。残った矢の中では溜めが速い'},
 {id:'shield',name:'城壁の大楯',type:'大楯',kind:'shield',btn:'盾',file:'weapon_shield',col:'#c9a227',bg:[.93,.95,1],ammo:0,g:1,sp:'城壁結界',spd:8,spMode:'mode',
  d:['タップで盾で押す。長押しで正面を防御（移動は遅い）','当たる直前に防御すると弾をはね返す'],s:'前に水色のバリアを張り、敵の弾を防ぐ（約８秒）'},
-{id:'staff',name:'護符の錫杖',type:'錫杖',kind:'staff',btn:'祈',file:'weapon_staff',col:'#2fb38a',bg:[.88,1,.93],ammo:0,g:1,sp:'反魂の祈り',spd:0.3,spMode:'once',
+{id:'staff',name:'護符の錫杖',type:'杖',kind:'staff',btn:'祈',file:'weapon_staff',col:'#2fb38a',bg:[.88,1,.93],ammo:0,g:1,sp:'反魂の祈り',spd:0.3,spMode:'once',
  d:['護符の玉を飛ばす。味方に当たると回復＋短い加護、敵にはダメージ','玉は味方を少し追う。近くの敵は杖で殴る'],s:'味方全員を回復し、ダウンした味方を復活。しばらくダメージ軽減＋攻撃力アップ'}];
 const WB_RF=4,RAIL_DM=9,RAIL_ICE=20;// bomb: seconds from its own throw until that bomb is back / 氷魄砲 damage per 0.06 s tick (normal, 氷牢)
 // ---- ownership / equip (localStorage koma_wpn: {eq: weapon id, got: 1 once the six were obtained}) ----
