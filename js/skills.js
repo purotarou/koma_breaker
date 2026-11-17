@@ -4,10 +4,13 @@
 // already computes for itself in co-op, so nothing extra goes over the network. Skills are off in versus and the demo.
 // Shape: a cross. The centre is the start; four arms go out (up=攻, right=速, down=守, left=技). Each arm:
 //   一段 → 二段 → (A line | B line | short middle branch). A/B lines have 三段・四段・五段・極み; the middle branch has 2 panels.
-//   Every panel can be taken (no limit on lines or points). Tier gate = stages cleared (三段1, 四段2, 五段3, 極み5).
+//   Past 極み each A/B line goes on: 七段・八段(覇). The middle branch has a third panel (五段).
+//   複合: between two neighbouring arms (攻×速, 速×守, 守×技, 技×攻) runs a diagonal ladder of 6 compound panels (三段〜八段).
+//   Each rung needs BOTH neighbouring panels of the same depth (the B line of one arm and the A line of the next) plus the rung before it.
+//   Every panel can be taken (no limit on lines or points). Tier gate = stages cleared (三段1, 四段2, 五段3, 極み以降5).
 // Points come only from levels: +1 point per level up. EXP comes from beating enemies (more on harder stages) and clearing a stage.
 // The EXP for the next level grows each level (skNeed), so points stay scarce: it grows faster the higher the level (150+6L+0.15L²)
-// (one arm without its 極み = 32). All 48 panels = 192 points ≈ Lv193, only with a great deal of play.
+// All 92 panels = 644 points (the original 48 panels were 192), only with a great deal of play.
 // Each level also raises the base numbers a little (max HP +1, damage +0.3%), see skApply.
 const SKB=[{n:'攻',col:'#ff4a3d',la:'連射',lb:'一撃'},{n:'速',col:'#3f8cff',la:'疾走',lb:'跳躍'},{n:'守',col:'#35d06a',la:'不動',lb:'治癒'},{n:'技',col:'#f4a51a',la:'気合',lb:'乱舞'}];
 // per arm: t1 t2 A3 A4 A5 A6 B3 B4 B5 B6 C3 C4  [name, effect]
@@ -28,12 +31,27 @@ const SKD=[
  ['自然回復','必殺ゲージが少しずつたまる'],['連発の構え','必殺技を撃ってもゲージが10％残る'],['気迫','敵を倒すとゲージが多くたまる'],['極み：気魄','最初から必殺ゲージが満タン'],
  ['必殺持続','必殺技の時間＋15％'],['必殺中無敵','必殺技の前半はダメージを受けない'],['余韻','必殺技の後にゲージが25％戻る'],['極み：必殺乱舞','必殺技の後、5秒以内ならもう一度撃てる'],
  ['捨て身','必殺ゲージ＋30％（回復－50％）'],['無茶','必殺技の威力＋20％（撃った後に体力－10）']]];
-const SKCOST=[1,2,3,4,5,8,3,4,5,8,2,3],SKCODE=['t1','t2','A3','A4','A5','A6','B3','B4','B5','B6','C3','C4'],SKRESPEC=1;// 振り直し（外す）1個につき1ポイント。戻るのは取ったときのポイントから引いた分
+const SKD_X=[// per arm: A7 A8 B7 B8 C5 (past 極み: the 覇 road, and the middle branch's third panel)
+[['弾幕の達人','連射の速さ さらに＋15％・装弾数＋6発'],['覇：無限弾幕','装填－25％・弾を使わない確率10％'],['一撃の達人','弱点ダメージ さらに＋20％・与ダメージ＋10％'],['覇：滅殺','与ダメージ＋25％・ボスへの与ダメージ＋20％'],['闘気','敵を倒すと弾が2発戻る']],
+[['風の達人','移動の速さ さらに＋8％・回避の待ち時間－15％'],['覇：神速','移動の速さ＋10％・回避の無敵が さらに長く'],['空の達人','空中の与ダメージ さらに＋15％・空中で受けるダメージ－15％'],['覇：飛龍','空中の与ダメージ＋25％・空中にいられる時間＋15％'],['ひらり','敵の攻撃を10％の確率で無効化']],
+[['不動の達人','受けるダメージ さらに－8％・やられた後の無敵時間＋50％'],['覇：金剛','受けるダメージ－15％・体力＋40・1回で受ける上限は最大体力の30％'],['治癒の達人','回復アイテム＋30％・自動回復 さらに強く'],['覇：蘇生','復活が2回できる・敵を倒すと体力＋1'],['吸収','敵を倒すと体力＋2']],
+[['気合の達人','必殺ゲージのたまり方＋20％・敵を倒すとゲージ＋2'],['覇：満願','必殺技の後にゲージが50％残る'],['乱舞の達人','必殺技の威力＋15％・時間＋15％'],['覇：乱舞神','必殺技の威力＋25％・時間＋20％'],['ひらめき','手に入る経験値＋15％']]];
+SKD.forEach((a,b)=>a.push(...SKD_X[b]));
+const SKCOST=[1,2,3,4,5,8,3,4,5,8,2,3,10,16,10,16,5],SKCODE=['t1','t2','A3','A4','A5','A6','B3','B4','B5','B6','C3','C4','A7','A8','B7','B8','C5'],SKRESPEC=1;// 振り直し（外す）1個につき1ポイント。戻るのは取ったときのポイントから引いた分
 const SKN=[];
 for(let b=0;b<4;b++)SKCODE.forEach((c,i)=>{const ln=c[0]==='t'?'':c[0],d=+c[1],sv=ln==='A'?-1:ln==='B'?1:0;
  const par=c==='t1'?[]:c==='t2'?[b+'t1']:[b+(d===3?'t2':ln+(d-1))];
- SKN.push({id:b+c,b,c,ln,d,sv,cap:d===6,c0:SKCOST[i],n:SKD[b][i][0],e:SKD[b][i][1],par,tier:d===6?5:Math.max(0,d-2)})});
+ SKN.push({id:b+c,b,c,ln,d,sv,cap:d===6,fin:d===8,big:d===6||d===8,c0:SKCOST[i],n:SKD[b][i][0],e:SKD[b][i][1],par,tier:d>=6?5:Math.max(0,d-2)})});
+// 複合 [name, effect, cost] for 三段〜八段 of each quarter between arm q and arm q+1 (q = 攻×速, 速×守, 守×技, 技×攻)
+const SKXD=[
+[['疾風撃ち','動いている間の与ダメージ＋10％',6],['残像撃ち','回避のあと2秒間、与ダメージ＋20％',8],['怒濤','連続で倒すほど与ダメージ最大＋12％',10],['複合極み：神風','与ダメージ＋25％・弱点ダメージ＋20％・移動中さらに＋10％',18],['追い風','移動の速さ＋8％・回避の待ち時間－15％',12],['覇：疾風迅雷','与ダメージ＋30％・移動中さらに＋15％・ボスへ＋10％',22]],
+[['空の盾','空中にいる間、受けるダメージ－12％',6],['空蝉','敵の攻撃を8％の確率で無効化',8],['天駆け','空中の与ダメージ＋15％・受けるダメージ－5％',10],['複合極み：天衣無縫','受けるダメージ－20％・空中で受けるダメージ さらに－15％',18],['残心','やられた後の無敵時間＋50％・空中にいられる時間＋10％',12],['覇：羽衣','敵の攻撃を さらに7％無効化・受けるダメージ－10％',22]],
+[['養生','回復アイテムを取るとゲージ＋20％',6],['気力の泉','ゲージのたまり方＋10％・必殺ゲージが さらに自然にたまる',8],['傷は浅い','受けたダメージの半分がゲージになる',10],['複合極み：命燃ゆ','敵を倒すと体力＋3・最大体力＋30',18],['血の気','敵を倒すとゲージ＋2・回復アイテム＋20％',12],['覇：不滅の灯','最大体力＋40・受けるダメージ－10％・自動回復 さらに強く',22]],
+[['乱れ撃ち','必殺技の威力＋8％・装填時間－10％',6],['弾幕の気迫','敵を倒すと弾が1発戻る・連射＋8％',8],['連弾','必殺技の時間＋10％・連射＋8％',10],['複合極み：万雷','必殺技の威力＋30％・時間＋25％',18],['無尽','弾を使わない確率10％・必殺技の後ゲージ＋10％',12],['覇：天雷乱舞','必殺技の威力＋30％・弾を使わない確率＋10％・装弾数＋8発',22]]];
+for(let q=0;q<4;q++){const a=(q+1)%4;SKXD[q].forEach((x,i)=>{const k=i+3,par=k===3?[q+'B3',a+'A3']:[q+'X'+(k-1),q+'B'+k,a+'A'+k];
+ SKN.push({id:q+'X'+k,b:q,b2:a,cmp:true,q,u:k,v:k,k,c:'X'+k,ln:'X',d:k,sv:0,cap:false,fin:false,big:k===6||k===8,c0:x[2],n:x[0],e:x[1],par,tier:0})})}
 const SKI={};for(const n of SKN)SKI[n.id]=n;
+for(const n of SKN)if(n.cmp)n.tier=Math.max(...n.par.map(p=>SKI[p].tier));
 const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0]};
 // EXP needed to go from level L to L+1 (grows a little every level)
 const skNeed=L=>Math.round(150+6*L+0.15*L*L),SKLV_HP=1,SKLV_ATK=0.003;
@@ -56,7 +74,8 @@ let SK={},skPop=null,skMsg=null,skSel=null;
 // effective values for the current game (neutral in versus / demo); called from resetPlayer
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=c=>on&&skHas(c);
 const s={atk:1,rel:1,mag:16,cool:1,crit:1.25,pierce:0,crush:0,low:0,def:1,spd:1,dash:1,dinv:0.34,ddist:1,dash2:0,jump:1,sj:0,grav:1,air:0,dj:0,airc:0,
- hp:100,regen:0,heal:1,heal2:1,steady:0,fud:0,rev:0,revH:0.3,gauge:1,spw:1,gReg:0,gKeep:0,gKill:0,g0:0,beam:0.8,spinv:0,gAfter:0,again:0,spCost:0,pow:12};
+ hp:100,regen:0,heal:1,heal2:1,steady:0,fud:0,rev:0,revH:0.3,gauge:1,spw:1,gReg:0,gKeep:0,gKill:0,g0:0,beam:0.8,spinv:0,gAfter:0,again:0,spCost:0,pow:12,
+ run:0,dB:0,combo:0,boss:1,vamp:0,aKill:0,save:0,airDef:1,dodge:0,hinv:1,cap:0,gHit:0,gItem:0,xpk:1};
 // level: a small rise of the base numbers
 if(on){const k=Math.max(0,(SKS.lv|0)-1);s.hp+=k*SKLV_HP;s.atk*=1+k*SKLV_ATK}
 // 攻
@@ -79,13 +98,24 @@ if(h('3t1'))s.gauge*=1.15;if(h('3t2'))s.spw*=1.05;
 if(h('3A3'))s.gReg=0.3;if(h('3A4'))s.gKeep=10;if(h('3A5'))s.gKill=2;if(h('3A6'))s.g0=100;
 if(h('3B3'))s.beam*=1.15;if(h('3B4'))s.spinv=1;if(h('3B5'))s.gAfter=25;if(h('3B6'))s.again=1;
 if(h('3C3')){s.gauge*=1.3;s.heal*=0.5}if(h('3C4')){s.spw*=1.2;s.spCost=10}
+// 覇の道・中央枝の先
+if(h('0A7')){s.cool/=1.15;s.mag+=6}if(h('0A8')){s.rel*=0.75;s.save+=0.1}if(h('0B7')){s.crit*=1.2;s.atk*=1.1}if(h('0B8')){s.atk*=1.25;s.boss*=1.2}if(h('0C5'))s.aKill+=2;
+if(h('1A7')){s.spd*=1.08;s.dash*=0.85}if(h('1A8')){s.spd*=1.1;s.dinv=0.75}if(h('1B7')){s.air+=0.15;s.airDef*=0.85}if(h('1B8')){s.air+=0.25;s.grav/=1.15}if(h('1C5'))s.dodge+=0.1;
+if(h('2A7')){s.def*=0.92;s.hinv*=1.5}if(h('2A8')){s.def*=0.85;s.hp+=40;s.cap=0.3}if(h('2B7')){s.heal*=1.3;s.regen+=1}if(h('2B8')){s.rev=2;s.vamp+=1}if(h('2C5'))s.vamp+=2;
+if(h('3A7')){s.gauge*=1.2;s.gKill+=2}if(h('3A8'))s.gKeep=Math.max(s.gKeep,50);if(h('3B7')){s.spw*=1.15;s.beam*=1.15}if(h('3B8')){s.spw*=1.25;s.beam*=1.2}if(h('3C5'))s.xpk*=1.15;
+// 複合（攻×速 / 速×守 / 守×技 / 技×攻）
+if(h('0X3'))s.run+=0.1;if(h('0X4'))s.dB=0.2;if(h('0X5'))s.combo=0.004;if(h('0X6')){s.atk*=1.25;s.crit*=1.2;s.run+=0.1}if(h('0X7')){s.spd*=1.08;s.dash*=0.85}if(h('0X8')){s.atk*=1.3;s.run+=0.15;s.boss*=1.1}
+if(h('1X3'))s.airDef*=0.88;if(h('1X4'))s.dodge+=0.08;if(h('1X5')){s.air+=0.15;s.def*=0.95}if(h('1X6')){s.def*=0.8;s.airDef*=0.85}if(h('1X7')){s.hinv*=1.5;s.grav/=1.1}if(h('1X8')){s.dodge+=0.07;s.def*=0.9}
+if(h('2X3'))s.gItem=20;if(h('2X4')){s.gauge*=1.1;s.gReg+=0.3}if(h('2X5'))s.gHit=0.5;if(h('2X6')){s.vamp+=3;s.hp+=30}if(h('2X7')){s.gKill+=2;s.heal*=1.2}if(h('2X8')){s.hp+=40;s.def*=0.9;s.regen+=1}
+if(h('3X3')){s.spw*=1.08;s.rel*=0.9}if(h('3X4')){s.aKill+=1;s.cool/=1.08}if(h('3X5')){s.beam*=1.1;s.cool/=1.08}if(h('3X6')){s.spw*=1.3;s.beam*=1.25}if(h('3X7')){s.save+=0.1;s.gAfter+=10}if(h('3X8')){s.spw*=1.3;s.save+=0.1;s.mag+=8}
+s.dodge=Math.min(s.dodge,0.3);s.save=Math.min(s.save,0.4);
 SK=s;if(DEV&&G.mode!=='pvp')Object.assign(SK,{atk:20,rel:0.15,mag:40,cool:0.7,hp:99999,heal:3,def:1,rev:1,dash:0.2,dj:1,gauge:3,spinv:1,spd:1.3,crit:2,beam:2,regen:2});if(typeof wpApply==='function')wpApply(SK)}// weapon numbers (weapons.js)
 skApply();
 function addGauge(v){if(pl.sp)return;pl.gauge=Math.min(100,pl.gauge+v*SK.gauge)}
 // damage multiplier from skills that depend on the moment (air time, low HP); crits are separate
-function skAtk(){let m=SK.atk;if(SK.air&&pl.y>0.05)m*=1+SK.air;if(SK.low)m*=1+SK.low*(1-sat(pl.hp/SK.hp));return m}
+function skAtk(){let m=SK.atk;if(SK.run&&pl.moving>0.3)m*=1+SK.run;if(SK.dB&&pl.dbt>0)m*=1+SK.dB;if(SK.combo)m*=1+SK.combo*Math.min(G.combo|0,30);if(SK.air&&pl.y>0.05)m*=1+SK.air;if(SK.low)m*=1+SK.low*(1-sat(pl.hp/SK.hp));return m}
 const spReady=()=>pl.gauge>=100||pl.spX>0;
-function skMsgOf(s,n){return s==='own'?'習得済みです':s==='prev'?'手前のスキルを先に習得しよう':s==='tier'?(n.cap?'５つのステージをすべてクリアすると解放':'ステージを'+n.tier+'つクリアすると解放'):'ポイントが足りません（あと'+(n.c0-SKS.pt)+'）'}
+function skMsgOf(s,n){return s==='own'?'習得済みです':s==='prev'?(n.cmp?'となり合う2つの系統の同じ段を、どちらも習得しよう':'手前のスキルを先に習得しよう'):s==='tier'?(n.cap?'５つのステージをすべてクリアすると解放':'ステージを'+n.tier+'つクリアすると解放'):'ポイントが足りません（あと'+(n.c0-SKS.pt)+'）'}
 function skBuy(n){const s=skState(n);if(s!=='ok'){skMsg={s:skMsgOf(s,n),t:now};return}
 SKS.pt-=n.c0;SKS.own[n.id]=1;SKS.last=n.id;skSave();snd('item');skPop={id:n.id,t:now};skMsg=null}
 // take back one panel (only the end of a path); all its points come back
@@ -99,7 +129,7 @@ function skReset(){let r=0,k=0;for(const n of SKN)if(skOwn(n.id)){r+=n.c0-SKRESP
 // and on a clear the boss and a clear bonus that grow with the stage. Game over keeps the EXP of the enemies beaten.
 // own table (enemy strength per stage, kept apart from DIF so easing story mode does not cut the EXP); 難易度：極 ×EXK.xp
 const XPK=[[1.25,1.2],[1.5,1.4],[1.8,1.6],[2.15,1.85],[2.6,2.15]];
-function skExp(cl){const i=G.stage,d=XPK[Math.min(i,XPK.length-1)],k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round((k*10*d[0]+(cl?150*d[1]+60*(i+1):0))*(G.ex?EXK.xp:1))}
+function skExp(cl){const i=G.stage,d=XPK[Math.min(i,XPK.length-1)],k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round((k*10*d[0]+(cl?150*d[1]+60*(i+1):0))*(G.ex?EXK.xp:1)*(SK.xpk||1))}
 function skGain(x){SKS.xp+=x;let up=0;while(SKS.xp>=skNeed(SKS.lv)){SKS.xp-=skNeed(SKS.lv);SKS.lv++;SKS.pt++;up++}return up}
 // result screen level bar: the gauge fills from the old EXP, and wraps round at each level-up (one segment per level passed)
 function skSegs(l,x,rem){const g=[];for(let n=0;n<200;n++){const need=skNeed(l),room=need-x;if(rem>=room){g.push({lv:l,a:x/need,b:1});rem-=room;l++;x=0}else{g.push({lv:l,a:x/need,b:(x+rem)/need});break}}return g}
@@ -125,11 +155,12 @@ G.rew={xp,up,lv:SKS.lv,lv0,xp0,segs:skSegs(lv0,xp0,xp),lu:0};skSave();gaReward(c
 const SKC=[380,394],SKST=62,SKSW=48,SKO=[[0,-1],[1,0],[0,1],[-1,0]],SKSD=[[1,0],[0,1],[-1,0],[0,-1]];
 const SKVR={x:30,y:22,w:700,h:676},SKVC=[380,368],SKS0=0.94,skV={x:0,y:0,s:SKS0},skP={};let skPinch=null;
 function skPos(b,d,sv){const o=SKO[b],s=SKSD[b];return[SKC[0]+o[0]*SKST*d+s[0]*SKSW*sv,SKC[1]+o[1]*SKST*d+s[1]*SKSW*sv]}
+function skPosN(n){if(n.cmp){const o=SKO[n.q],t=SKO[(n.q+1)%4];return[SKC[0]+(o[0]*n.u+t[0]*n.v)*SKST,SKC[1]+(o[1]*n.u+t[1]*n.v)*SKST]}return skPos(n.b,n.d,n.sv)}
 function skScr(p){return[SKVC[0]+skV.x+(p[0]-SKC[0])*skV.s,SKVC[1]+skV.y+(p[1]-SKC[1])*skV.s]}
 const skIn=p=>p.x>=SKVR.x&&p.x<=SKVR.x+SKVR.w&&p.y>=SKVR.y&&p.y<=SKVR.y+SKVR.h;
-function skClampV(){const m=500*skV.s;skV.x=clamp(skV.x,-m,m);skV.y=clamp(skV.y,-m,m)}
+function skClampV(){const m=640*skV.s;skV.x=clamp(skV.x,-m,m);skV.y=clamp(skV.y,-m,m)}
 function skZoom(f,px,py){const s1=clamp(skV.s*f,0.5,2.2),k=s1/skV.s;skV.x=(px-SKVC[0])-(px-SKVC[0]-skV.x)*k;skV.y=(py-SKVC[1])-(py-SKVC[1]-skV.y)*k;skV.s=s1;skClampV()}
-function skHit(x,y){let best=null,bd=1e9;for(const n of SKN){if(skVis(n)<2)continue;const q=skScr(skPos(n.b,n.d,n.sv)),d=Math.hypot(q[0]-x,q[1]-y);if(d<(n.cap?30:17)*skV.s+10&&d<bd){bd=d;best=n}}return best}
+function skHit(x,y){let best=null,bd=1e9;for(const n of SKN){if(skVis(n)<2)continue;const q=skScr(skPosN(n)),d=Math.hypot(q[0]-x,q[1]-y);if(d<(n.big?30:17)*skV.s+10&&d<bd){bd=d;best=n}}return best}
 // pointer hooks from the input code: ph 'd' down / 'm' move / 'u' up. Returns true when the tree used the event.
 function skTouch(ph,p,id){if(G.state!=='menu'||G.menu!=='skill'||setOpen||wipe.on||skConf){for(const k in skP)delete skP[k];skPinch=null;return false}
  if(ph==='d'){if(!skIn(p))return false;for(const b of btns)if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return false;
@@ -151,15 +182,34 @@ function skEdge(a,b,on,col,t){ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a[0
 // 2 = shown, 1 = a dark "？" teaser one step beyond what can be taken now, 0 = hidden
 function skVis(n){if(skHas(n.id)||n.par.every(skHas))return 2;return n.par.every(p=>{const m=SKI[p];return m.par.every(skHas)})?1:0}
 // open the tree zoomed in: on the start the first time, then on the last panel taken
-function skFocus(){const id=SKS.last&&skHas(SKS.last)?SKS.last:null,n=id&&SKI[id],p=n?skPos(n.b,n.d,n.sv):SKC;skV.s=1.3;skV.x=-(p[0]-SKC[0])*skV.s;skV.y=-(p[1]-SKC[1])*skV.s;skClampV()}
+function skFocus(){const id=SKS.last&&skHas(SKS.last)?SKS.last:null,n=id&&SKI[id],p=n?skPosN(n):SKC;skV.s=1.3;skV.x=-(p[0]-SKC[0])*skV.s;skV.y=-(p[1]-SKC[1])*skV.s;skClampV()}
 function skDia(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath()}
 function skHex(x,y,r){ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU-PI/2;i?ctx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r):ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r)}ctx.closePath()}
 function skSpark(x,y,r){ctx.beginPath();ctx.moveTo(x,y-r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.quadraticCurveTo(x,y,x,y+r);ctx.quadraticCurveTo(x,y,x-r,y);ctx.quadraticCurveTo(x,y,x,y-r);ctx.fill()}
+function skFin(n,x,y,own,ok,t){const r=30,col=SKB[n.b].col;
+ if(own){ctx.fillStyle='#fff6b0';for(let i=0;i<4;i++){const a=-t*1.2+i/4*TAU;skSpark(x+Math.cos(a)*(r+12),y+Math.sin(a)*(r+12),5+2*Math.sin(t*6+i))}}
+ skHex(x+3,y+4,r);ctx.fillStyle=INK;ctx.fill();skHex(x,y,r);ctx.fillStyle=own?col:ok?'#fff':'#3a4170';ctx.fill();ctx.strokeStyle=ok?(Math.sin(t*8)>0?'#ffd91a':INK):INK;ctx.lineWidth=5;ctx.stroke();
+ skHex(x,y,r-8);ctx.strokeStyle=own?'#ffd91a':ok?col:'#5d6799';ctx.lineWidth=2.5;ctx.stroke();
+ txt('覇',x,y+1,26,own?'#fff':ok?INK:'#8b93c0',own?INK:null,own?6:0)}
+// 複合: a hexagon in the two arms' colours
+function skCmp(n,x,y,own,ok,t){const r=n.big?28:19,c1=SKB[n.b].col,c2=SKB[n.b2].col;
+ if(own&&n.big){ctx.fillStyle='#fff6b0';for(let i=0;i<4;i++){const a=t*1.2+i/4*TAU;skSpark(x+Math.cos(a)*(r+12),y+Math.sin(a)*(r+12),5+2*Math.sin(t*6+i))}}
+ skHex(x+3,y+4,r);ctx.fillStyle=INK;ctx.fill();skHex(x,y,r);ctx.fillStyle=own?c1:ok?'#fff':'#3a4170';ctx.fill();
+ if(own||ok){ctx.save();skHex(x,y,r);ctx.clip();ctx.globalAlpha=own?1:0.6;ctx.fillStyle=c2;ctx.beginPath();ctx.moveTo(x+r*0.2,y-r*1.3);ctx.lineTo(x+r*1.3,y-r*1.3);ctx.lineTo(x+r*1.3,y+r*1.3);ctx.lineTo(x-r*0.6,y+r*1.3);ctx.closePath();ctx.fill();ctx.restore()}
+ skHex(x,y,r);ctx.strokeStyle=ok?(Math.sin(t*8)>0?'#ffd91a':INK):INK;ctx.lineWidth=n.big?5:4;ctx.stroke();
+ if(n.big){skHex(x,y,r-8);ctx.strokeStyle=own?'#ffd91a':ok?'#fff':'#5d6799';ctx.lineWidth=2.5;ctx.stroke()}
+ if(own)skGlint(x,y,r);
+ const big=n.big,lab=big?(n.k===8?'覇':'合'):own?n.n[0]:String(n.c0);
+ txt(lab,x,y+1,big?26:own?17:16,own||ok&&big?(own?'#fff':INK):ok?INK:'#8b93c0',own?INK:null,own?5:0)}
+// split a long effect text in two lines at a ・ near the middle
+function skLines(e){if(e.length<=22)return[e];const p=e.split('・');let best=null,bd=1e9;for(let j=1;j<p.length;j++){const a=p.slice(0,j).join('・'),b=p.slice(j).join('・'),d=Math.abs(a.length-b.length);if(d<bd){bd=d;best=[a,b]}}return best||[e]}
 function skNode(n,t){const v=skVis(n);if(!v)return;
- if(v===1){const p=skPos(n.b,n.d,n.sv);ctx.save();ctx.globalAlpha=0.75;if(n.cap)skDia(p[0],p[1],22);else{ctx.beginPath();ctx.arc(p[0],p[1],13,0,TAU)}ctx.fillStyle='#232a58';ctx.fill();ctx.setLineDash([4,4]);ctx.strokeStyle='#7c86c4';ctx.lineWidth=2;ctx.stroke();ctx.restore();txt('？',p[0],p[1]+1,n.cap?20:15,'#8b93c0');return}
-const p=skPos(n.b,n.d,n.sv),x=p[0],y=p[1],s=skState(n),own=s==='own',ok=s==='ok',col=SKB[n.b].col,sel=skSel===n.id;
+ if(v===1){const p=skPosN(n);ctx.save();ctx.globalAlpha=0.75;if(n.cmp)skHex(p[0],p[1],n.big?24:16);else if(n.big)skDia(p[0],p[1],22);else{ctx.beginPath();ctx.arc(p[0],p[1],13,0,TAU)}ctx.fillStyle='#232a58';ctx.fill();ctx.setLineDash([4,4]);ctx.strokeStyle='#7c86c4';ctx.lineWidth=2;ctx.stroke();ctx.restore();txt('？',p[0],p[1]+1,n.big?20:15,'#8b93c0');return}
+const p=skPosN(n),x=p[0],y=p[1],s=skState(n),own=s==='own',ok=s==='ok',col=SKB[n.b].col,sel=skSel===n.id;
  const bob=ok?Math.abs(Math.sin(t*5+n.d))*2.5:0,yy=y-bob;
- if(n.cap){const r=30;if(own){ctx.fillStyle='#fff6b0';for(let i=0;i<4;i++){const a=t*1.2+i/4*TAU;skSpark(x+Math.cos(a)*(r+12),yy+Math.sin(a)*(r+12),5+2*Math.sin(t*6+i))}}
+ if(n.cmp)skCmp(n,x,yy,own,ok,t);
+ else if(n.fin)skFin(n,x,yy,own,ok,t);
+ else if(n.cap){const r=30;if(own){ctx.fillStyle='#fff6b0';for(let i=0;i<4;i++){const a=t*1.2+i/4*TAU;skSpark(x+Math.cos(a)*(r+12),yy+Math.sin(a)*(r+12),5+2*Math.sin(t*6+i))}}
   skDia(x+3,yy+4,r);ctx.fillStyle=INK;ctx.fill();skDia(x,yy,r);ctx.fillStyle=own?col:ok?'#fff':'#3a4170';ctx.fill();ctx.strokeStyle=ok?(Math.sin(t*8)>0?'#ffd91a':INK):INK;ctx.lineWidth=5;ctx.stroke();
   skDia(x,yy,r-8);ctx.strokeStyle=own?'#ffd91a':ok?col:'#5d6799';ctx.lineWidth=2.5;ctx.stroke();
   if(own){ctx.save();skDia(x,yy,r);ctx.clip();ctx.globalAlpha=0.35;ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x-r,yy-r*0.15);ctx.lineTo(x+r*0.15,yy-r);ctx.lineTo(x+r*0.4,yy-r);ctx.lineTo(x-r,yy+r*0.1);ctx.fill();ctx.restore()}
@@ -168,10 +218,10 @@ const p=skPos(n.b,n.d,n.sv),x=p[0],y=p[1],s=skState(n),own=s==='own',ok=s==='ok'
   if(ok){ctx.strokeStyle=Math.sin(t*8)>0?'#ffd91a':col;ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,yy,r-3,0,TAU);ctx.stroke()}
   if(own)skGlint(x,yy,r);
   txt(own?n.n[0]:String(n.c0),x,yy+1,own?17:16,own?'#fff':ok?INK:'#8b93c0',own?INK:null,own?5:0)}
- if(sel){ctx.save();ctx.setLineDash([7,6]);ctx.lineDashOffset=t*20;ctx.strokeStyle='#ffd91a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,yy,n.cap?40:23,0,TAU);ctx.stroke();ctx.restore()}
+ if(sel){ctx.save();ctx.setLineDash([7,6]);ctx.lineDashOffset=t*20;ctx.strokeStyle='#ffd91a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,yy,n.big?40:23,0,TAU);ctx.stroke();ctx.restore()}
  if(skPop&&skPop.id===n.id&&now-skPop.t<0.8){const u=now-skPop.t,k=easeBack(sat(u/0.18))*(1+0.25*(1-sat(u/0.18)));ctx.save();ctx.globalAlpha=sat((0.8-u)/0.2);ctx.translate(x,yy-40);ctx.rotate(-0.12);ctx.scale(k*0.55,k*0.55);
   burstPath(4,5,104,40,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,104,40,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('習得！',0,2,40,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
-function skBadge(b,t){const p=skPos(b,7.4,0),col=SKB[b].col,x=p[0],y=p[1],r=42;
+function skBadge(b,t){const p=skPos(b,9.4,0),col=SKB[b].col,x=p[0],y=p[1],r=42;
  const c=skPos(b,1,0);ctx.save();ctx.setLineDash([3,10]);ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(c[0],c[1]);ctx.lineTo(x,y);ctx.stroke();ctx.restore();
  skHex(x+4,y+5,r);ctx.fillStyle=INK;ctx.fill();skHex(x,y,r);ctx.fillStyle=col;ctx.fill();
  ctx.save();skHex(x,y,r);ctx.clip();ctx.globalAlpha=0.28;ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x-r,y-r*0.2);ctx.lineTo(x+r*0.2,y-r);ctx.lineTo(x+r*0.55,y-r);ctx.lineTo(x-r,y+r*0.35);ctx.fill();ctx.globalAlpha=0.18;ctx.fillStyle=INK;ctx.fillRect(x-r,y+r*0.45,r*2,r);ctx.restore();
@@ -187,14 +237,14 @@ function skCore(t){const x=SKC[0],y=SKC[1],R=44;
  ctx.beginPath();ctx.arc(x,y,27,0,TAU);ctx.fillStyle='#1a2050';ctx.fill();ctx.strokeStyle='#ffd91a';ctx.lineWidth=3;ctx.stroke();ctx.beginPath();ctx.arc(x,y,27,0,TAU);ctx.strokeStyle=INK;ctx.lineWidth=1;ctx.stroke();
  txt('起点',x,y+1,19,'#fff',INK,4)}
 function skRoundBtn(x,y,label,cb){btns.push({x:x-24,y:y-24,w:48,h:48,cb});skDisc(x,y,21,'#fff',4);txt(label,x,y+1,label.length>1?15:28,INK)}
-function drawSkill(){const nc=skClr(),t=now,R=SKVR;
+function drawSkill(){const t=now,R=SKVR;
 // ---- left: a manga panel with focus lines ----
 ctx.fillStyle=INK;ctx.fillRect(R.x+9,R.y+10,R.w,R.h);ctx.save();
 const bg=ctx.createRadialGradient(SKVC[0],SKVC[1],40,SKVC[0],SKVC[1],520);bg.addColorStop(0,'#3d55c4');bg.addColorStop(1,'#151b44');ctx.fillStyle=bg;ctx.fillRect(R.x,R.y,R.w,R.h);
 ctx.beginPath();ctx.rect(R.x,R.y,R.w,R.h);ctx.clip();
 ctx.globalAlpha=0.09;ctx.fillStyle=skTone();ctx.fillRect(R.x,R.y,R.w,R.h);ctx.globalAlpha=1;
 ctx.translate(SKVC[0]+skV.x,SKVC[1]+skV.y);ctx.scale(skV.s,skV.s);ctx.translate(-SKC[0],-SKC[1]);
-for(const n of SKN){const v=skVis(n);if(!v)continue;const p=skPos(n.b,n.d,n.sv),q=n.par.length?skPos(SKI[n.par[0]].b,SKI[n.par[0]].d,SKI[n.par[0]].sv):SKC;if(v===1){ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='rgba(140,150,210,.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();ctx.restore()}else skEdge(q,p,skHas(n.id),SKB[n.b].col,t)}
+for(const n of SKN){const v=skVis(n);if(!v)continue;const p=skPosN(n);for(const pid of n.par.length?n.par:[null]){const m=pid&&SKI[pid],q=m?skPosN(m):SKC;if(v===1){ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='rgba(140,150,210,.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();ctx.restore()}else skEdge(q,p,skHas(n.id),SKB[(m||n).b].col,t)}}
 for(let b=0;b<4;b++)skBadge(b,t);skCore(t);for(const n of SKN)skNode(n,t);
 ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(R.x,R.y,R.w,R.h);
 skRoundBtn(R.x+46,R.y+R.h-46,'＋',()=>skZoom(1.25,SKVC[0],SKVC[1]));skRoundBtn(R.x+104,R.y+R.h-46,'－',()=>skZoom(0.8,SKVC[0],SKVC[1]));skRoundBtn(R.x+162,R.y+R.h-46,'元へ',skFocus);
@@ -203,14 +253,14 @@ txt(touchMode?'指で動かす・２本指で拡大':'ドラッグで移動・�
 const X=750;para(X,104,330,56,20);ctx.fillStyle=INK;ctx.fill();txt('スキルツリー',X+175,133,32,'#fff');
 para(X+6,182,480,62,16);ctx.fillStyle=INK;ctx.fill();para(X,176,480,62,16);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
 txt('Lv',X+36,210,22,INK);txt(String(SKS.lv),X+86,206,40,'#e5402b',INK,4);txt('スキルＰ',X+176,207,21,INK);txt(String(SKS.pt),X+248,206,40,'#e5402b',INK,4);
-{const nd=skNeed(SKS.lv),bx=X+296,bw=158;txt('クリア '+nc+'/5',bx+bw/2,190,13,INK);ctx.fillStyle=INK;ctx.fillRect(bx-2,198,bw+4,14);ctx.fillStyle='#fff';ctx.fillRect(bx,200,bw,10);ctx.fillStyle='#35b8ff';ctx.fillRect(bx,200,bw*sat(SKS.xp/nd),10);txt('次のLvまで '+(nd-SKS.xp),bx+bw/2,224,13,INK)}
+{const nd=skNeed(SKS.lv),bx=X+296,bw=158;ctx.fillStyle=INK;ctx.fillRect(bx-2,198,bw+4,14);ctx.fillStyle='#fff';ctx.fillRect(bx,200,bw,10);ctx.fillStyle='#35b8ff';ctx.fillRect(bx,200,bw*sat(SKS.xp/nd),10);txt('次のLvまで '+(nd-SKS.xp),bx+bw/2,224,13,INK)}
 const cy=262,ch=270;panel(X,cy,478,ch);
 const n=skSel&&SKI[skSel];
-if(n){const s=skState(n),col=SKB[n.b].col,path=n.ln==='A'?SKB[n.b].la:n.ln==='B'?SKB[n.b].lb:n.ln==='C'?'寄り道':'基本';
- skHex(X+53,cy+56,30);ctx.fillStyle=INK;ctx.fill();skHex(X+50,cy+52,30);ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();skHex(X+50,cy+52,24);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();txt(SKB[n.b].n,X+50,cy+54,28,'#fff',INK,7);
- txt(path+(n.cap?'・極み':'・'+'一二三四五'[n.d-1]+'段'),X+96,cy+34,16,'#555a70',null,0,'left');
+if(n){const s=skState(n),col=SKB[n.b].col,path=n.cmp?'複合・'+SKB[n.b].n+'×'+SKB[n.b2].n:n.ln==='A'?SKB[n.b].la:n.ln==='B'?SKB[n.b].lb:n.ln==='C'?'寄り道':'基本';
+ skHex(X+53,cy+56,30);ctx.fillStyle=INK;ctx.fill();skHex(X+50,cy+52,30);if(n.cmp){const g=ctx.createLinearGradient(X+28,cy+30,X+72,cy+74);g.addColorStop(0,col);g.addColorStop(0.5,col);g.addColorStop(0.5,SKB[n.b2].col);g.addColorStop(1,SKB[n.b2].col);ctx.fillStyle=g}else ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();skHex(X+50,cy+52,24);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();txt(n.cmp?SKB[n.b].n+SKB[n.b2].n:SKB[n.b].n,X+50,cy+54,n.cmp?22:28,'#fff',INK,n.cmp?6:7);
+ txt(path+(n.cmp?(n.k===6?'・極み':n.k===8?'・覇':'・'+'一二三四五六七八'[n.k-1]+'段'):n.cap?'・極み':n.d===8?'・覇の極み':'・'+'一二三四五六七八'[n.d-1]+'段'),X+96,cy+34,16,'#555a70',null,0,'left');
  txt(n.n,X+96,cy+66,n.n.length>8?26:30,INK,null,0,'left');
- txt(n.e,X+239,cy+124,n.e.length>21?17:20,INK);
+ {const ls=skLines(n.e),fs=ls.some(l=>l.length>24)?15:ls.length>1?18:n.e.length>21?17:20;if(ls.length>1){txt(ls[0],X+239,cy+110,fs,INK);txt(ls[1],X+239,cy+138,fs,INK)}else txt(n.e,X+239,cy+124,fs,INK)}
  para(X+22,cy+160,116,40,10);ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(n.c0+'ポイント',X+86,cy+181,20,'#fff',INK,5);
  txt(s==='own'?'習得済み！':s==='ok'?'習得できる！':skMsgOf(s,n),X+320,cy+180,s==='own'||s==='ok'?24:15,s==='own'?'#1f9a4a':s==='ok'?'#e5402b':'#6a6f88',s==='own'||s==='ok'?'#fff':null,s==='own'||s==='ok'?6:0);
  if(s==='own')B(X+130,cy+204,220,52,'外す（-'+SKRESPEC+'）',()=>skUndo(n),{size:26,col:'#d8d8e0'});else B(X+130,cy+204,220,52,'習得する',()=>skBuy(n),{size:26,col:s==='ok'?'#ff4a3d':'#d8d8e0',tc:s==='ok'?'#fff':'#6a6f88'})}
