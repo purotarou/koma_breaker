@@ -11,7 +11,7 @@
 // Transformation (st 'trans', 3 s): own camera (monkCam), skin turns black, eyes red, body x1.15, roar with camera shake.
 //   If the bell was broken it falls off in the middle; if HP triggered it he keeps the bell.
 // Striker slams freeze the player hit (MK_FRZ s) and the second slam re-aims at them (b.sl2), so it always lands.
-// Every charge ends straight in the striker slams then tired, no stop (phase 2; each slam makes a big two-ring shock wave). The hero says the bell fell once it lands. Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
+// Every charge ends straight in the striker slams then tired, no stop (phase 2; the slams make no shock wave). The hero says the bell fell once it lands. Phase 2 with bell: waves x4, stomp x3, charge, run -> striker slams (right, left).
 // Phase 2 without bell: no sound waves, faster. A charge into the fallen bell -> long tired (7 s) (a wall only ends the charge).
 // The fallen bell stays on the ground as cover: it blocks the shock waves and bodies.
 // Host runs updMonk; clients get the state through snapMsg (m.k) and only animate (monkCos).
@@ -174,10 +174,10 @@ Object.assign(FXE,{
 mland(x,z,p2,intro){explode(x,0.6,z,intro?2.6:1.8,{ink:1,text:intro?'ズドォォン！！':'ドスン！'});fxRing(x,0.1,z,intro?16:11,C.white,0.4);fxSmoke(x,0.3,z,10,2.5,C.snow,6);fxDebris(x,0.4,z,8,8,C.snow,0.5);
  decals.push({x,z,r:intro?5:4,life:6});shake(intro?1:0.6);snd('boom',intro?1:0.7);
  if(!intro){ices.push({x,z,r:p2?3.4:4.2,life:1})}},
-mring(x,z){snd('gong');fxRing(x,4,z,10,C.yellow,0.5);fxRing(x,0.2,z,14,C.gold,0.6);shake(0.5);sfxAt('ゴォォォン！',x,8,z,{size:96,st:'boom',life:0.8,grow:0.14});
- shocks.push({x,z,r:1.4,v:15,max:24,d:14,hit:false,mk:1},{x,z,r:-3.6,v:15,max:24,d:14,hit:false,mk:1})},
+mring(x,z){snd('gong');fxRing(x,4,z,16,C.yellow,0.5);fxRing(x,0.2,z,24,C.gold,0.6);shake(0.6);sfxAt('ゴォォォン！',x,8,z,{size:96,st:'boom',life:0.8,grow:0.14});
+ shocks.push({x,z,r:1.4,v:17,max:48,d:14,hit:false,mk:1},{x,z,r:-5,v:17,max:48,d:14,hit:false,mk:1})},// huge rings that cross the whole arena, the second trails the first
 mslam(x,z){explode(x,0.5,z,1.3,{ink:1,quiet:1});fxRing(x,0.1,z,6,C.white,0.3);fxDebris(x,0.4,z,6,7,C.snow,0.4);decals.push({x,z,r:2.6,life:5});shake(0.45);snd('boom',0.6);
- sfxAt('ドガァン！',x,2.5,z,{size:66,st:'boom',life:0.45});shocks.push({x,z,r:0.6,v:13,max:24,d:12,hit:false,mk:1},{x,z,r:-5,v:13,max:24,d:12,hit:false,mk:1})},// two big rings, the second trails the first (jump each)
+ sfxAt('ドガァン！',x,2.5,z,{size:66,st:'boom',life:0.45});},
 mbreak(x,z,quiet){snd('gong');snd('boom',1);shake(1);const b=boss;if(!quiet){flash(0.7);stopT(0.18);invA=1;addText('バキィッ！',W/2,H*0.3,{size:150,st:'boom',life:1.1,rot:-0.08,grow:0.12})}
  if(b){const w=mkW(b,0,4.3,-1.8);fxDebris(w[0],w[1],w[2],18,9,C.gold,0.55);fxStar(w[0],w[1],w[2],5,C.white,0.12);explode(w[0],w[1],w[2],1.6,{quiet:1})}},
 mend(x,z){for(let i=0;i<4;i++)explode(x+rnd(-2,2),rnd(1.5,7),z+rnd(-2,2),rnd(1.6,2.4),{quiet:1,ink:1});explode(x,4,z,4.5,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.25);for(let i=0;i<18;i++)fxOrb(x+rnd(-2,2),rnd(2,7),z+rnd(-2,2))}});
