@@ -6,7 +6,7 @@
 //   一段 → 二段 → (A line | B line | short middle branch). A/B lines have 三段・四段・五段・極み; the middle branch has 2 panels.
 //   Every panel can be taken (no limit on lines or points). Tier gate = stages cleared (三段1, 四段2, 五段3, 極み5).
 // Points come only from levels: +1 point per level up. EXP comes from beating enemies (more on harder stages) and clearing a stage.
-// The EXP for the next level grows each level (skNeed), so points stay scarce: stages 1-4 played twice ≈ Lv31 ≈ 30 points
+// The EXP for the next level grows each level (skNeed), so points stay scarce: it grows faster the higher the level (150+6L+0.15L²)
 // (one arm without its 極み = 32). All 48 panels = 192 points ≈ Lv193, only with a great deal of play.
 // Each level also raises the base numbers a little (max HP +1, damage +0.3%), see skApply.
 const SKB=[{n:'攻',col:'#ff4a3d',la:'連射',lb:'一撃'},{n:'速',col:'#3f8cff',la:'疾走',lb:'跳躍'},{n:'守',col:'#35d06a',la:'不動',lb:'治癒'},{n:'技',col:'#f4a51a',la:'気合',lb:'乱舞'}];
@@ -36,7 +36,7 @@ for(let b=0;b<4;b++)SKCODE.forEach((c,i)=>{const ln=c[0]==='t'?'':c[0],d=+c[1],s
 const SKI={};for(const n of SKN)SKI[n.id]=n;
 const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0]};
 // EXP needed to go from level L to L+1 (grows a little every level)
-const skNeed=L=>150+6*L,SKLV_HP=1,SKLV_ATK=0.003;
+const skNeed=L=>Math.round(150+6*L+0.15*L*L),SKLV_HP=1,SKLV_ATK=0.003;
 try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
  if(s&&s.v===3)Object.assign(SKS,s);
  else if(s&&s.v===2){// old point rules: keep skills and points, and turn every point earned so far into one level
@@ -81,7 +81,7 @@ if(h('3B3'))s.beam*=1.15;if(h('3B4'))s.spinv=1;if(h('3B5'))s.gAfter=25;if(h('3B6
 if(h('3C3')){s.gauge*=1.3;s.heal*=0.5}if(h('3C4')){s.spw*=1.2;s.spCost=10}
 SK=s;if(DEV&&G.mode!=='pvp')Object.assign(SK,{atk:20,rel:0.15,mag:40,cool:0.7,hp:99999,heal:3,def:1,rev:1,dash:0.2,dj:1,gauge:3,spinv:1,spd:1.3,crit:2,beam:2,regen:2});if(typeof wpApply==='function')wpApply(SK)}// weapon numbers (weapons.js)
 skApply();
-function addGauge(v){pl.gauge=Math.min(100,pl.gauge+v*SK.gauge)}
+function addGauge(v){if(pl.sp)return;pl.gauge=Math.min(100,pl.gauge+v*SK.gauge)}
 // damage multiplier from skills that depend on the moment (air time, low HP); crits are separate
 function skAtk(){let m=SK.atk;if(SK.air&&pl.y>0.05)m*=1+SK.air;if(SK.low)m*=1+SK.low*(1-sat(pl.hp/SK.hp));return m}
 const spReady=()=>pl.gauge>=100||pl.spX>0;

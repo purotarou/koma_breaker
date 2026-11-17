@@ -117,7 +117,7 @@ rayApply(h,dm,hx,hy,hz,false,dm/20,140);
 // 貫通弾: the shot goes on through the first (small) enemy and also hits the next one in line
 const he=h.e;if(SK.pierce&&he&&!he.monk&&he.type!=='boss'){let e2=null,t2=h.wallT,m2=1;for(const e of enemies){if(e===he||e.dead||e.st==='spawn'||e.type==='boss')continue;for(const q of spheres(e)){const t=raySph(ox,oy,oz,d,q[0],q[1],q[2],q[3]);if(t>tw&&t<t2){t2=t;e2=e;m2=q[4]}}}
  if(e2){const x=ox+d[0]*t2,y=oy+d[1]*t2,z=oz+d[2]*t2,cr=m=>SK.crush&&m<1?m+(1-m)*0.5:m;fxTracer(hx,hy,hz,x,y,z,C.white,0.07);damage(e2,dm*cr(m2),m2>1.5,x,y,z)}}}
-function pvHit(o,dmg,crit,hx,hy,hz){o.flash=0.08;hitMark=0.12;hitCrit=crit;fxStar(hx,hy,hz,crit?1.5:1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,3,5,PCOL[o.slot],0.1);snd(crit?'crit':'hit');pl.gauge=Math.min(100,pl.gauge+4);
+function pvHit(o,dmg,crit,hx,hy,hz){o.flash=0.08;hitMark=0.12;hitCrit=crit;fxStar(hx,hy,hz,crit?1.5:1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,3,5,PCOL[o.slot],0.1);snd(crit?'crit':'hit');if(!pl.sp)pl.gauge=Math.min(100,pl.gauge+4);
 if(lim('hitT',0.22))sideText(crit?'キィン！':pick(['バキッ！','ガッ！','ドカッ！']),o,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+dmg}
 function beamDamage(dt){const d=aimDir(),AO=aimOrigin(),ox=AO[0],oy=AO[1]-0.2,oz=AO[2],pw=(pl.pow>0?1.6:1)*SK.spw;
 const near=(x,y,z,r)=>{const px=x-ox,py=y-oy,pz=z-oz,t=px*d[0]+py*d[1]+pz*d[2];return t>0&&Math.sqrt(Math.max(0,px*px+py*py+pz*pz-t*t))<r};
@@ -210,7 +210,7 @@ function updateItems(dt){G.itemT-=dt;if(G.itemT>0)return;G.itemT=rnd(9,14)/(G.mo
 let low=false;for(const p of allP())if(p.hp<55)low=true;spawnItem(low&&Math.random()<0.6?0:(Math.random()*3)|0,x,z)}
 function pickItems(dt){for(let i=items.length-1;i>=0;i--){const it=items[i];it.t+=dt;if(pl.dead||G.state!=='play'&&!G.demoOn||Math.hypot(pl.x-it.x,pl.z-it.z)>1.6||pl.y>2.2)continue;items.splice(i,1);if(isCli()){net.q.pk.push(it.id);net.picked[it.id]=1}
 fxStar(it.x,1.2,it.z,3,C.white,0.12);fxRing(it.x,0.1,it.z,4,C.yellow,0.3);snd('item');flash(0.15);
-if(it.k===0){pl.hp=Math.min(SK.hp,pl.hp+40*SK.heal);addText('カイフク！',W/2,H*0.36,{size:76,st:'cyan',life:0.8,rot:-0.06})}else if(it.k===1){pl.pow=SK.pow;addText('パワー！',W/2,H*0.36,{size:84,st:'boom',life:0.8,rot:-0.06})}else{pl.gauge=Math.min(100,pl.gauge+50);addText('キラッ',W/2,H*0.36,{size:76,st:'fire',life:0.8,rot:-0.06})}}}
+if(it.k===0){pl.hp=Math.min(SK.hp,pl.hp+40*SK.heal);addText('カイフク！',W/2,H*0.36,{size:76,st:'cyan',life:0.8,rot:-0.06})}else if(it.k===1){pl.pow=SK.pow;addText('パワー！',W/2,H*0.36,{size:84,st:'boom',life:0.8,rot:-0.06})}else{if(!pl.sp)pl.gauge=Math.min(100,pl.gauge+50);addText('キラッ',W/2,H*0.36,{size:76,st:'fire',life:0.8,rot:-0.06})}}}
 // ---- draw: heroes, items, shockwaves ----
 function drawHero(o){if(HERO.ready)drawHeroGlb(o);else drawHeroBox(o);drawHeroFx(o)}
 // box-built hero (used until / unless assets/hero_kakeru.glb is loaded, see hero.js)

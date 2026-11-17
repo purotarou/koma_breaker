@@ -18,7 +18,7 @@ function fxOrb(x,y,z){addP({k:8,x,y,z,vx:rnd(-4,4),vy:rnd(3,7),vz:rnd(-4,4),s:0.
 function updateParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];if(p.dl>0){p.dl-=dt;continue}p.age+=dt;p.life-=dt;if(p.life<=0){parts.splice(i,1);continue}
 const k=p.k;if(k===1||k===6||k===2){p.vy-=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(k===6)p.rot+=p.spin*dt;if(p.y<0.05&&k!==2){if(k===1){if(Math.random()<0.45&&decals.length<50)decals.push({x:p.x,z:p.z,r:p.s*rnd(2,4),life:rnd(5,9)});parts.splice(i,1)}else{p.y=0.05;p.vy=-p.vy*0.35;p.vx*=0.6;p.vz*=0.6}}}
 else if(k===3){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;const f=Math.exp(-3*dt);p.vx*=f;p.vz*=f}
-else if(k===8){const dx=pl.x-p.x,dy=1.2-p.y,dz=pl.z-p.z,d=Math.hypot(dx,dy,dz)||1;if(p.age>0.3){const a=40*dt;p.vx+=dx/d*a;p.vy+=dy/d*a;p.vz+=dz/d*a;const f=Math.exp(-4*dt);p.vx*=f;p.vy*=f;p.vz*=f}else p.vy-=14*dt;p.x+=p.vx*dt;p.y=Math.max(0.2,p.y+p.vy*dt);p.z+=p.vz*dt;if(d<1.1&&p.age>0.3){pl.gauge=Math.min(100,pl.gauge+3);parts.splice(i,1)}}}
+else if(k===8){const dx=pl.x-p.x,dy=1.2-p.y,dz=pl.z-p.z,d=Math.hypot(dx,dy,dz)||1;if(p.age>0.3){const a=40*dt;p.vx+=dx/d*a;p.vy+=dy/d*a;p.vz+=dz/d*a;const f=Math.exp(-4*dt);p.vx*=f;p.vy*=f;p.vz*=f}else p.vy-=14*dt;p.x+=p.vx*dt;p.y=Math.max(0.2,p.y+p.vy*dt);p.z+=p.vz*dt;if(d<1.1&&p.age>0.3){if(!pl.sp)pl.gauge=Math.min(100,pl.gauge+3);parts.splice(i,1)}}}
 for(let i=decals.length-1;i>=0;i--){decals[i].life-=dt;if(decals[i].life<=0)decals.splice(i,1)}}
 function orient(dx,dy,dz){const l=Math.hypot(dx,dy,dz)||1;mRY(Math.atan2(dx,dz));mRX(-Math.asin(clamp(dy/l,-1,1)));return l}
 function drawParts(){const NF=F_UNLIT|F_NOCAST;for(const p of parts){if(p.dl>0)continue;const t=p.age/p.max;switch(p.k){
