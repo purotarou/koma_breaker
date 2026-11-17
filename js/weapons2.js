@@ -263,7 +263,8 @@ for(const e of enemies){if(e.dead||!(e.stn>0))continue;const c=eCenter(e),r=Math
  else for(let k=0;k<3;k++){const a=now*5+k*TAU/3;bill(STAR,c[0]+Math.cos(a)*r*0.6,c[1]+r*0.8,c[2]+Math.sin(a)*r*0.6,0.28,now*8,C.yellow,NF)}}
 // spear thrust-slash: a diamond spear-head of light (tip leading; it grows out of the spear point) with a lightning core,
 // shock rings left hanging in the air along its path (they spread and fade), speed lines and a flash at the tip
-for(const s of wspk){const big=s.big,sp=big?70:48,Ln=big?8:3.4*(s.k===2?1.25:1),L=Math.max(0.2,Math.min(Ln,s.d-1)),end=sat((s.R-s.d)/(sp*0.08)),
+for(const s of wspk){if(!s.big){spkTri(s);continue}
+ const big=s.big,sp=big?70:48,Ln=big?8:3.4*(s.k===2?1.25:1),L=Math.max(0.2,Math.min(Ln,s.d-1)),end=sat((s.R-s.d)/(sp*0.08)),
  w=(big?2.2:1)*(0.25+0.75*sat(s.d/(big?8:4)))*(0.55+0.45*end),dx=s.dx,dy=s.dy,dz=s.dz,
  P=[s.x+dx*s.d,s.y+dy*s.d,s.z+dz*s.d],h=Math.hypot(dx,dz),rt=h>0.01?[dz/h,0,-dx/h]:[1,0,0],up=[dy*rt[2]-dz*rt[1],dz*rt[0]-dx*rt[2],dx*rt[1]-dy*rt[0]],
  fb=s.d/L,at=f=>(f=Math.min(f,fb),[P[0]-dx*L*f,P[1]-dy*L*f,P[2]-dz*L*f]),off=(Q,a,o)=>{const c=Math.cos(a),n=Math.sin(a);return[Q[0]+(rt[0]*c+up[0]*n)*o,Q[1]+(rt[1]*c+up[1]*n)*o,Q[2]+(rt[2]*c+up[2]*n)*o]},
@@ -279,6 +280,10 @@ for(const s of wspk){const big=s.big,sp=big?70:48,Ln=big?8:3.4*(s.k===2?1.25:1),
  for(let i=0;i<8;i++){const a=i*TAU/8+s.t*5,ln=[1.6,1.2,1.9,1.1,1.5,2.1,1.3,1.7][i];w2SegW(off(at(ln),a,w*(0.9+0.4*ln)),off(at(0.4),a,w*0.5),big?0.06:0.03,C.white)}
  // the flash at the tip
  bill(STAR,P[0],P[1],P[2],w*(0.55+0.15*Math.sin(now*40)),now*25,C.white,NF)}
+// a plain thrust (not the special): a modest flat white triangle with a yellow middle, point leading
+function spkTri(s){if(s.d<1.3)return;const L=Math.min(s.k===2?2:1.6,s.d-1),w=0.5*(0.6+0.4*sat(s.d/4))*(0.6+0.4*sat((s.R-s.d)/4)),P=[s.x+s.dx*(s.d-L/2),s.y+s.dy*(s.d-L/2),s.z+s.dz*(s.d-L/2)],
+ roll=[-0.5,0.15,0.55][s.k|0];mPush();mT(P[0],P[1],P[2]);orient(s.dx,s.dy,s.dz);mRZ(roll);mRX(PI/2);mS(w,L,0.03);emit(CONE,C.white,0,0,F_UNLIT|F_NOCAST,0);
+ mT(0,0.08,0);mS(0.45,0.75,1.4);emit(CONE,C.yellow,0,0,F_UNLIT|F_NOCAST|F_NOEDGE,0);mPop()}
 // arrows
 for(const a of warrows)w2Arrow(a.x-a.dx*0.45,a.y-a.dy*0.45,a.z-a.dz*0.45,a.dx,a.dy,a.dz,0.9,a.c>=1);
 for(const a of warrows)if(!a.stk&&a.c>=0.5)bill(STAR,a.x,a.y,a.z,0.25+0.2*a.c,now*30,W2_GLOW,NF);
