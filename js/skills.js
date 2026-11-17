@@ -4,9 +4,11 @@
 // already computes for itself in co-op, so nothing extra goes over the network. Skills are off in versus and the demo.
 // Shape: a cross. The centre is the start; four arms go out (up=攻, right=速, down=守, left=技). Each arm:
 //   一段 → 二段 → (A line | B line | short middle branch). A/B lines have 三段・四段・五段・極み; the middle branch has 2 panels.
-//   Inside one arm only one of A / B / middle can be taken. Tier gate = stages cleared (三段1, 四段2, 五段3, 極み5).
-// Points are scarce and capped: first clear of a stage +3, second clear +1, boss beaten without damage +1 (each stage once),
-// all five stages cleared +4 → 29 in all. A full line to its 極み costs 23.
+//   Every panel can be taken (no limit on lines or points). Tier gate = stages cleared (三段1, 四段2, 五段3, 極み5).
+// Points come only from levels: +1 point per level up. EXP comes from beating enemies (more on harder stages) and clearing a stage.
+// The EXP for the next level grows each level (skNeed), so points stay scarce: stages 1-4 played twice ≈ Lv31 ≈ 30 points
+// (one arm without its 極み = 32). All 48 panels = 192 points ≈ Lv193, only with a great deal of play.
+// Each level also raises the base numbers a little (max HP +1, damage +0.3%), see skApply.
 const SKB=[{n:'攻',col:'#ff4a3d',la:'連射',lb:'一撃'},{n:'速',col:'#3f8cff',la:'疾走',lb:'跳躍'},{n:'守',col:'#35d06a',la:'不動',lb:'治癒'},{n:'技',col:'#f4a51a',la:'気合',lb:'乱舞'}];
 // per arm: t1 t2 A3 A4 A5 A6 B3 B4 B5 B6 C3 C4  [name, effect]
 const SKD=[
@@ -26,23 +28,27 @@ const SKD=[
  ['自然回復','必殺ゲージが少しずつたまる'],['連発の構え','必殺技を撃ってもゲージが10％残る'],['気迫','敵を倒すとゲージが多くたまる'],['極み：気魄','最初から必殺ゲージが満タン'],
  ['必殺持続','必殺技の時間＋15％'],['必殺中無敵','必殺技の前半はダメージを受けない'],['余韻','必殺技の後にゲージが25％戻る'],['極み：必殺乱舞','必殺技の後、5秒以内ならもう一度撃てる'],
  ['捨て身','必殺ゲージ＋30％（回復－50％）'],['無茶','必殺技の威力＋20％（撃った後に体力－10）']]];
-const SKCOST=[1,2,3,4,5,8,3,4,5,8,2,3],SKCODE=['t1','t2','A3','A4','A5','A6','B3','B4','B5','B6','C3','C4'],SKMAX=29,SKRESPEC=1;// 振り直し（外す）1個につき1ポイント。戻るのは取ったときのポイントから引いた分
+const SKCOST=[1,2,3,4,5,8,3,4,5,8,2,3],SKCODE=['t1','t2','A3','A4','A5','A6','B3','B4','B5','B6','C3','C4'],SKRESPEC=1;// 振り直し（外す）1個につき1ポイント。戻るのは取ったときのポイントから引いた分
 const SKN=[];
 for(let b=0;b<4;b++)SKCODE.forEach((c,i)=>{const ln=c[0]==='t'?'':c[0],d=+c[1],sv=ln==='A'?-1:ln==='B'?1:0;
  const par=c==='t1'?[]:c==='t2'?[b+'t1']:[b+(d===3?'t2':ln+(d-1))];
  SKN.push({id:b+c,b,c,ln,d,sv,cap:d===6,c0:SKCOST[i],n:SKD[b][i][0],e:SKD[b][i][1],par,tier:d===6?5:Math.max(0,d-2)})});
 const SKI={};for(const n of SKN)SKI[n.id]=n;
-const SKS={v:2,pt:0,own:{},clr:[0,0,0,0,0],c2:[0,0,0,0,0],nd:[0,0,0,0,0]};
+const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0]};
+// EXP needed to go from level L to L+1 (grows a little every level)
+const skNeed=L=>150+6*L,SKLV_HP=1,SKLV_ATK=0.003;
 try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
- if(s&&s.v===2)Object.assign(SKS,s);
- else{// first run or the old 4×4 tree: keep the record of cleared stages, rebuild points under the new rules (old skills are cleared)
+ if(s&&s.v===3)Object.assign(SKS,s);
+ else if(s&&s.v===2){// old point rules: keep skills and points, and turn every point earned so far into one level
+  Object.assign(SKS,s);delete SKS.c2;delete SKS.nd;let e=SKS.pt|0;for(const id in SKS.own)if(SKI[id])e+=SKI[id].c0;
+  SKS.v=3;SKS.lv=1+e;SKS.xp=0;skSave()}
+ else{// first run or the old 4×4 tree: keep the record of cleared stages (old skills are cleared), 3 levels per cleared stage
   for(let i=0;i<5;i++)SKS.clr[i]=s&&s.clr?(s.clr[i]?1:0):(+(localStorage.getItem('koma_hi'+i)||0)>0?1:0);
-  const n=SKS.clr.filter(v=>v).length;SKS.pt=n*3+(n===5?4:0);skSave()}}catch(e){}
+  const n=SKS.clr.filter(v=>v).length;SKS.pt=n*3;SKS.lv=1+n*3;skSave()}}catch(e){}
 function skSave(){try{localStorage.setItem('koma_skill',JSON.stringify(SKS))}catch(e){}}
 const skHas=id=>!!DEV||!!SKS.own[id],skOwn=id=>!!SKS.own[id],skClr=()=>SKS.clr.filter(v=>v).length;
-// own | prev (earlier panel missing) | line (another line of this arm is taken) | tier (not enough stages cleared) | pt | ok
+// own | prev (earlier panel missing) | tier (not enough stages cleared) | pt | ok
 function skState(n){if(skHas(n.id))return'own';if(n.par.some(p=>!skHas(p)))return'prev';
- if(n.ln)for(const id in SKS.own){const m=SKI[id];if(m&&m.b===n.b&&m.ln&&m.ln!==n.ln)return'line'}
  if(skClr()<n.tier)return'tier';return SKS.pt<n.c0?'pt':'ok'}
 const skAny=()=>SKN.some(n=>skState(n)==='ok');
 var DEV=0;// 開発者用の裏技（設定画面の「設定」を10回タップすると開発者メニューが出て、そこの「超強化」ボタンで切り替え。ONだとプレイ中に「ボスへ」ボタンも出る）。無敵ではなく体力が桁違いに多い
@@ -51,6 +57,8 @@ let SK={},skPop=null,skMsg=null,skSel=null;
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=c=>on&&skHas(c);
 const s={atk:1,rel:1,mag:16,cool:1,crit:1.25,pierce:0,crush:0,low:0,def:1,spd:1,dash:1,dinv:0.34,ddist:1,dash2:0,jump:1,grav:1,air:0,dj:0,airc:0,
  hp:100,regen:0,heal:1,heal2:1,steady:0,fud:0,rev:0,revH:0.3,gauge:1,spw:1,gReg:0,gKeep:0,gKill:0,g0:0,beam:0.8,spinv:0,gAfter:0,again:0,spCost:0,pow:12};
+// level: a small rise of the base numbers
+if(on){const k=Math.max(0,(SKS.lv|0)-1);s.hp+=k*SKLV_HP;s.atk*=1+k*SKLV_ATK}
 // 攻
 if(h('0t1'))s.atk*=1.05;if(h('0t2'))s.atk*=1.08;
 if(h('0A3'))s.rel*=0.8;if(h('0A4'))s.mag+=4;if(h('0A5'))s.cool/=1.12;if(h('0A6')){s.mag=Math.round(s.mag*1.5);s.cool/=1.3;s.rel*=0.7}
@@ -77,7 +85,7 @@ function addGauge(v){pl.gauge=Math.min(100,pl.gauge+v*SK.gauge)}
 // damage multiplier from skills that depend on the moment (air time, low HP); crits are separate
 function skAtk(){let m=SK.atk;if(SK.air&&pl.y>0.05)m*=1+SK.air;if(SK.low)m*=1+SK.low*(1-sat(pl.hp/SK.hp));return m}
 const spReady=()=>pl.gauge>=100||pl.spX>0;
-function skMsgOf(s,n){return s==='own'?'習得済みです':s==='prev'?'手前のスキルを先に習得しよう':s==='line'?'同じ系統では、1本の道しか選べません':s==='tier'?(n.cap?'５つのステージをすべてクリアすると解放':'ステージを'+n.tier+'つクリアすると解放'):'ポイントが足りません（あと'+(n.c0-SKS.pt)+'）'}
+function skMsgOf(s,n){return s==='own'?'習得済みです':s==='prev'?'手前のスキルを先に習得しよう':s==='tier'?(n.cap?'５つのステージをすべてクリアすると解放':'ステージを'+n.tier+'つクリアすると解放'):'ポイントが足りません（あと'+(n.c0-SKS.pt)+'）'}
 function skBuy(n){const s=skState(n);if(s!=='ok'){skMsg={s:skMsgOf(s,n),t:now};return}
 SKS.pt-=n.c0;SKS.own[n.id]=1;SKS.last=n.id;skSave();snd('item');skPop={id:n.id,t:now};skMsg=null}
 // take back one panel (only the end of a path); all its points come back
@@ -87,10 +95,13 @@ let skConf=false;// 全て振り直すの確認ポップアップ
 function skRespecInfo(){let sp=0,k=0;for(const n of SKN)if(skOwn(n.id)){sp+=n.c0;k++}return{k,sp,loss:k*SKRESPEC,back:sp-k*SKRESPEC}}
 function skAskReset(){if(!skRespecInfo().k){skMsg={s:'習得したスキルがありません',t:now};return}skConf=true}
 function skReset(){let r=0,k=0;for(const n of SKN)if(skOwn(n.id)){r+=n.c0-SKRESPEC;k++}if(!k)return;SKS.pt+=r;SKS.own={};SKS.last=null;skSave();skMsg={s:'振り直し：'+k+'個外して'+r+'ポイント戻りました（1個につき'+SKRESPEC+'ポイント）',t:now}}
-// points at the end of a game (solo / co-op, once per game)
-function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;let p=0;const i=G.stage;
-if(cl){if(!SKS.clr[i]){SKS.clr[i]=1;p+=3;if(skClr()===5)p+=4}else if(!SKS.c2[i]){SKS.c2[i]=1;p+=1}if(!G.bHurt&&!SKS.nd[i]){SKS.nd[i]=1;p+=1}}
-SKS.pt+=p;G.rew=p;skSave();gaReward(cl)}// コマ札 (gacha.js)
+// EXP at the end of a game (solo / co-op, once per game). Enemies beaten (by anyone in co-op) × stage enemy strength,
+// and on a clear the boss and a clear bonus that grow with the stage. Game over keeps the EXP of the enemies beaten.
+function skExp(cl){const i=G.stage,d=difOf(i),k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round(k*10*d.hp+(cl?150*d.bh+60*(i+1):0))}
+function skGain(x){SKS.xp+=x;let up=0;while(SKS.xp>=skNeed(SKS.lv)){SKS.xp-=skNeed(SKS.lv);SKS.lv++;SKS.pt++;up++}return up}
+function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;const i=G.stage;
+if(cl&&!SKS.clr[i])SKS.clr[i]=1;const xp=skExp(cl),up=skGain(xp);
+G.rew={xp,up,lv:SKS.lv};skSave();gaReward(cl)}// コマ札 (gacha.js)
 // ---- skill tree screen: a manga panel with the cross (pan / zoom) ----
 // The cross is drawn in "world" coords around SKC and shown through a view (SKVR) that can be dragged, pinched and wheel-zoomed.
 const SKC=[380,394],SKST=62,SKSW=48,SKO=[[0,-1],[1,0],[0,1],[-1,0]],SKSD=[[1,0],[0,1],[-1,0],[0,-1]];
@@ -173,7 +184,8 @@ txt(touchMode?'指で動かす・２本指で拡大':'ドラッグで移動・�
 // ---- right: info panel ----
 const X=750;para(X,104,330,56,20);ctx.fillStyle=INK;ctx.fill();txt('スキルツリー',X+175,133,32,'#fff');
 para(X+6,182,480,62,16);ctx.fillStyle=INK;ctx.fill();para(X,176,480,62,16);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
-txt('スキルポイント',X+118,207,24,INK);txt(String(SKS.pt),X+300,206,48,'#e5402b',INK,4);txt('/'+SKMAX,X+334,214,20,INK,null,0,'left');txt('クリア '+nc+'/5',X+430,207,17,INK);
+txt('Lv',X+36,210,22,INK);txt(String(SKS.lv),X+86,206,40,'#e5402b',INK,4);txt('スキルＰ',X+176,207,21,INK);txt(String(SKS.pt),X+248,206,40,'#e5402b',INK,4);
+{const nd=skNeed(SKS.lv),bx=X+296,bw=158;txt('クリア '+nc+'/5',bx+bw/2,190,13,INK);ctx.fillStyle=INK;ctx.fillRect(bx-2,198,bw+4,14);ctx.fillStyle='#fff';ctx.fillRect(bx,200,bw,10);ctx.fillStyle='#35b8ff';ctx.fillRect(bx,200,bw*sat(SKS.xp/nd),10);txt('次のLvまで '+(nd-SKS.xp),bx+bw/2,224,13,INK)}
 const cy=262,ch=270;panel(X,cy,478,ch);
 const n=skSel&&SKI[skSel];
 if(n){const s=skState(n),col=SKB[n.b].col,path=n.ln==='A'?SKB[n.b].la:n.ln==='B'?SKB[n.b].lb:n.ln==='C'?'寄り道':'基本';
@@ -184,8 +196,8 @@ if(n){const s=skState(n),col=SKB[n.b].col,path=n.ln==='A'?SKB[n.b].la:n.ln==='B'
  para(X+22,cy+160,116,40,10);ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(n.c0+'ポイント',X+86,cy+181,20,'#fff',INK,5);
  txt(s==='own'?'習得済み！':s==='ok'?'習得できる！':skMsgOf(s,n),X+320,cy+180,s==='own'||s==='ok'?24:15,s==='own'?'#1f9a4a':s==='ok'?'#e5402b':'#6a6f88',s==='own'||s==='ok'?'#fff':null,s==='own'||s==='ok'?6:0);
  if(s==='own')B(X+130,cy+204,220,52,'外す（-'+SKRESPEC+'）',()=>skUndo(n),{size:26,col:'#d8d8e0'});else B(X+130,cy+204,220,52,'習得する',()=>skBuy(n),{size:26,col:s==='ok'?'#ff4a3d':'#d8d8e0',tc:s==='ok'?'#fff':'#6a6f88'})}
-else{txt('光っている丸をタップして選ぼう',X+239,cy+58,23,INK);txt('同じ系統で選べる道は１本だけ',X+239,cy+106,18,INK);txt('習得すると、その先が見えてくる',X+239,cy+138,18,INK);txt('ポイントは全部で'+SKMAX+'。全部は取れない！',X+239,cy+194,20,'#e5402b','#fff',6)}
-if(skMsg&&now-skMsg.t<2.2)txt(skMsg.s,X+245,562,20,'#ff5a4d',INK,6,'center','#fff',10);else txt('初クリア＋3／2回目＋1／ボス無傷＋1／全面クリア＋4／外すと1個-1',X+245,562,15,'#fff',INK,5);
+else{txt('光っている丸をタップして選ぼう',X+239,cy+58,23,INK);txt('習得すると、その先が見えてくる',X+239,cy+106,18,INK);txt('レベルが上がるとポイント＋1',X+239,cy+138,18,INK);txt('やりこめば、いつか全部取れる！',X+239,cy+194,20,'#e5402b','#fff',6)}
+if(skMsg&&now-skMsg.t<2.2)txt(skMsg.s,X+245,562,20,'#ff5a4d',INK,6,'center','#fff',10);else txt('Lvアップ：ポイント＋1・体力＋1・攻撃＋0.3％／外すと1個-1',X+245,562,15,'#fff',INK,5);
 B(X,616,220,56,'もどる',()=>{G.menu='main';skMsg=null;skSel=null},{size:26});B(X+250,616,230,56,'全て振り直す',()=>skAskReset(),{size:24,col:'#ff4a3d',tc:'#fff'});
 if(skConf){const f=skRespecInfo();btns.length=0;ctx.fillStyle='rgba(10,12,40,.72)';ctx.fillRect(0,0,W,H);
  const x=340,y=170,w=600,h=380;panel(x,y,w,h);ctx.fillStyle='#e5402b';ctx.fillRect(x,y,w,64);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(x,y,w,64);txt('全て振り直しますか？',x+w/2,y+34,32,'#fff',INK,6);
