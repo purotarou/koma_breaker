@@ -22,7 +22,7 @@ const FT={
  ibru:{armor:220}};
 const FVAR={bom:['imp',1],ibru:['bru',2],shadeR:['shade',1]};// wave-table names that are variants of a type
 const fires=[],lwaves=[],sweeps=[],spins=[];
-function hazReset(){fires.length=0;lwaves.length=0;sweeps.length=0;spins.length=0}
+function hazReset(){fires.length=0;lwaves.length=0;sweeps.length=0;spins.length=0;if(typeof erupts!=='undefined')erupts.length=0}
 // shared death burst in the enemy's own colour
 function foeDie(e,c,str,deb){const y=FOE[e.type].ctr(e)[1];fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,c,0.3);fxBlobs(e.x,y,e.z,12,7,C.ink,0.2);fxDebris(e.x,y,e.z,deb||6,8,c,0.28);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.4,C.white,0.25);
 if(!pl.sp||lim('spx',0.5))sideText(str,e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}
@@ -189,7 +189,7 @@ put(RING,s.tx,0.11,s.tz,0,0,0,r,1,r,s.k===6?C.orange:C.red,0,0,NF)}
 function addFire(x,z,r,life,dl,long){if(Math.abs(x)>BX+1||z>BZ1+1||z<BZ0-1)return;if(long){let n=0,first=-1;for(let i=0;i<fires.length;i++)if(fires[i].long){n++;if(first<0)first=i}if(n>=BT.aka.fireMax)fires.splice(first,1)}
 if(fires.length>70)fires.shift();fires.push({x,z,r,life,max:life,dl:dl||0,long:long?1:0,s:rnd(0,9)})}
 const spinA=(s,k)=>s.dir*(-1.6-k*BT.aka.spinGap+BT.aka.spinW*Math.max(0,s.t));
-function hazTick(dt){if(boss&&boss.st==='die')hazReset();const live=!pl.dead&&(G.state==='play'||G.demoOn);
+function hazTick(dt){if(boss&&boss.st==='die')hazReset();const live=!pl.dead&&(G.state==='play'||G.demoOn);exTick(dt,live);
 if(ices.length&&!(boss&&boss.monk))for(let i=ices.length-1;i>=0;i--){ices[i].life-=dt/7;if(ices[i].life<=0)ices.splice(i,1)}
 for(let i=fires.length-1;i>=0;i--){const f=fires[i];if(f.dl>0){f.dl-=dt;if(f.dl<=0){fxStar(f.x,0.6,f.z,f.r*1.6,C.orange,0.12);if(lim('fwh',0.15))snd('whoosh')}continue}f.life-=dt;if(f.life<=0){fires.splice(i,1);continue}
  if(live&&pl.y<1.5&&Math.hypot(pl.x-f.x,pl.z-f.z)<f.r*0.9&&lim('burn',BT.aka.burnT)){const h=pl.hp;hurtPlayer(BT.aka.burn,f.x,f.z);if(pl.hp<h)addText('アチチ！',W/2,H*0.62,{size:64,st:'boom',life:0.45})}}
@@ -200,7 +200,7 @@ for(let i=sweeps.length-1;i>=0;i--){const s=sweeps[i],a0=s.dir*lerp(-1.3,1.3,sat
  if(lim('swfx',0.03)){const d=rnd(14,BT.nyudo.swR+4);fxSmoke(Math.sin(a1)*d,0.4,-26+Math.cos(a1)*d,1,1.4,C.smoke,3)}if(s.t>s.dur)sweeps.splice(i,1)}
 for(let i=spins.length-1;i>=0;i--){const s=spins[i],K=BT.aka;s.t+=dt;if(s.t>(3.2+K.spinGap)/K.spinW){spins.splice(i,1);continue}if(s.t<0||!live)continue;
  for(let k=0;k<2;k++){const a=spinA(s,k),px=pl.x,pz=pl.z+17,al=px*Math.sin(a)+pz*Math.cos(a),pp=px*Math.cos(a)-pz*Math.sin(a);if(al>5&&Math.abs(pp)<0.95&&Math.abs(a)<1.75&&lim('spinh',0.5))hurtPlayer(K.spinDmg,pl.x-Math.cos(a)*s.dir,pl.z+Math.sin(a)*s.dir)}}}
-function drawHaz(){const NF=F_UNLIT|F_NOCAST,FF=NF|F_FLAME;
+function drawHaz(){const NF=F_UNLIT|F_NOCAST,FF=NF|F_FLAME;exDraw();
 for(const f of fires){if(f.dl>0){if(Math.sin(now*30)>0)put(RING,f.x,0.12,f.z,0,0,0,f.r*2,1,f.r*2,C.red,0,0,NF);continue}const k=Math.min(1,f.life*2,(f.max-f.life)*5+0.3),r=f.r*k;
  put(CYL,f.x,0.08,f.z,0,0,0,r*2,0.03,r*2,C.redD,0,0,NF|F_NOEDGE);for(let i=0;i<5;i++){const a=f.s+i*1.57,q=i?0.55:0,h=(i?0.85:1.2)*r*(0.75+0.25*Math.sin(now*9+f.s+i*2)),w=r*(i?0.6:0.78);put(CONE,f.x+Math.cos(a)*r*q,h*0.5,f.z+Math.sin(a)*r*q,0,a,0,w,h,w,i%2?C.orange:C.yellow,0,0,FF)}}
 for(const w of lwaves){if(w.dl>0)continue;const wd=BX*2+6;gId=nid();box(0,0.6,w.z,wd,1.2,1.5,BI,0,.6);for(let i=0;i<14;i++)sph(-BX+(i+0.5)*(BX*2/14),1.25+Math.sin(now*9+i*1.7)*0.3,w.z-0.2,3.6,2.0,2.2,BI,0,.6,0,1);gId=0;

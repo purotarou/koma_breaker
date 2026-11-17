@@ -25,8 +25,12 @@ const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:4,fox:
 [{ch:'第一話',name:'墨に溶ける色',g:[{shade:2,imp:4},{shade:2,lan:3}],say:['足元の','墨が動く!']},{ch:'第二話',name:'過去の影',g:[{shade:2,shadeR:2},{shadeR:2,bom:3,lan:2}],say:['見覚えが','あるぞ…']},{ch:'第三話',name:'最後の門番',g:[{bru:1,shade:2,imp:2},{shadeR:2,lan:3,bom:3},{bru:2,shade:2}]},{ch:'最終話',name:'白抜魔王シロヌキ',boss:1}]];
 // Difficulty by stage (the later the stage, the bigger the step): enemy HP / boss HP (the bell too) / damage dealt to the player / small-enemy ink-imp speed.
 // Meant to keep pace with the skill tree and the weapon gacha; tune here. Not used in the demo or versus. A 6th stage onwards keeps climbing by the last step.
-const DIF=[{hp:1.25,bh:1.2,dmg:1.15,spd:1.05},{hp:1.5,bh:1.4,dmg:1.3,spd:1.1},{hp:1.8,bh:1.6,dmg:1.45,spd:1.15},{hp:2.15,bh:1.85,dmg:1.6,spd:1.2},{hp:2.6,bh:2.15,dmg:1.8,spd:1.25}];
-function difOf(n){if(G.demoOn||G.mode==='pvp')return{hp:1,bh:1,dmg:1,spd:1};if(n<DIF.length)return DIF[n];const a=DIF[DIF.length-1],k=n-DIF.length+1;return{hp:a.hp+0.45*k,bh:a.bh+0.3*k,dmg:a.dmg+0.2*k,spd:Math.min(1.5,a.spd+0.05*k)}}
+// Story mode (普通) is a little easier than before, most of all on the early stages. 難易度：極 (G.ex, js/extreme.js) multiplies it by EXK.
+const DIF=[{hp:1.0,bh:0.95,dmg:0.9,spd:1},{hp:1.2,bh:1.15,dmg:1.1,spd:1.05},{hp:1.6,bh:1.45,dmg:1.35,spd:1.12},{hp:2.0,bh:1.75,dmg:1.5,spd:1.18},{hp:2.5,bh:2.05,dmg:1.7,spd:1.23}];
+// 極: enemy HP / boss HP / damage to the player / speed / pause between attacks (smaller = busier) / more small enemies per group / EXP
+const EXK={hp:1.7,bh:1.6,dmg:1.5,spd:1.15,cd:0.78,more:1.25,xp:1.6};
+function difOf(n){if(G.demoOn||G.mode==='pvp')return{hp:1,bh:1,dmg:1,spd:1};let d;if(n<DIF.length)d=DIF[n];else{const a=DIF[DIF.length-1],k=n-DIF.length+1;d={hp:a.hp+0.45*k,bh:a.bh+0.3*k,dmg:a.dmg+0.2*k,spd:Math.min(1.5,a.spd+0.05*k)}}
+ return G.ex?{hp:d.hp*EXK.hp,bh:d.bh*EXK.bh,dmg:d.dmg*EXK.dmg,spd:Math.min(1.6,d.spd*EXK.spd)}:d}
 const SPAWN=[[0,16,0],[-4,18,0],[4,18,0],[0,20,0]],PSPAWN=[[-17,17],[17,-20],[17,17],[-17,-20],[0,17],[0,-13]];
 function setStage(n){if(curStage===n)return;curStage=n;templeDoor.t=templeDoor.target=0;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();[buildStage1,buildStage2,buildStage3,buildStage4,buildStage5][n]();mReset();curLayer=1;setSun(STG[n].sun);setArena(STG[n].arena)}
 // Stage 2 (castle) is authored in Blender: blender/stage_castle.blend -> assets/stage_castle.glb (loaded by js/glb.js).
@@ -186,7 +190,8 @@ function bossDieFx(b){b.pops=b.pops||0;for(let i=0;i<BDIE_POPS.length;i++){const
 // ---- shared FX events (host runs + broadcasts, clients replay) ----
 const FXE={
 bomb(x,z){explode(x,0.6,z,1.6,{ink:1,text:'ドォン！'});decals.push({x,z,r:3,life:6})},
-slam(x,z){explode(x,0.8,z,2.4,{ink:1,text:'ドゴォォン！'});fxRing(x,0.1,z,14,C.white,0.4);decals.push({x,z,r:5,life:7});shocks.push({x,z,r:1.5,v:12,max:STG[G.stage].hard?30:24,d:12,hit:false});if(STG[G.stage].hard)shocks.push({x,z,r:-4,v:12,max:30,d:12,hit:false})},
+slam(x,z){explode(x,0.8,z,2.4,{ink:1,text:'ドゴォォン！'});fxRing(x,0.1,z,14,C.white,0.4);decals.push({x,z,r:5,life:7});if(G.stage<2&&!G.ex)return;// 普通: the bosses of stages 1-2 make no shock wave
+shocks.push({x,z,r:1.5,v:12,max:STG[G.stage].hard?30:24,d:12,hit:false});if(STG[G.stage].hard)shocks.push({x,z,r:-4,v:12,max:30,d:12,hit:false})},
 smash(x,z){fxRing(x,0.1,z,8,C.white,0.3);fxSmoke(x,0.3,z,5,1,C.smoke,4);fxStar(x,0.6,z,3.5,C.yellow,0.1);shake(0.4);stopT(0.05);snd('boom',0.7);sfxAt('ドゴォ！',x,3.4,z,{size:66,st:'boom',life:0.6})},
 stun(x,z){fxStar(x,2,z,4,C.white,0.12);shake(0.45);stopT(0.06);sfxAt('ガァン！',x,4.4,z,{size:70,st:'boom',life:0.6});snd('boom',0.6)},
 roar(k){snd('roar');addText(k?'グオオオオ！':'グオオオ！',W/2,150,{size:k?100:86,st:'hurt',life:1.1});shake(0.6);if(k)invA=1},

@@ -97,7 +97,9 @@ function skAskReset(){if(!skRespecInfo().k){skMsg={s:'習得したスキルが�
 function skReset(){let r=0,k=0;for(const n of SKN)if(skOwn(n.id)){r+=n.c0-SKRESPEC;k++}if(!k)return;SKS.pt+=r;SKS.own={};SKS.last=null;skSave();skMsg={s:'振り直し：'+k+'個外して'+r+'ポイント戻りました（1個につき'+SKRESPEC+'ポイント）',t:now}}
 // EXP at the end of a game (solo / co-op, once per game). Enemies beaten (by anyone in co-op) × stage enemy strength,
 // and on a clear the boss and a clear bonus that grow with the stage. Game over keeps the EXP of the enemies beaten.
-function skExp(cl){const i=G.stage,d=difOf(i),k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round(k*10*d.hp+(cl?150*d.bh+60*(i+1):0))}
+// own table (enemy strength per stage, kept apart from DIF so easing story mode does not cut the EXP); 難易度：極 ×EXK.xp
+const XPK=[[1.25,1.2],[1.5,1.4],[1.8,1.6],[2.15,1.85],[2.6,2.15]];
+function skExp(cl){const i=G.stage,d=XPK[Math.min(i,XPK.length-1)],k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round((k*10*d[0]+(cl?150*d[1]+60*(i+1):0))*(G.ex?EXK.xp:1))}
 function skGain(x){SKS.xp+=x;let up=0;while(SKS.xp>=skNeed(SKS.lv)){SKS.xp-=skNeed(SKS.lv);SKS.lv++;SKS.pt++;up++}return up}
 function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;const i=G.stage;
 if(cl&&!SKS.clr[i])SKS.clr[i]=1;const xp=skExp(cl),up=skGain(xp);

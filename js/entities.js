@@ -14,10 +14,11 @@ if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.
 if(e.type==='bru')return[[e.x,1.0,e.z,0.95,1],[e.x,2.0,e.z,1.1,1],[e.x+fx*0.2,3.0,e.z+fz*0.2,0.55,2]];
 if(e.monk)return monkSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
 function updateEnemies(dt){for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.dead){enemies.splice(i,1);if(e===boss)boss=null;continue}
-if(e.monk){const sl=e.slw>0;if(sl)e.slw-=dt;updMonk(e,sl?dt*0.5:dt);continue}
+if(e.monk){const sl=e.slw>0;if(sl)e.slw-=dt;updMonk(e,sl?dt*0.5:dt);if(G.ex)exMonk(e,sl?dt*0.5:dt);continue}
 if(e.frz>0&&e.type!=='boss'){e.frz-=dt;e.flash-=dt;continue}// frozen by 妖光・氷牢 (weapons.js): no moves, no attacks
 T=pickT(e.x,e.z);e.t+=dt;e.stT+=dt;e.flash-=dt;if(e.type==='boss'){const k=e.slw>0?0.5:1;if(k<1){e.slw-=dt;e.t-=dt*0.5;e.stT-=dt*0.5}updBoss(e,dt*k);continue}
 if(e.st==='spawn'){if(e.stT>0.7){e.st='chase';e.stT=0}continue}
+if(G.ex&&e.cd>0)e.cd-=dt*(1/EXK.cd-1);// 極: attacks come round sooner
 e.x+=e.kx*dt;e.z+=e.kz*dt;const f=Math.exp(-8*dt);e.kx*=f;e.kz*=f;
 const dx=T.x-e.x,dz=T.z-e.z,d=Math.hypot(dx,dz)||1,wy=Math.atan2(dx,dz);
 const F=FOE[e.type];if(F)F.upd(e,dt,T,dx,dz,d,wy);else if(e.type==='imp'){
@@ -39,8 +40,8 @@ else{if(e.ap&&e.hp<=e.bh){e.ap=0;e.st='stun';e.stT=0;e.cd=2;ev('icebrk',r1(e.x),
   else if(e.stT>1.7){e.st='rec';e.stT=0;e.cd=2.5}}
  else if(e.st==='swing'){if(e.stT>0.6&&!e.hd){e.hd=true;const sx=e.x+Math.sin(e.yaw)*2.4,sz=e.z+Math.cos(e.yaw)*2.4;ev('smash',r1(sx),r1(sz));areaHurt(sx,sz,3.3,18,1)}if(e.stT>1.2){e.st='chase';e.cd=Math.max(e.cd,1)}}
  else if(e.stT>(e.st==='stun'?1.5:0.5))e.st='chase'}
-if(e.type!=='lan'){collide(e,e.r);if(boss){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.8:8,bx=e.x-cx,bz=e.z-cz,bd=Math.hypot(bx,bz)||1;if(bd<R&&!(mk&&boss.y>2)){e.x=cx+bx/bd*R;e.z=cz+bz/bd*R}}}}
-for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.type==='lan'||a.type==='boss')continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.type==='lan'||b.type==='boss')continue;const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz)||0.01,rr=a.r+b.r+0.25;if(d<rr){const p=(rr-d)/2/d;a.x-=dx*p;a.z-=dz*p;b.x+=dx*p;b.z+=dz*p}}}}
+if(e.type!=='lan'){collide(e,e.r);if(boss&&e.type!=='crow'){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.8:8,bx=e.x-cx,bz=e.z-cz,bd=Math.hypot(bx,bz)||1;if(bd<R&&!(mk&&boss.y>2)){e.x=cx+bx/bd*R;e.z=cz+bz/bd*R}}}}
+for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.type==='lan'||a.type==='boss'||a.type==='crow')continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.type==='lan'||b.type==='boss'||b.type==='crow')continue;const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz)||0.01,rr=a.r+b.r+0.25;if(d<rr){const p=(rr-d)/2/d;a.x-=dx*p;a.z-=dz*p;b.x+=dx*p;b.z+=dz*p}}}}
 // ---- boss ----
 const restH=(s,yo)=>({x:s*5.3,y:9.35+yo,z:-16.6});
 function updBoss(b,dt){b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);const hands=[b.hL,b.hR];T=bossT(b);
@@ -54,14 +55,15 @@ if(b.phase===1&&b.hp<b.mhp*0.5){b.phase=2;b.st='stag';b.stT=0;b.ah=-1;ev('roar',
 for(let i=0;i<2;i++){if(b.ah===i)continue;const r=restH(i?1:-1,0),h=hands[i],k=Math.min(1,dt*4);h.x+=(r.x-h.x)*k;h.y+=(r.y-h.y)*k;h.z+=(r.z-h.z)*k}
 const p2=b.phase>1;
 if(b.st==='stag'){b.mouth=1;if(b.stT>1.8){b.st='idle';b.stT=0;b.cdT=0.5}}
-else if(b.st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*(STG[G.stage].hard?0.6:1)){b.atk++;b.ti=null;T=bossT(b);const m=b.atk%4;b.stT=0;if(m===1||m===3||(m===0&&p2)){b.st='up';b.ah=(T.x<0?0:1)^(b.atk%3===0?1:0);const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}else if(m===2){b.st='volley';b.vn=0}else b.st='summon'}}
+else if(b.st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*(STG[G.stage].hard?0.6:1)*(G.ex?EXK.cd:1)){b.atk++;b.ti=null;T=bossT(b);const m=b.atk%4;b.stT=0;b.k=0;if(G.ex&&b.atk%5===4)b.st='rows';else if(m===1||m===3||(m===0&&p2)){b.st='up';b.ah=(T.x<0?0:1)^(b.atk%3===0?1:0);const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}else if(m===2){b.st='volley';b.vn=0}else b.st='summon'}}
 else if(b.st==='up'){const h=hands[b.ah],u=Math.min(1,b.stT/(p2?0.6:0.85));if(u<0.7){b.tx=clamp(T.x,-20,20);b.tz=clamp(T.z,-11,20)}const e=easeOut(u);h.x=lerp(b.s0.x,b.tx,e);h.z=lerp(b.s0.z,b.tz,e);h.y=lerp(b.s0.y,10,e)+Math.sin(u*PI)*3;if(u>=1){b.st='down';b.stT=0}}
 else if(b.st==='down'){const h=hands[b.ah];h.y=lerp(10,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){h.y=1.1;b.st='hold';b.stT=0;ev('slam',r1(h.x),r1(h.z));areaHurt(h.x,h.z,4.3,28)}}
 else if(b.st==='hold'){if(b.stT>(p2?0.8:1.2)){b.ah=-1;b.st='idle';b.stT=0;b.cdT=p2?0.5:1.0}}
 else if(b.st==='volley'){b.mouth=1;const n=p2?8:5,want=Math.floor((b.stT-0.4)/0.17);while(b.vn<=want&&b.vn<n){b.vn++;T=pickR();const ox=b.hx*2.7,oy=23.4,oz=-19.6,tx=clamp(T.x+rnd(-5,5),-20,20),tz=clamp(T.z+rnd(-5,5),-12,20),FT=1.5;
   shots.push({id:++eidN,k:1,x:ox,y:oy,z:oz,vx:(tx-ox)/FT,vy:-oy/FT+8*FT,vz:(tz-oz)/FT,r:0.55,dmg:16,g:16,life:9,tx,tz});fxStar(ox,oy,oz,3,C.white,0.08);if(lim('bo',0.3))sfxAt('ボッ',ox,oy+2,oz,{size:70,st:'ink',life:0.4});snd('spawn')}
  if(b.stT>0.4+n*0.17+0.4){b.st='idle';b.stT=0;b.cdT=p2?0.6:1.1}}
-else if(b.st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);for(let i=0;i<(p2?4:3)+G.np-1;i++)spawnNear(STG[G.stage].bom&&i%2?'bom':'imp');if(p2)spawnNear('lan')}if(b.stT>1.3){b.sm=false;b.st='idle';b.stT=0;b.cdT=1}}}
+else if(b.st==='rows'){if(exRows(b,dt,hands)){b.ah=-1;b.st='idle';b.stT=0;b.cdT=0.8}}
+else if(b.st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);for(let i=0;i<(p2?4:3)+G.np-1;i++)spawnNear(STG[G.stage].bom&&i%2?'bom':'imp');if(p2)spawnNear('lan');if(G.ex)spawnNear('crow')}if(b.stT>1.3){b.sm=false;b.st='idle';b.stT=0;b.cdT=1}}}
 // ================= DRAW ENTITIES =================
 function drawImp(e){const s=e.sc;let sq=1,hop=0,lean=0,arm=0.5;mPush();
 if(e.st==='spawn'){const u=e.stT/0.7,k=0.3+0.7*easeBack(Math.min(1,u));mT(e.x,-1.2*(1-easeOut(Math.min(1,u))),e.z);mRY(e.yaw);mS(s*k,s*k,s*k)}

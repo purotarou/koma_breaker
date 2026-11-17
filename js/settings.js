@@ -85,7 +85,7 @@ if(t>P0){const k=easeOut(sat((t-P0)/0.3)),pw=600,rows=[['撃破数',G.kills],['�
  const ph=rows.length*58+44;ctx.save();ctx.translate(lerp(-760,0,k)+390,420);ctx.rotate(-0.025);
  ctx.fillStyle=INK;ctx.fillRect(-pw/2+12,-ph/2+14,pw,ph);ctx.fillStyle='#fff';ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.save();ctx.beginPath();ctx.rect(-pw/2,-ph/2,pw,ph);ctx.clip();ctx.fillStyle=dotPat;ctx.globalAlpha=0.2;ctx.beginPath();ctx.moveTo(-pw/2,ph/2);ctx.lineTo(pw/2,-ph/2+40);ctx.lineTo(pw/2,ph/2);ctx.fill();ctx.restore();
  ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(-pw/2,-ph/2,pw,ph);ctx.lineWidth=2;ctx.strokeRect(-pw/2+9,-ph/2+9,pw-18,ph-18);
- para(-pw/2-16,-ph/2-34,360,54,18);ctx.fillStyle=cl?'#e5402b':INK;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(STG[G.stage].sub+'　'+STG[G.stage].name,-pw/2+172,-ph/2-6,26,'#fff');
+ para(-pw/2-16,-ph/2-34,360,54,18);ctx.fillStyle=cl?'#e5402b':INK;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(STG[G.stage].sub+'　'+STG[G.stage].name+(G.ex?'　極':''),-pw/2+172,-ph/2-6,26,'#fff');
  rows.forEach((r,i)=>{const st=P0+0.3+i*0.18,a=sat((t-st)/0.12);if(a<=0)return;if(!(G.rs&(1<<i))){G.rs|=1<<i;snd('hit')}const y=-ph/2+52+i*58,cu=easeOut(sat((t-st)/0.6));ctx.globalAlpha=a;
   txt(r[0],-pw/2+40+(1-a)*-30,y,30,INK,null,0,'left');
   const v=r[2]==='t'?fmtT(r[1]*cu):r[2]==='s'?r[1]:String(Math.floor(r[1]*cu));ctx.save();ctx.translate(pw/2-38,y+2);ctx.transform(1,0,-0.18,1,0,0);txt(v,0,0,i===2?46:40,i===2?'#e5402b':INK,i===2?'#fff':null,i===2?10:0,'right');ctx.restore();ctx.globalAlpha=1});
