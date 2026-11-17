@@ -51,7 +51,7 @@ const skHas=id=>!!DEV||!!SKS.own[id],skOwn=id=>!!SKS.own[id],skClr=()=>SKS.clr.f
 function skState(n){if(skHas(n.id))return'own';if(n.par.some(p=>!skHas(p)))return'prev';
  if(skClr()<n.tier)return'tier';return SKS.pt<n.c0?'pt':'ok'}
 const skAny=()=>SKN.some(n=>skState(n)==='ok');
-var DEV=0;// 開発者用の裏技（設定画面の「設定」を10回タップすると開発者メニューが出て、そこの「超強化」ボタンで切り替え。ONだとプレイ中に「ボスへ」ボタンも出る）。無敵ではなく体力が桁違いに多い
+var DEV=0;try{DEV=localStorage.getItem('koma_dev')==='1'?1:0}catch(e){}// 超強化の ON/OFF は localStorage の koma_dev に保存（リロードしても残る）。 開発者用の裏技（設定画面の「設定」を10回タップすると開発者メニューが出て、そこの「超強化」ボタンで切り替え。ONだとプレイ中に「ボスへ」ボタンも出る）。無敵ではなく体力が桁違いに多い
 let SK={},skPop=null,skMsg=null,skSel=null;
 // effective values for the current game (neutral in versus / demo); called from resetPlayer
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=c=>on&&skHas(c);

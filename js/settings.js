@@ -8,8 +8,8 @@ applySet();
 function openSet(){setOpen=true;layEdit=false}
 // dev cheat: tap the 「設定」 title 10 times -> super strong, invincible
 let devTap=0,devT=0;
-function devToggle(){DEV=DEV?0:1;skApply();if(typeof pl!=='undefined'&&!pl.dead&&G.state!=='menu')pl.hp=Math.min(pl.hp,SK.hp);if(DEV&&G.state!=='menu')pl.hp=SK.hp;snd('item');addText(DEV?'超強化 ON':'超強化 OFF',W/2,H*0.4,{size:90,st:'boom',life:1.2})}
-let devOpen=false;// the dev menu in the settings appears only after the 10 taps
+function devToggle(){DEV=DEV?0:1;try{localStorage.setItem('koma_dev',DEV?'1':'0')}catch(e){}skApply();if(typeof pl!=='undefined'&&!pl.dead&&G.state!=='menu')pl.hp=Math.min(pl.hp,SK.hp);if(DEV&&G.state!=='menu')pl.hp=SK.hp;snd('item');addText(DEV?'超強化 ON':'超強化 OFF',W/2,H*0.4,{size:90,st:'boom',life:1.2})}
+let devOpen=!!DEV;// the dev menu in the settings appears only after the 10 taps
 function devTapTitle(){if(now-devT>3)devTap=0;devT=now;devTap++;if(devTap<10)return;devTap=0;devOpen=!devOpen;if(!devOpen&&DEV)devToggle();snd('item');addText(devOpen?'開発者メニュー 表示':'開発者メニュー 非表示',W/2,H*0.4,{size:70,st:'boom',life:1.2})}
 // dev: jump straight to the boss wave (solo / host only)
 function devSkipBoss(){if(isCli()||G.mode==='pvp'||G.state!=='play')return;const last=WAVESET[G.stage].length-1;if(G.wave>=last)return;for(const e of enemies)e.dead=true;G.paused=false;startWave(last)}
