@@ -425,8 +425,12 @@ case'bomb':return[['威力','130（爆風の端では 65）'],['爆風','半径 
 return[]}
 function drawEqDet(w,X,Y,PW,PH){panel(X,Y,PW,PH);const rows=wpStats(w),n=rows.length,lh=Math.min(36,(PH-70)/n);
 para(X+16,Y-22,240,44,12);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の性能',X+40,Y+1,24,'#fff',INK,6,'left');
-let y=Y+44;for(const[l,v]of rows){if(!l){ctx.fillStyle='#e5402b';ctx.fillRect(X+18,y-lh*0.42,PW-36,lh*0.84);txt(v,X+30,y+1,Math.min(22,lh*0.62),'#fff',null,0,'left')}
- else{txt(l,X+30,y+1,Math.min(19,lh*0.55),'#555a70',null,0,'left');fitTxt(v,X+176,y+1,Math.min(21,lh*0.6),PW-200,INK);ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+24,y+lh/2-1,PW-48,2)}y+=lh}
+let y=Y+44,zi=0;const vs=Math.min(25,lh*0.7),ls=Math.min(20,lh*0.56),vx=X+190,vw=PW-vx+X-24;
+for(const[l,v]of rows){if(!l){zi=0;ctx.fillStyle='#e5402b';ctx.fillRect(X+18,y-lh*0.44,PW-36,lh*0.88);ctx.fillStyle=INK;ctx.fillRect(X+18,y-lh*0.44,8,lh*0.88);txt(v,X+38,y+1,Math.min(24,lh*0.66),'#fff',INK,4,'left')}
+ else{if(zi++%2===0){ctx.fillStyle='rgba(89,216,255,.16)';ctx.fillRect(X+18,y-lh*0.5,PW-36,lh)}
+  ctx.fillStyle=w.col;ctx.fillRect(X+18,y-lh*0.5+3,5,lh-6);txt(l,X+34,y+1,ls,'#3a3f55',null,0,'left');
+  ctx.font='900 '+vs+'px '+FONT;if(ctx.measureText(v).width<=vw||lh<34)fitTxt(v,vx,y+1,vs,vw,INK);
+  else{const parts=v.split('・'),h=Math.ceil(parts.length/2),l1=parts.slice(0,h).join('・'),l2=parts.slice(h).join('・'),fs=Math.min(vs*0.78,lh*0.42);fitTxt(l1,vx,y-lh*0.22,fs,vw,INK);fitTxt(l2,vx,y+lh*0.24,fs,vw,INK)}}y+=lh}
 txt('※スキル・強化アイテムなしの値',X+PW-20,Y+PH-18,15,'#555a70',null,0,'right')}
 function fitTxt(s,x,y,size,maxw,fill,al){ctx.font='900 '+size+'px '+FONT;const w=ctx.measureText(s).width;if(w>maxw)size=Math.floor(size*maxw/w);txt(s,x,y,size,fill,null,0,al||'left')}
 function drawEquip(dt){const sel=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[sel],ok=wpOwn(sel),eqI=wpCur(),isEq=ok&&sel===eqI,X=EQ.px,Y=EQ.py,PW=EQ.pw,PH=EQ.ph;
