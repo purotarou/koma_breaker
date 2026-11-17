@@ -272,7 +272,7 @@ function skCore(t){const x=SKC[0],y=SKC[1],R=46,P=Math.sin(t*2.4);
  const gl=ctx.createRadialGradient(x,y,R*0.4,x,y,R*2.7);gl.addColorStop(0,'rgba(255,226,130,'+(0.5+0.12*P)+')');gl.addColorStop(0.45,'rgba(255,170,90,.12)');gl.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y,R*2.7,0,TAU);ctx.fill();
  // spikes: four long ones toward the arms (in their colours), four short white ones between
  ctx.lineJoin='round';
- for(let i=0;i<8;i++){const a=-PI/2+i*PI/4,long=i%2===0,col=long?SKB[[0,1,2,3][i/2]].col:'#fff',L=long?R*1.42:R*1.1,W=long?R*0.3:R*0.16;
+ for(let i=0;i<8;i+=2){const a=-PI/2+i*PI/4,long=true,col=long?SKB[i/2].col:'#fff',L=long?R*1.42:R*1.1,W=long?R*0.3:R*0.16;
   ctx.save();ctx.translate(x,y);ctx.rotate(a);const path=()=>{ctx.beginPath();ctx.moveTo(L,0);ctx.lineTo(R*0.6,-W);ctx.lineTo(R*0.3,0);ctx.lineTo(R*0.6,W);ctx.closePath()};
   ctx.save();ctx.translate(3,4);path();ctx.fillStyle=INK;ctx.fill();ctx.restore();path();ctx.fillStyle=col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();
   if(long){ctx.beginPath();ctx.moveTo(L-8,0);ctx.lineTo(R*0.62,-W*0.45);ctx.lineTo(R*0.62,0);ctx.closePath();ctx.fillStyle='rgba(255,255,255,.45)';ctx.fill()}ctx.restore()}
