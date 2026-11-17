@@ -108,7 +108,7 @@ if(h.e&&h.tg==='bell')monkBellHit(h.e,dmg,hx,hy,hz,quiet);else if(h.e&&h.tg==='f
 else if(h.tg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(h.o)pvHit(h.o,(h.m>1.5?32:16)*pv,h.m>1.5,hx,hy,hz);else if(h.s){popShot(h.s);if(isCli())net.q.ps.push(h.s.id)}
 else if(!quiet&&h.t<maxT&&h.t===h.wallT){fxStar(hx,hy,hz,0.7,C.white,0.08);fxSparks(hx,hy,hz,4,5,C.yellow)}}
 // one shot of the equipped gun (妖弾銃 / 連珠銃; 散華砲 goes to shotgunFire in weapons.js). During 珠時雨 no ammo is used, the rate doubles and the aim homes in.
-function shoot(){const w=wpW(),buff=pl.sp===2&&w.spMode==='buff';if(!buff&&!(SK.save&&Math.random()<SK.save)){pl.ammo--;if(pl.ammo<=0)startReload()}pl.cool=0.125*SK.cool*(buff?0.5:1);pl.kick+=w.kick;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(w.shk);snd(w.snd);
+function shoot(){const w=wpW(),buff=pl.sp===2&&w.spMode==='buff';if(!buff&&!(SK.save&&Math.random()<SK.save)&&!(SK.freeCombo&&G.combo>=5)){pl.ammo--;if(pl.ammo<=0)startReload()}pl.cool=0.125*SK.cool*(buff?0.5:1);pl.kick+=w.kick;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(w.shk);snd(w.snd);
 if(w.pel){shotgunFire(w,0);return}
 const pw=pl.pow>0?2:1,dm=w.dmg*pw,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),buff?0.3:as?0.1:0.035,buff?1:as?0.85:0.5),h=rayHit(ox,oy,oz,d,140),tw=h.t;
 const hx=ox+d[0]*tw,hy=oy+d[1]*tw,hz=oz+d[2]*tw;fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,buff?C.cyan:pw>1?C.orange:C.white,pw>1||buff?0.11:0.07);if(net.on)net.q.f.push([r1(hx),r1(hy),r1(hz)]);
@@ -126,7 +126,7 @@ for(const s of shots)if(near(s.x,s.y,s.z,2.5)){popShot(s);if(isCli())net.q.ps.pu
 if(G.mode==='pvp')for(const o of others)if(!o.dead&&near(o.x,o.y+1,o.z,1.9)){o.flash=0.08;hitMark=0.1;net.pvAcc[o.slot]=(net.pvAcc[o.slot]||0)+170*dt*pw}}
 function respawn(){let b=PSPAWN[0],bs=-1;for(const s of PSPAWN){let m=99;for(const o of others)if(!o.dead)m=Math.min(m,Math.hypot(o.x-s[0],o.z-s[1]));m+=Math.random()*4;if(m>bs){bs=m;b=s}}resetPlayer(b[0],b[1],Math.atan2(b[0],b[1]+2));pl.inv=2.5;snd('ui')}
 function updatePlayer(dt){if(pl.pow>0)pl.pow-=dt;pl.land*=Math.exp(-9*dt);if(pl.spX>0)pl.spX-=dt;if(pl.dq){pl.dqT-=dt;if(pl.dqT<=0)pl.dq=0}
-if(!pl.dead&&G.state==='play'){if(pl.dbt>0)pl.dbt-=dt;if(SK.regen&&pl.hp<SK.hp)pl.hp=Math.min(SK.hp,pl.hp+(pl.moving<0.15&&pl.y<=0?0.8:0.3)*SK.regen*dt);if(SK.gReg&&!pl.sp)pl.gauge=Math.min(100,pl.gauge+SK.gReg*dt)}
+if(!pl.dead&&G.state==='play'){if(pl.dbt>0)pl.dbt-=dt;if(pl.shT>0)pl.shT-=dt;if(SK.regen&&pl.hp<SK.hp)pl.hp=Math.min(SK.hp,pl.hp+(pl.moving<0.15&&pl.y<=0?0.8:0.3)*SK.regen*dt);if(SK.gReg&&!pl.sp)pl.gauge=Math.min(100,pl.gauge+SK.gReg*dt)}
 if(pl.dead){pl.deadT+=RDT;inp.lx=inp.ly=0;inp.jump=inp.dash=inp.special=inp.reload=false;pl.y=Math.max(0,pl.y-dt*6);
  if(net.on&&G.state==='play'){pl.respT-=RDT;if(G.mode==='pvp'){if(pl.respT<=0)respawn()}else{let near=false,any=false;for(const o of others)if(!o.dead){any=true;if(Math.hypot(o.x-pl.x,o.z-pl.z)<2.8)near=true}pl.revT=near?pl.revT+RDT:Math.max(0,pl.revT-RDT);
   if(pl.revT>2.5||(pl.respT<=0&&any)){pl.dead=false;pl.hp=50;pl.inv=2.5;pl.revT=0;snd('item');addText('カイフク！',W/2,H*0.4,{size:90,st:'cyan',life:0.8})}}}return}
@@ -149,10 +149,10 @@ if(pl.sp===1){pl.spT+=RDT;lines(0.7,'#16121f');if(pl.spT>0.55){pl.sp=2;pl.spT=0;
 else if(pl.sp===2){pl.spT+=dt;wpSpTick(dt);if(pl.spT>spDur()){pl.sp=0;if(SK.gAfter)pl.gauge=Math.min(100,pl.gauge+SK.gAfter);if(SK.spCost)pl.hp=Math.max(1,pl.hp-SK.spCost);if(SK.again&&!pl.spF){pl.spX=5;addText('もう一発！',W/2,H*0.2,{size:70,st:'fire',life:0.8})}pl.spF=0}}
 wpUpdate(dt,cine);
 pl.gunDip=lerp(pl.gunDip,pl.reload>0?1:0,1-Math.exp(-14*dt))}
-function hurtPlayer(d,x,z,by){if(pl.inv>0||pl.dead||G.cine>0||monkCine()||G.state==='clear'||G.state==='menu')return;if(SK.spinv&&(pl.sp===1||pl.sp===2&&pl.spT<spDur()*0.5))return;if(SK.dodge&&!G.demoOn&&Math.random()<SK.dodge){pl.inv=0.3;addText('ひらり！',W/2+rnd(-200,200),H*0.5,{size:70,st:'cyan',life:0.5});snd('dash');return}if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
+function hurtPlayer(d,x,z,by){if(pl.inv>0||pl.dead||G.cine>0||monkCine()||G.state==='clear'||G.state==='menu')return;if(SK.spinv&&(pl.sp===1||pl.sp===2&&pl.spT<spDur()*0.5))return;if(SK.shield&&!(pl.shT>0)&&!G.demoOn){pl.shT=SK.shield;pl.inv=0.5;fxRing(pl.x,pl.y+1,pl.z,3,C.cyan,0.3);flash(0.2);addText('結界！',W/2+rnd(-200,200),H*0.5,{size:80,st:'cyan',life:0.6});snd('clank');return}if(SK.dodge&&!G.demoOn&&Math.random()<SK.dodge){pl.inv=0.3;addText('ひらり！',W/2+rnd(-200,200),H*0.5,{size:70,st:'cyan',life:0.5});snd('dash');return}if(G.demoOn){d*=0.3;if(pl.hp-d<40)d=0}
 d*=difOf(G.stage).dmg;d*=SK.def*(SK.fud&&pl.hp<SK.hp*0.5?0.9:1)*(pl.y>0.05?SK.airDef:1);if(SK.cap)d=Math.min(d,SK.hp*SK.cap);pl.hp-=d;G.dmg+=d;if(SK.gHit)addGauge(d*SK.gHit);if(boss)G.bHurt=1;pl.inv=(by==null?0.45:0.1)*SK.hinv;hurtA=1;const st=SK.steady?0.5:1;shake(0.5*st);snd('hurt');stopT(0.04*st);lines(0.6,'#c20020');pl.tilt=(Math.random()<.5?-1:1)*0.09*st;pl.lastBy=by==null?-1:by;
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
-if(pl.hp<=0&&(pl.revU|0)<SK.rev){pl.revU=(pl.revU|0)+1;pl.hp=Math.round(SK.hp*SK.revH);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
+if(pl.hp<=0&&(pl.revU|0)<SK.rev){pl.revU=(pl.revU|0)+1;pl.hp=Math.round(SK.hp*SK.revH);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');if(SK.revClr)for(const q of shots.slice()){popShot(q);if(isCli())net.q.ps.push(q.id)}addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
 else if(pl.hp<=0){pl.hp=0;pl.dead=true;pl.deadT=0;pl.revT=0;pl.sp=0;if(!net.on)gameOver();else if(G.mode==='pvp'){pl.respT=3;if(net.host)pvTally(pl.lastBy,net.slot);else net.q.kb.push(pl.lastBy)}else pl.respT=15}}
 function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;if(e.frz>0)dmg*=1.5;dmg*=skAtk()*(crit?SK.crit:1);if(e.type==='boss'&&SK.boss>1)dmg*=SK.boss;if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
 if(!quiet){fxStar(hx,hy,hz,crit?1.6:1.1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,4,5,C.ink,0.13);addGauge(crit?3:2);snd(crit?'crit':'hit');stopT(0.012);
@@ -161,7 +161,8 @@ if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-
 else if(lim('bh'+e.seed,0.07)){fxStar(hx+rnd(-1,1),hy+rnd(-1,1),hz,1.8,C.cyan,0.1);fxBlobs(hx,hy,hz,3,7,C.ink,0.16)}
 if(isCli()){net.dacc[e.id]=(net.dacc[e.id]||0)+dmg;return}e.hp-=dmg;if(e.hp<=0)kill(e,pl.slot)}
 function killFx(e){const F=FOE[e.type],mine=!net.on||e.mine>now-0.7,y=F?F.ctr(e)[1]:e.type==='lan'?e.y:e.type==='bru'?1.6:0.6;
-if(mine){G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.3;addGauge((F?F.g:({imp:6,lan:8,bru:25})[e.type])+SK.gKill);if(SK.vamp&&!pl.dead)pl.hp=Math.min(SK.hp,pl.hp+SK.vamp);if(SK.aKill&&pl.reload<=0&&wpW().ammo)pl.ammo=Math.min(SK.mag,pl.ammo+SK.aKill)}
+if(mine){G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.3;addGauge((F?F.g:({imp:6,lan:8,bru:25})[e.type])+SK.gKill);if(SK.vamp&&!pl.dead)pl.hp=Math.min(SK.hp,pl.hp+SK.vamp);if(SK.aKill&&pl.reload<=0&&wpW().ammo)pl.ammo=Math.min(SK.mag,pl.ammo+SK.aKill);if(SK.kAmmo&&wpW().ammo&&!pl.sp){pl.reload=0;pl.ammo=SK.mag}
+ if(SK.boom&&(pl.boomD|0)<3){pl.boomD=(pl.boomD|0)+1;fxRing(e.x,0.2,e.z,9,C.orange,0.3);fxBall(e.x,y,e.z,2.4,C.orange,0.25);for(const q of enemies)if(q!==e&&!q.dead&&q.st!=='spawn'&&Math.hypot(q.x-e.x,q.z-e.z)<4.5)damage(q,70,false,q.x,y,q.z,true);pl.boomD--}}
 if(F&&F.die)F.die(e);else if(F||e.type==='imp'){if(e.v&&!F)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);if(!pl.sp||lim('spx',0.5))sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
 else if(e.type==='lan')explode(e.x,y,e.z,1.1);else{explode(e.x,1.8,e.z,2.3,{text:'ズドォォン！'});fxBlobs(e.x,1.5,e.z,20,10,C.ink,0.25);stopT(0.12);invA=1}
 for(let i=0;i<(e.type==='bru'?8:3);i++)fxOrb(e.x,y,e.z)}
