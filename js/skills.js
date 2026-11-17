@@ -76,8 +76,8 @@ const SKXD=[
 [['空の盾','空中にいる間、受けるダメージ－12％',6],['空蝉','敵の攻撃を8％の確率で無効化',8],['天駆け','空中の与ダメージ＋15％・受けるダメージ－5％',10],['複合極み：天衣無縫','受けるダメージ－20％・空中で受けるダメージ さらに－15％',18],['残心','やられた後の無敵時間＋50％・空中にいられる時間＋10％',12],['覇：羽衣','敵の攻撃を さらに7％無効化・受けるダメージ－10％',22]],
 [['養生','回復アイテムを取るとゲージ＋20％',6],['気力の泉','ゲージのたまり方＋10％・必殺ゲージが さらに自然にたまる',8],['傷は浅い','受けたダメージの半分がゲージになる',10],['複合極み：命燃ゆ','敵を倒すと体力＋3・最大体力＋30',18],['血の気','敵を倒すとゲージ＋2・回復アイテム＋20％',12],['覇：不滅の灯','最大体力＋40・受けるダメージ－10％・自動回復 さらに強く',22]],
 [['乱れ撃ち','必殺技の威力＋8％・装填時間－10％',6],['弾幕の気迫','敵を倒すと弾が1発戻る・連射＋8％',8],['連弾','必殺技の時間＋10％・連射＋8％',10],['複合極み：万雷','必殺技の威力＋30％・時間＋25％',18],['無尽','弾を使わない確率10％・必殺技の後ゲージ＋10％',12],['覇：天雷乱舞','必殺技の威力＋30％・弾を使わない確率＋10％・装弾数＋8発',22]]];
-for(let q=0;q<4;q++){const a=(q+1)%4,x=SKXD[q][3];// one 複合 panel per corner, tied to the 四段 of the outer rows of both arms (it needs both)
- SKN.push({id:q+'X',b:q,b2:a,cmp:true,q,u:374,v:374,k:'X',c:'X',ln:'X',d:374,sv:0,cap:false,fin:false,orb:false,big:true,c0:x[2],n:x[0],e:x[1],par:[q+'Bo4',a+'Ao4'],x:[],tier:0,lb:'極み'})}
+for(let q=0;q<4;q++){const a=(q+1)%4,x=SKXD[q][3];// one 複合 panel per corner, tied to the twigs (枝) of both arms that face the corner (it needs both)
+ SKN.push({id:q+'X',b:q,b2:a,cmp:true,q,u:374,v:374,k:'X',c:'X',ln:'X',d:374,sv:0,cap:false,fin:false,orb:false,big:true,c0:x[2],n:x[0],e:x[1],par:[q+'Bt',a+'At'],x:[],tier:0,lb:'極み'})}
 const SKI={};for(const n of SKN)SKI[n.id]=n;
 for(const n of SKN)if(n.cmp)n.tier=Math.max(...n.par.map(p=>SKI[p].tier));
 for(let b=0;b<4;b++)for(const[x,y]of SKLINK){SKI[b+x].x.push(b+y);SKI[b+y].x.push(b+x)}
@@ -264,15 +264,10 @@ const p=skPosN(n),x=p[0],y=p[1],s=skState(n),own=s==='own',ok=s==='ok',col=SKB[n
   burstPath(4,5,104,40,14,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,104,40,14,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('習得！',0,2,40,'#e5402b',INK,6,'center','#fff',12);ctx.restore()}}
 // names of the two side lines, next to their first panels
 function skLabels(){for(let b=0;b<4;b++)for(const[k,sv]of[['la',-1],['lb',1]]){if(skVis(SKI[b+(sv<0?'A':'B')+'3'])<2)continue;const q=skLoc(b,196,sv*160);txt(SKB[b][k],q[0],q[1],17,'#fff',INK,6)}}
-// triangles at the edge of the view that always point to the four arms, wherever the view is dragged to
-function skArrows(t){const R=SKVR,cx=R.x+R.w/2,cy=R.y+R.h/2,x0=R.x+30,x1=R.x+R.w-30,y0=R.y+30,y1=R.y+R.h-84;
- for(let b=0;b<4;b++){const col=SKB[b].col,T=skScr(skLoc(b,300,0));let dx=T[0]-cx,dy=T[1]-cy;const l=Math.hypot(dx,dy);if(l<2){dx=SKO[b][0];dy=SKO[b][1]}else{dx/=l;dy/=l}
-  const tx=dx>1e-4?(x1-cx)/dx:dx<-1e-4?(x0-cx)/dx:1e9,ty=dy>1e-4?(y1-cy)/dy:dy<-1e-4?(y0-cy)/dy:1e9,k=Math.min(tx,ty),px=cx+dx*k,py=cy+dy*k,pu=1+0.1*Math.sin(t*5+b*1.6);
-  ctx.save();ctx.translate(px,py);ctx.rotate(Math.atan2(dy,dx));ctx.scale(pu,pu);
-  ctx.beginPath();ctx.moveTo(19,0);ctx.lineTo(-11,-17);ctx.lineTo(-11,17);ctx.closePath();ctx.save();ctx.translate(3,3);ctx.fillStyle=INK;ctx.fill();ctx.restore();
-  ctx.fillStyle=col;ctx.fill();ctx.lineJoin='round';ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();ctx.lineJoin='miter';
-  ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-5,-8);ctx.lineTo(-5,-2);ctx.closePath();ctx.fillStyle='rgba(255,255,255,.55)';ctx.fill();ctx.restore();
-  const lx=px-dx*36,ly=py-dy*36;skDisc(lx,ly,16,col,3.5);txt(SKB[b].n,lx,ly+1,21,'#fff',INK,5)}}
+// the background of each arm: a soft glow in the arm's colour and a big faint kanji (drawn in the tree's own coordinates, so it moves with the view)
+const SKRGB=SKB.map(b=>[1,3,5].map(i=>parseInt(b.col.slice(i,i+2),16)).join(','));
+function skBackdrop(){for(let b=0;b<4;b++){const c=skLoc(b,380,0),g=ctx.createRadialGradient(c[0],c[1],30,c[0],c[1],600);g.addColorStop(0,'rgba('+SKRGB[b]+',.28)');g.addColorStop(0.6,'rgba('+SKRGB[b]+',.1)');g.addColorStop(1,'rgba('+SKRGB[b]+',0)');ctx.fillStyle=g;ctx.fillRect(c[0]-620,c[1]-620,1240,1240)}
+ ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='900 300px '+FONT;for(let b=0;b<4;b++){const c=skLoc(b,380,0);ctx.fillStyle='rgba('+SKRGB[b]+',.17)';ctx.fillText(SKB[b].n,c[0],c[1])}ctx.restore()}
 function skCore(t){const x=SKC[0],y=SKC[1],R=46,P=Math.sin(t*2.4);
  const gl=ctx.createRadialGradient(x,y,R*0.4,x,y,R*2.7);gl.addColorStop(0,'rgba(255,226,130,'+(0.5+0.12*P)+')');gl.addColorStop(0.45,'rgba(255,170,90,.12)');gl.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y,R*2.7,0,TAU);ctx.fill();
  // spikes: four long ones toward the arms (in their colours), four short white ones between
@@ -302,11 +297,11 @@ ctx.fillStyle=INK;ctx.fillRect(R.x+9,R.y+10,R.w,R.h);ctx.save();
 const bg=ctx.createRadialGradient(SKVC[0],SKVC[1],40,SKVC[0],SKVC[1],520);bg.addColorStop(0,'#1b2352');bg.addColorStop(0.55,'#0d1130');bg.addColorStop(1,'#04050f');ctx.fillStyle=bg;ctx.fillRect(R.x,R.y,R.w,R.h);
 ctx.beginPath();ctx.rect(R.x,R.y,R.w,R.h);ctx.clip();
 ctx.globalAlpha=0.09;ctx.fillStyle=skTone();ctx.fillRect(R.x,R.y,R.w,R.h);ctx.globalAlpha=1;
-ctx.translate(SKVC[0]+skV.x,SKVC[1]+skV.y);ctx.scale(skV.s,skV.s);ctx.translate(-SKC[0],-SKC[1]);
+ctx.translate(SKVC[0]+skV.x,SKVC[1]+skV.y);ctx.scale(skV.s,skV.s);ctx.translate(-SKC[0],-SKC[1]);skBackdrop();
 for(const n of SKN){const v=skVis(n);if(!v)continue;const p=skPosN(n);for(const pid of n.par.length?n.par:[null]){const m=pid&&SKI[pid],q=m?skPosN(m):SKC;if(v===1){ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='rgba(140,150,210,.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();ctx.restore()}else skEdge(q,p,skHas(n.id),SKB[(m||n).b].col,t)}
  for(const eid of n.x){if(eid<n.id)continue;const m=SKI[eid],vm=skVis(m);if(!vm)continue;const q=skPosN(m);if(v===1||vm===1){ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='rgba(140,150,210,.5)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(p[0],p[1]);ctx.stroke();ctx.restore()}else skEdge(q,p,skHas(n.id)&&skHas(m.id),SKB[n.b].col,t)}}
 skCore(t);skLabels();for(const n of SKN)skNode(n,t);
-ctx.restore();skArrows(t);ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(R.x,R.y,R.w,R.h);
+ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(R.x,R.y,R.w,R.h);
 skRoundBtn(R.x+46,R.y+R.h-46,'＋',()=>skZoom(1.25,SKVC[0],SKVC[1]));skRoundBtn(R.x+104,R.y+R.h-46,'－',()=>skZoom(0.8,SKVC[0],SKVC[1]));skRoundBtn(R.x+162,R.y+R.h-46,'元へ',skFocus);
 txt(touchMode?'指で動かす・２本指で拡大':'ドラッグで移動・ホイールで拡大',R.x+R.w-22,R.y+R.h-28,15,'#fff',INK,5,'right');
 // ---- right: info panel ----
