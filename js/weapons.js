@@ -423,10 +423,10 @@ case'shield':{const S=W2.sh;return[['押す',S.bash+'（ダッシュ中・直後
 case'staff':{const S=W2.st;return[['玉','敵に '+S.dm+'・味方は '+Math.round(S.heal*100)+'% 回復＋'+S.bT+'秒の加護'],['間隔',S.cool+' 秒'],['追尾','味方を少し追う'],['殴り','近くの敵に '+S.bonk],gp,['','必殺 '+w.sp],['効果','全員を回復・ダウンした味方を復活（いつでも使える）'],['加護',Math.round(S.sT)+'秒 ダメージ軽減＋攻撃力アップ（凸で強まる）']]}
 case'bomb':return[['威力','130（爆風の端では 65）'],['爆風','半径 4.3 m・ボスにも当たる'],['所持','3 個'],['補充','投げた玉それぞれ '+WB_RF+' 秒で１個戻る'],['投げる間隔','0.5 秒'],['味方・自分','巻き込まない'],gp,['','必殺 '+w.sp],['威力','520（端では 260）・半径 9 m'],['炎','6 秒・毎秒 60（ボスに付くと ×1.5）']]}
 return[]}
-function drawEqDet(w,X,Y,PW,PH){panel(X,Y,PW,PH);const rows=wpStats(w),n=rows.length,lh=Math.min(36,(PH-70)/n);
+function drawEqDet(w,X,Y,PW,PH){panel(X,Y,PW,PH);const rows=wpStats(w),n=rows.length,lh=Math.min(42,(PH-60)/n);
 para(X+16,Y-22,240,44,12);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の性能',X+40,Y+1,24,'#fff',INK,6,'left');
-let y=Y+44;for(const[l,v]of rows){if(!l){ctx.fillStyle='#e5402b';ctx.fillRect(X+18,y-lh*0.42,PW-36,lh*0.84);txt(v,X+30,y+1,Math.min(22,lh*0.62),'#fff',null,0,'left')}
- else{txt(l,X+30,y+1,Math.min(19,lh*0.55),'#555a70',null,0,'left');fitTxt(v,X+176,y+1,Math.min(21,lh*0.6),PW-200,INK);ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+24,y+lh/2-1,PW-48,2)}y+=lh}
+let y=Y+44;for(const[l,v]of rows){if(!l){ctx.fillStyle='#e5402b';ctx.fillRect(X+18,y-lh*0.42,PW-36,lh*0.84);txt(v,X+30,y+1,Math.min(27,lh*0.74),'#fff',null,0,'left')}
+ else{txt(l,X+30,y+1,Math.min(23,lh*0.64),'#555a70',null,0,'left');fitTxt(v,X+200,y+1,Math.min(26,lh*0.74),PW-224,INK);ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+24,y+lh/2-1,PW-48,2)}y+=lh}
 txt('※スキル・強化アイテムなしの値',X+PW-20,Y+PH-18,15,'#555a70',null,0,'right')}
 function fitTxt(s,x,y,size,maxw,fill,al){ctx.font='900 '+size+'px '+FONT;const w=ctx.measureText(s).width;if(w>maxw)size=Math.floor(size*maxw/w);txt(s,x,y,size,fill,null,0,al||'left')}
 function drawEquip(dt){const sel=eqSel<0?wpIdx(WS.eq):eqSel,w=WPN[sel],ok=wpOwn(sel),eqI=wpCur(),isEq=ok&&sel===eqI,X=EQ.px,Y=EQ.py,PW=EQ.pw,PH=EQ.ph;
