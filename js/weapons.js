@@ -465,7 +465,7 @@ if(now-eqPop<0.7){const u=now-eqPop,k=easeBack(sat(u/0.15));ctx.save();ctx.globa
 // 3D preview inside the equip window (camera space, layer 2): a light backdrop and the weapon turning slowly
 // largest scale that keeps the centred box inside the window over every angle the preview turns through, with perspective (cached per weapon and screen)
 // 装備画面での向き: ry=回転の中心の角度（既定は真横=PI/2）、roll=画面内で回す角度。弓は縦長なので横に寝かせ、盾は薄い板なので正面から見せる
-const WPV={bow:{roll:PI/2},shield:{ry:0}};
+const WPV={bow:{roll:PI/2},shield:{ry:PI}};
 const wpPv=w=>{const v=WPV[w.id]||{};return{ry:v.ry==null?PI/2:v.ry,roll:v.roll||0}};
 const WFIT={};
 function wpFit(w,mn,mx,cx,cy,hw,hh,D){const pv=wpPv(w),cr=Math.cos(pv.roll),sr=Math.sin(pv.roll),key=w.id+'|'+W+'|'+H+'|'+cx.toFixed(3)+'|'+cy.toFixed(3)+'|'+hw.toFixed(3);if(WFIT[key])return WFIT[key];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[],pts=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=16;k++)rots.push([pv.ry+0.4*Math.sin(k/16*TAU),0.15]);
