@@ -107,7 +107,7 @@ if(gaMsg&&now-gaMsg.t<2.6){const a=sat((2.6-(now-gaMsg.t))/0.3);ctx.globalAlpha=
 if(gaDet)gaDetail(w,id)}
 // details: what the weapon does + 必殺Lv table (right side, over the highlight)
 // 詳細の中身は縦スクロール（ドラッグ・スワイプ・ホイール）。枠の外はクリップする
-const gaDS={y:0,v:0,id:null,py:0,k:'',t:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=700;
+const gaDS={y:0,v:0,id:null,py:0,k:'',t:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=742;
 const gaDMax=()=>Math.max(0,GA_DCH-GA_DH);
 function gaDetTouch(ph,p,id){if(!(G.menu==='gacha'&&gaDet===1&&!gaA)){gaDS.id=null;return false}
 if(ph==='d'){if(p.x<GA_DX||p.x>GA_DX+GA_DW||p.y<GA_DY+22||p.y>GA_DY+GA_DH)return false;gaDS.id=id;gaDS.py=p.y;gaDS.v=0;return true}
