@@ -20,7 +20,7 @@ const W2={
  fl:{chg:1.5,R:[10,20,40],dm:[60,110,190],spinR:2.8,spinDm:14,spinT:0.3,orbR:1.5,slam:150,slamR:3.2,last:420,lastR:5.5,buf:1.2,bufT:10},
  sp:{dm:[30,30,46],R:4.2,A:1.05,cool:[0.28,0.28,0.45],wv:14,wvDm:22,zap:10,stun:0.7,bstun:0.3,spR:8,spWv:60,spK:1.6},
  bw:{dm:40,chg:1.5,spd:85,rain:26,rainR:8,rainT:1.6,zoneK:2.5,zoneT:6},
- sh:{bash:18,dash:55,R:2.7,jg:0.25,slow:0.5,barR:3.4,barA:1.08,refl:3},
+ sh:{bash:14,dash:24,R:1.9,A:0.7,push:4,pushD:8,lunge:4,lungeD:9,jg:0.3,slow:0.5,barR:3.4,barA:1.08,refl:3},
  st:{heal:0.1,dm:45,cool:0.6,spd:13,turn:2.2,bonk:40,life:2.8,bT:5,bA:1.1,bD:0.9,sh:0.4,sT:12,sA:0.3,sD:0.5}};// bT/bA/bD = 玉の加護（秒・攻撃倍率・被ダメ倍率）、sh/sT/sA/sD = 必殺（回復割合・秒・攻撃の上乗せ・軽減の強さ。SK.spw / SK.beam で凸に応じて伸びる）
 const W2K={flail:1,spear:1,bow:1,shield:1,staff:1};
 const wflys=[],wspk=[],warrows=[],wrains=[],wrefl=[],worbs=[];
@@ -117,17 +117,18 @@ function bwRainMk(own,x,z,life){const S=W2.bw,r=mulberry(((x*31+z*17)|0)+7),arr=
 return{own,x,z,r:S.rainR,t:0,life,tk:0,arr}}
 // ================= 城壁の大楯 =================
 function shieldUpdate(dt,f){const S=W2.sh;if(pl.jrT>0)pl.jrT-=dt;if(pl.dashT>0)pl.lastDash=now;
-if(f&&pl.sp!==1){if(!pl.gp){pl.gp=1;pl.gdT=0;pl.grd=1}else pl.gdT+=dt}
-else if(pl.gp){pl.gp=0;pl.grd=0;pl.jrT=S.jg;if(pl.gdT<0.2&&pl.cool<=0&&pl.sp!==1)shieldBash()}}
-function shieldBash(){const S=W2.sh,pw=w2pw(),dash=now-(pl.lastDash||-9)<0.35,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),dm=(dash?S.dash:S.bash)*pw,R=S.R+(dash?0.8:0);
-pl.cool=0.32;wpAct(20);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.08;pl.lgV=pl.frz>0?0:dash?16:9;pl.lgP=0;snd('whoosh');
-let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,R,1.0,pl.y-0.5,pl.y+3);if(!s)continue;wpDmg(e,dm,s[0],s[1],s[2],{quiet:n>0});n++;
- if(e.type!=='boss'){wpEffect(e,6,dash?0.9:0.45);if(dash&&e.type==='bru')wpEffect(e,2)}if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*(dash?15:8);e.kz=(e.z-pl.z)/d*(dash?15:8)}}
-for(const s of shots)if(!s.dead){const dx=s.x-pl.x,dz=s.z-pl.z,d=Math.hypot(dx,dz);if(d<R+0.4&&s.y<pl.y+3&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<1.1){popShot(s);if(isCli())net.q.ps.push(s.id)}}
-if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z;if(Math.hypot(dx,dz)<R&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<1)pvHit(o,(dash?24:8)*pw,false,o.x,o.y+1.1,o.z)}
+if(f&&pl.sp!==1){if(!pl.gp){pl.gp=1;pl.gdT=0;pl.grd=1;pl.jrT=0}else pl.gdT+=dt}
+// 離した瞬間だけジャストガード（押した直後は対象外。ちょん押し＝攻撃は対象外）
+else if(pl.gp){pl.gp=0;pl.grd=0;const tap=pl.gdT<0.2;pl.jrT=tap?0:S.jg;if(tap&&pl.cool<=0&&pl.sp!==1)shieldBash()}}
+function shieldBash(){const S=W2.sh,pw=w2pw(),dash=now-(pl.lastDash||-9)<0.35,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),dm=(dash?S.dash:S.bash)*pw,R=S.R+(dash?0.5:0);
+pl.cool=0.32;wpAct(20);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.08;pl.lgV=pl.frz>0?0:dash?S.lungeD:S.lunge;pl.lgP=0;snd('whoosh');
+let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,R,S.A,pl.y-0.5,pl.y+3);if(!s)continue;wpDmg(e,dm,s[0],s[1],s[2],{quiet:n>0});n++;
+ if(e.type!=='boss'){if(dash){wpEffect(e,6,0.35);if(e.type==='bru')wpEffect(e,2)}if(!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1,v=dash?S.pushD:S.push;e.kx=(e.x-pl.x)/d*v;e.kz=(e.z-pl.z)/d*v}}}
+for(const s of shots)if(!s.dead){const dx=s.x-pl.x,dz=s.z-pl.z,d=Math.hypot(dx,dz);if(d<R+0.3&&s.y<pl.y+3&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A+0.2){popShot(s);if(isCli())net.q.ps.push(s.id)}}
+if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z;if(Math.hypot(dx,dz)<R&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A)pvHit(o,(dash?12:5)*pw,false,o.x,o.y+1.1,o.z)}
 if(n){shake(dash?0.3:0.15);stopT(dash?0.06:0.03)}addText(dash?'ドガァッ！':'ガツッ',W*0.6+rnd(-40,60),H*0.56,{size:dash?66:48,st:dash?'boom':'hit',life:0.3})}
 // guard state of a player: 1 = guarding the front (holding, or the barrier is up), 2 = reflecting window
-const shRefl=()=>(pl.grd&&pl.gdT<W2.sh.jg)||pl.jrT>0;
+const shRefl=()=>pl.jrT>0&&!pl.grd;
 function shGuardOf(p){if(p===pl){if(wpW().kind!=='shield'||pl.dead)return 0;return(pl.grd||pl.sp===2?1:0)|(shRefl()?2:0)}return p.gf|0}
 function w2Flags(){const g=shGuardOf(pl);return(g&1?32:0)|(g&2?64:0)|(wpW().kind==='shield'&&pl.sp===2&&!pl.dead?128:0)}
 // host: an enemy shot reached player p. Blocked (front, guarding) or sent back (front, reflecting window)? true = handled
@@ -138,10 +139,12 @@ if(g&2){s.dead=true;const v=Math.hypot(s.vx,s.vy,s.vz)||10,k=Math.max(18,v*1.8)/
 else{popShot(s);ev('txt','ガキン！',r1(s.x),r1(s.y+0.8),r1(s.z),48,'cyan');if(p===pl){snd('clank');pl.shHit=now}}
 return true}
 // local: a hit from (x,z) on a guarding player (the shield's front); true = no damage
-function wpGuardHit(d,x,z){if(x==null||wpW().kind!=='shield'||!(pl.grd||pl.sp===2))return false;const dx=x-pl.x,dz=z-pl.z;if(Math.hypot(dx,dz)<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))>1.2)return false;
-if(pl.grd&&pl.gdT<W2.sh.jg){addGauge(6);pl.inv=Math.max(pl.inv,0.3);addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}
+function wpGuardHit(d,x,z){const jg=pl.jrT>0&&!pl.grd;if(x==null||wpW().kind!=='shield'||!(pl.grd||pl.sp===2||jg))return false;const dx=x-pl.x,dz=z-pl.z;if(Math.hypot(dx,dz)<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))>1.2)return false;
+if(jg){addGauge(6);pl.inv=Math.max(pl.inv,0.3);shStagger(x,z);addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}
 else{addText('ガキン！',W/2+rnd(-120,120),H*0.45,{size:60,st:'cyan',life:0.35});snd('clank')}
 shake(0.15);pl.shHit=now;return true}
+// ジャストガードで近接の雑魚敵をのけぞらせる（攻撃してきた位置 x,z にいちばん近い敵）
+function shStagger(x,z){let b=null,bd=3.2;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;const d=Math.hypot(e.x-x,e.z-z);if(d<bd){bd=d;b=e}}if(!b)return;wpEffect(b,6,1.2);if(!isCli()){const d=Math.hypot(b.x-pl.x,b.z-pl.z)||1;b.kx=(b.x-pl.x)/d*10;b.kz=(b.z-pl.z)/d*10}fxStar(b.x,(b.y||0)+1,b.z,1.8,C.cyan,0.12)}
 // host: enemy shots stop at a barrier (必殺「城壁結界」) of any player
 function wpBarShot(s){if(s.dead)return false;const S=W2.sh;for(const p of allP()){if(!(p===pl?wpW().kind==='shield'&&pl.sp===2:p.bar))continue;const dx=s.x-p.x,dz=s.z-p.z,d=Math.hypot(dx,dz);
  if(Math.abs(d-S.barR)>0.9||s.y>(p.y||0)+4.2||Math.abs(angDiff(Math.atan2(-dx,-dz),p.yaw))>S.barA)continue;popShot(s);if(lim('barT',0.15))ev('txt','キンッ',r1(s.x),r1(s.y+0.6),r1(s.z),44,'cyan');return true}return false}
@@ -343,7 +346,7 @@ else if(k==='staff'){o.ak=c<0.8?22:23;o.at=c%0.8}}
 // ================= HUD =================
 function w2HUD(w){if((w.kind==='flail'||w.kind==='bow')&&pl.hon){const c=pl.hc,full=c>=1,col=full?(Math.sin(now*16)>0?'#fff':'#ffc21a'):'#ffc21a';gauge(W/2-100,662,230,18,c,col,w.kind==='bow'?'引':'溜');
  if(w.kind==='flail'){const st=flSt(c);txt(['','１段','２段','３段'][st],W/2+150,672,22,st>2?'#e5402b':'#fff',INK,6,'left');ctx.fillStyle=INK;ctx.fillRect(W/2-100+230*0.45,660,3,22)}else if(bwZoneK(pl)>1)txt('矢の中：溜めが速い',W/2+15,634,20,'#59d8ff',INK,6)}
-else if(w.kind==='shield'&&(pl.grd||pl.sp===2))txt(pl.grd&&pl.gdT<W2.sh.jg?'ジャスト！':'防御中',W/2,650,26,pl.grd&&pl.gdT<W2.sh.jg?'#ffd91a':'#59d8ff',INK,6);
+else if(w.kind==='shield'&&(pl.grd||pl.sp===2||pl.jrT>0))txt(pl.jrT>0&&!pl.grd?'ジャスト！':'防御中',W/2,650,26,pl.jrT>0&&!pl.grd?'#ffd91a':'#59d8ff',INK,6);
 else if(w.kind==='spear'&&now-(pl.spkT||-9)<0.8)for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(W/2-30+i*30,668,9,0,TAU);ctx.fillStyle=i<=pl.spk?'#ffd91a':'rgba(255,255,255,.5)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}
 if(pl.fbuf>0){const r=sat(pl.fbuf/(pl.fbufT||1));txt('攻撃力アップ',W/2,556,22,'#ffd91a',INK,6);gauge(W/2-90,572,220,12,r,'#ff8a2b','')}}
 // AI (title demo / gacha demo): hold to charge, let go; the shield taps
