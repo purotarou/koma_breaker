@@ -50,7 +50,11 @@ for(const[x,y,c]of cap){ctx.save();ctx.translate(x,y);ctx.rotate(x*0.05);ctx.beg
 ctx.restore();ctx.beginPath();ctx.arc(0,-40,52,0,TAU);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.stroke();ctx.beginPath();ctx.arc(-6,-48,34,PI*1.08,PI*1.42);ctx.strokeStyle='#fff';ctx.lineWidth=7;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
 ctx.fillStyle='#e5402b';ctx.fillRect(-52,-2,104,92);ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.strokeRect(-52,-2,104,92);ctx.fillStyle='#ffd91a';ctx.fillRect(-58,-8,116,16);ctx.strokeRect(-58,-8,116,16);
 ctx.save();ctx.translate(0,36);ctx.rotate(now*1.5);ctx.beginPath();ctx.arc(0,0,20,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=5;ctx.stroke();ctx.fillStyle=INK;ctx.fillRect(-18,-5,36,10);ctx.restore();
-ctx.fillStyle=INK;ctx.fillRect(-24,66,48,18);ctx.beginPath();ctx.arc(10,78,8,PI,TAU);ctx.fillStyle='#ffd91a';ctx.fill();ctx.fillStyle=INK;ctx.fillRect(28,10,14,4);ctx.restore()}
+// coin slot plate (right of the knob): metal plate, vertical slit, small coin mark
+ctx.fillStyle='#d9dde6';ctx.fillRect(30,16,18,30);ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(30,16,18,30);ctx.fillStyle=INK;ctx.fillRect(37,21,4,14);ctx.beginPath();ctx.arc(39,40,2.6,0,TAU);ctx.fill();
+// prize outlet: dark opening, capsule inside, hinged flap in front
+ctx.fillStyle=INK;ctx.fillRect(-30,62,60,26);ctx.save();ctx.beginPath();ctx.rect(-27,64,54,22);ctx.clip();ctx.translate(8,82);ctx.beginPath();ctx.arc(0,0,13,PI,TAU);ctx.fillStyle='#ffd91a';ctx.fill();ctx.beginPath();ctx.arc(0,0,13,0,PI);ctx.fillStyle='#fff';ctx.fill();ctx.beginPath();ctx.arc(0,0,13,0,TAU);ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke();ctx.restore();
+ctx.beginPath();ctx.moveTo(-30,62);ctx.lineTo(30,62);ctx.lineTo(27,72);ctx.lineTo(-27,72);ctx.closePath();ctx.fillStyle='#c4c9d6';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke();ctx.beginPath();ctx.moveTo(-20,66);ctx.lineTo(-8,66);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore()}
 // level pips ◆◆◇ (filled = in use, half = waiting in the settings)
 function gaPips(x,y,id,s){const lv=WS.own[id]?wpLv(id):0,all=wpLvAll(id);s=s||1;for(let i=0;i<3;i++){const cx=x+i*22*s;ctx.save();ctx.translate(cx,y);ctx.rotate(PI/4);ctx.fillStyle=i<lv?'#ffd91a':i<all?'#ffb3a8':'#d0d3e2';ctx.fillRect(-7*s,-7*s,14*s,14*s);ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.strokeRect(-7*s,-7*s,14*s,14*s);ctx.restore()}}
 // picture contained in a box (centre cx,cy), with a float
