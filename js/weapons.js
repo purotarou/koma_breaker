@@ -18,7 +18,7 @@
 // + kind (others replay the swing / throw pose and slash trails), the hammer charge and rail-beam bits. Small visual-only events
 // (net.q.wx: bombs, the sword wave, hammer slams) are replayed by the others; freeze / stun / slow go to the host (net.q.ef), which runs the enemies.
 const WPN=[
-{id:'gun',name:'妖弾銃',type:'ピストル',kind:'gun',btn:'撃',file:null,col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:20,cool:0.15,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.045,-0.63],
+{id:'gun',name:'妖弾銃',type:'ピストル',kind:'gun',btn:'撃',file:null,col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:25,cool:0.1875,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.045,-0.63],
  d:['16発の連射銃。撃ち切ったら装填','いちばん扱いやすい標準の武器'],s:'正面に太い光線を一直線に放つ'},
 {id:'rifle',name:'連珠銃',type:'アサルト',kind:'gun',btn:'撃',file:'weapon_rifle',col:'#3f6fd8',bg:[.84,.88,1],ammo:1,mag:32,dmg:24,cool:1/7,rel:0.8,kick:0.006,shk:0.03,snd:'rshot',g:1,sp:'珠時雨',spd:5,spMode:'buff',muz:[0,0.03,-0.6],fore:0.27,
  d:['32発・威力24の速射銃','妖弾銃の上位版。反動がなく装填も速い'],s:'数秒間、弾が減らずに連射２倍。弾が敵を追う'},
