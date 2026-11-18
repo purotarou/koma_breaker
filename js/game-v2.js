@@ -123,7 +123,7 @@ if(setOpen)drawSettings();else drawMenuPop();if(wipe.on)drawWipe();ctx.strokeSty
 // ================= MAIN (v2) =================
 let GDT=0;
 // boss defeat camera: cut away from the player, start a little above the boss and drift in while circling
-function killCam(dt){if(boss&&boss.monk)G.kcP=[boss.x,boss.y,boss.z,boss.yaw];const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
+function killCam(dt){if(boss&&(boss.monk||boss.mob))G.kcP=[boss.x,boss.y,boss.z,boss.yaw];/* moving bosses (鐘の僧, シロヌキ第3形態): follow him */const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
 cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty-cam.y,dz=tz-cam.z;cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.03;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.03;cam.roll=lerp(-0.06,0.02,u)+rnd(-1,1)*s*0.03;cam.fov=lerp(64,54,u)*PI/180}
 // ---- third / second-person camera (SET.view 1 / 2, toggled in the settings / the small HUD button / V key) ----
 // Over the right shoulder. Walls pull the camera in at once and it eases back out; looking up from below,

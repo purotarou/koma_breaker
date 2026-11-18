@@ -28,34 +28,34 @@ if(b.phase===1&&!K.pats&&b.hp<b.mhp*0.5&&(b.st==='idle'||b.st==='hold')){b.phase
 for(let i=0;i<2;i++){if(b.ah===i||b.ah===2)continue;const r=restH(i?1:-1,0),h=hands[i],k=Math.min(1,dt*4);h.x+=(r.x-h.x)*k;h.y+=(r.y-h.y)*k;h.z+=(r.z-h.z)*k}
 const idle=cd=>{b.st='idle';b.stT=0;b.cdT=cd;b.ah=-1},st=b.st;
 if(st==='stag'){b.mouth=1;if(b.stT>1.8)idle(0.5)}
-else if(st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*K.cd*(G.ex?EXK.cd:1)){const pat=K.pats?K.pats[(G.ex?3:0)+b.phase-1]:G.ex?(p2?K.x2:K.x1):(p2?K.p2:K.p1),m=pat[b.atk++%pat.length];b.ti=null;P=bossT(b);b.stT=0;b.k=0;b.vn=0;b.sm=false;b.n=0;
-  if(m==='fist'||m==='palm'||m==='pound'){b.st='up';b.n=m==='palm'?1:0;b.ah=(P.x<0?0:1)^(b.atk%3===0?1:0);if(b.bk==='shiro')b.n=b.ah===0?1:0;// 5面: red arm = palm, black arm = fist
+else if(st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*K.cd*(G.ex?EXK.cd:1)){const pat=K.pats?K.pats[(G.ex?3:0)+b.phase-1]:G.ex?(p2?K.x2:K.x1):(p2?K.p2:K.p1),m=b.bk==='shiro'?shPick(b,pat[b.atk++%pat.length]):pat[b.atk++%pat.length];b.ti=null;P=bossT(b);b.stT=0;b.k=0;b.vn=0;b.sm=false;b.n=0;
+  if(m==='fist'||m==='palm'||m==='pound'){b.st='up';b.n=m==='palm'?1:0;b.ah=(P.x<0?0:1)^(b.atk%3===0?1:0);if(b.bk==='shiro'){if(b.phase===2)b.ah=m==='palm'?0:1;b.n=b.ah===0?1:0}// 5面: red arm = palm, black arm = fist (第2形態: palm = the red giant, fist = the black one)
   const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}
   else if(m==='double'){b.st='up2';b.ah=2;b.s0=[{...b.hL},{...b.hR}];const q=allP().find(o=>o!==P),ax=clamp(P.x,-20,20),az=clamp(P.z,-11,20),bx=q?clamp(q.x,-20,20):clamp(ax+(ax<0?10:-10),-20,20),bz=q?clamp(q.z,-11,20):clamp(az+rnd(-4,4),-11,20);
    if(ax<bx){b.tx=ax;b.tz=az;b.p0=bx;b.p1=bz}else{b.tx=bx;b.tz=bz;b.p0=ax;b.p1=az}if(b.bk==='shiro'){[b.tx,b.tz]=shReach(b,0,b.tx,b.tz);[b.p0,b.p1]=shReach(b,1,b.p0,b.p1)}}
   else if(m==='volley'||m==='fireball'){b.st='volley';b.n=m==='fireball'?1:0}else if(m==='summon')b.st='summon';
   else if(m==='wave'){b.st='wave';b.ah=2}
-  else if(m==='breath'){b.st='breath';b.p1=b.bk==='shiro'?r1(shMouth(b,1)[0]):0;b.p0=Math.atan2(P.x-b.p1,P.z+17)}
+  else if(m==='breath'){b.st='breath';const o=b.bk==='shiro'?shBrO(b):[0,-17];b.p1=r1(o[0]);b.p0=Math.atan2(P.x-o[0],P.z-o[1])}
   else if(m==='spin'){b.st='spin';b.sd=-(b.sd||1);b.p0=b.sd}
   else if(m==='sweep'||m==='sweep2'){b.st='sweep';b.n=m==='sweep2'?2:1;b.p0=Math.random()<0.5?1:-1;b.ah=b.p0>0?0:1}
   else if(m==='lantern')b.st='lantern';
   else if(m==='pillar'||m==='chase'||m==='ripple'){b.st=m;b.ah=2}
-  else if(m==='suck'||m==='koma'||m==='slash'||m==='rows')b.st=m;// 5面 (boss5.js shPre)
+  else if(m==='suck'||m==='koma'||m==='slash'||m==='rows'||m==='firerain'||m==='inkrain'||m==='darkring'||m==='flines')b.st=m;// 5面 (boss5.js shPre)
   else{b.st='rubble';b.ah=P.x<0?0:1;const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}}}
 else if(st==='pillar'||st==='chase'||st==='ripple'){if(exBoss(b,dt,hands,p2))idle(0.6)}
 else if(st==='up'){const h=hands[b.ah],u=Math.min(1,b.stT/K.up[pi]);if(u<0.7){b.tx=clamp(P.x,-20,20);b.tz=clamp(P.z,-11,20);if(b.bk==='shiro')[b.tx,b.tz]=shReach(b,b.ah,b.tx,b.tz)}const e=easeOut(u);h.x=lerp(b.s0.x,b.tx,e);h.z=lerp(b.s0.z,b.tz,e);h.y=lerp(b.s0.y,10,e)+Math.sin(u*PI)*3;if(u>=1){b.st='down';b.stT=0}}
-else if(st==='down'){const h=hands[b.ah];h.y=lerp(10,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){h.y=1.1;b.st='hold';b.stT=0;if(b.bk==='aka'||b.bk==='shiro'&&b.n===1)ev('pslam',r1(h.x),r1(h.z),b.atk%2);else ev('slam',r1(h.x),r1(h.z));areaHurt(h.x,h.z,4.3,K.slamDmg)}}
+else if(st==='down'){const h=hands[b.ah];h.y=lerp(10,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){h.y=1.1;b.st='hold';b.stT=0;if(b.bk==='aka'||b.bk==='shiro'&&b.n===1)ev('pslam',r1(h.x),r1(h.z),b.atk%2);else ev('slam',r1(h.x),r1(h.z));if(b.bk==='shiro')ev('shBoom',r1(h.x),r1(h.z),b.n===1?1:0,p2||G.ex?3:2);areaHurt(h.x,h.z,4.3,K.slamDmg)}}
 else if(st==='hold'){if(b.stT>K.hold[pi])idle(p2?0.5:1.0)}
 else if(st==='up2'){const u=Math.min(1,b.stT/K.up2),e=easeOut(u),tg=[[b.tx,b.tz],[b.p0,b.p1]];for(let i=0;i<2;i++){const h=hands[i],s=b.s0[i];h.x=lerp(s.x,tg[i][0],e);h.z=lerp(s.z,tg[i][1],e);h.y=lerp(s.y,11,e)+Math.sin(u*PI)*3}if(u>=1){b.st='down2';b.stT=0}}
-else if(st==='down2'){b.hL.y=b.hR.y=lerp(11,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){b.st='hold';b.stT=0;for(const h of hands){ev('slam',r1(h.x),r1(h.z));areaHurt(h.x,h.z,4.3,K.slamDmg)}}}
+else if(st==='down2'){b.hL.y=b.hR.y=lerp(11,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){b.st='hold';b.stT=0;for(let i=0;i<2;i++){const h=hands[i];ev('slam',r1(h.x),r1(h.z));if(b.bk==='shiro')ev('shBoom',r1(h.x),r1(h.z),i?0:1,p2||G.ex?3:2);areaHurt(h.x,h.z,4.3,K.slamDmg)}}}
 else if(st==='volley'){b.mouth=1;const fb=b.bk==='aka'||b.bk==='shiro'&&b.n===1,n=(fb?K.ballN:K.volN)[pi],want=Math.floor((b.stT-0.4)/0.17);
  const mo=b.bk==='shiro'?shMouth(b,fb):null;while(b.vn<=want&&b.vn<n){b.vn++;P=pickR();const ox=mo?mo[0]:b.hx*2.7,oy=mo?mo[1]:23.4,oz=mo?mo[2]:-19.6,tx=clamp(P.x+rnd(-5,5),-20,20),tz=clamp(P.z+rnd(-5,5),-12,20),ft=1.5;
   shots.push({id:++eidN,k:fb?4:1,x:ox,y:oy,z:oz,vx:(tx-ox)/ft,vy:-oy/ft+8*ft,vz:(tz-oz)/ft,r:0.55,dmg:fb?K.ballDmg:16,g:16,life:9,tx,tz});fxStar(ox,oy,oz,3,fb?C.orange:C.white,0.08);if(lim('bo',0.3))sfxAt('ボッ',ox,oy+2,oz,{size:70,st:fb?'boom':'ink',life:0.4});snd('spawn')}
  if(b.stT>0.4+n*0.17+0.4)idle(p2?0.6:1.1)}
 else if(st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);const n=K.sumN[pi]+G.np-1;for(let i=0;i<n;i++)spawnNear(b.bk==='aka'?(i%2?'gun':'bom'):b.bk==='shiro'?(i%2&&b.phase>1?'shadeR':i%2?'shade':'imp'):'imp');if(p2&&b.bk==='beta')spawnNear('lan');if(G.ex)spawnNear('crow')}if(b.stT>1.3)idle(1)}
-else if(st==='wave'){const tel=K.waveTel,u=b.stT,n=K.waveN[pi];b.mouth=u<tel?0.6:1;for(let i=0;i<2;i++){const h=hands[i],k=Math.min(1,dt*(u<tel?5:30));h.x+=((i?6.5:-6.5)-h.x)*k;h.y+=((u<tel?15:1.1)-h.y)*k;h.z+=(-14.5-h.z)*k}
- if(!b.k&&u>=tel+0.1){b.k=1;ev('smash',-6.5,-14.5);ev('smash',6.5,-14.5);for(let i=0;i<n;i++)ev('lwave',r2(i*0.95))}if(u>tel+0.1+n*0.95+0.3)idle(0.6)}
-else if(st==='breath'){b.mouth=1;if(!b.k&&b.stT>=K.brTel){b.k=1;ev('breath',r2(b.p0),K.brN[pi],b.p1||0)}if(b.stT>K.brTel+1.3)idle(p2?0.5:0.9)}
+else if(st==='wave'){const tel=K.waveTel,u=b.stT,n=K.waveN[pi];b.mouth=u<tel?0.6:1;const sx=b.bk==='shiro'?5.5:6.5,sz=b.bk==='shiro'?SN_Z+9:-14.5;for(let i=0;i<2;i++){const h=hands[i],k=Math.min(1,dt*(u<tel?5:30));h.x+=((i?sx:-sx)-h.x)*k;h.y+=((u<tel?15:1.1)-h.y)*k;h.z+=(sz-h.z)*k}
+ if(!b.k&&u>=tel+0.1){b.k=1;ev('smash',-sx,sz);ev('smash',sx,sz);for(let i=0;i<n;i++)ev('lwave',r2(i*0.95))}if(u>tel+0.1+n*0.95+0.3)idle(0.6)}
+else if(st==='breath'){b.mouth=1;if(!b.k&&b.stT>=K.brTel){b.k=1;ev('breath',r2(b.p0),K.brN[pi],b.p1||0,b.bk==='shiro'?r1(shBrO(b)[1]):-17)}if(b.stT>K.brTel+1.3)idle(p2?0.5:0.9)}
 else if(st==='spin'){b.mouth=1;if(!b.k){b.k=1;ev('spin',b.p0)}if(b.stT>K.spinTel+(3.2+K.spinGap)/K.spinW+0.2)idle(0.6)}
 else if(st==='sweep'){const tel=K.swTel[pi],dur=K.swDur[pi],per=tel+dur+0.35,i=Math.min(b.n-1,Math.floor(b.stT/per)),q=b.stT-i*per,dir=b.p0*(i%2?-1:1),h=hands[b.ah],a0=-dir*1.3;let a=a0,y=3.2+Math.sin(b.t*30)*0.15;
  if(q>=tel){if(b.k<=i){b.k=i+1;ev('sweep',dir,dur,K.swR+(K.swReach||0),K.swDmg)}a=lerp(a0,-a0,sat((q-tel)/dur));y=b.bk==='shiro'?2.4:1.5}
@@ -76,9 +76,9 @@ bphase(bk){const b=boss;flash(0.5);if(bk==='beta'){if(b)for(const h of[b.hL,b.hR
  else if(bk==='aka'){for(let i=0;i<4;i++)explode(rnd(-5,5),rnd(27,33),-22,2.2,{quiet:1});addText('ゴォォォ！',W/2,H*0.3,{size:120,st:'boom',life:0.9})}
  else{fxStar(0,29,-19,9,C.red,0.2);fxRing(0,0.2,-14,30,C.red,0.6);snd('heart');addText('ドクン…',W/2,H*0.3,{size:110,st:'hurt',life:0.9})}},
 pslam(x,z,rot){explode(x,0.8,z,2.2,{text:'バァァン！'});fxRing(x,0.1,z,11,C.orange,0.4);decals.push({x,z,r:5,life:7});if(!G.ex&&!(boss&&boss.bk==='shiro'))return;// 普通: no fire cross from the stage-2 boss (the final boss keeps it)
-const K=BT.aka,a0=rot?PI/4:0;
- for(let j=0;j<4;j++){const a=a0+j*PI/2;for(let i=1;i<=K.crossN;i++)addFire(x+Math.sin(a)*(1.8+i*3.4),z+Math.cos(a)*(1.8+i*3.4),1.9,K.crossLife,0.25+i*0.14)}},
-breath(a0,n,ox){ox=ox||0;snd('roar',0.6);sfxAt('ゴォォォ',ox,22,-19,{size:90,st:'boom',life:0.9});shake(0.4);for(let j=0;j<n;j++){const a=a0+(j-(n-1)/2)*0.42;for(let i=0;i<10;i++){const d=6+i*3.6;addFire(ox+Math.sin(a)*d,-17+Math.cos(a)*d,2.0,BT.aka.brLife,i*0.06)}}},// ox: the red giant's x (5面 第2形態)
+const K=BT.aka,a0=rot?PI/4:0,sh=boss&&boss.bk==='shiro',nd=sh?8:4,nn=K.crossN+(sh?2:0);// 5面: eight arms, longer
+ for(let j=0;j<nd;j++){const a=a0+j*TAU/nd;for(let i=1;i<=nn;i++)addFire(x+Math.sin(a)*(1.8+i*3.4),z+Math.cos(a)*(1.8+i*3.4),1.9,K.crossLife,0.25+i*0.14)}},
+breath(a0,n,ox,oz){ox=ox||0;oz=oz==null?-17:oz;snd('roar',0.6);sfxAt('ゴォォォ',ox,22,oz-2,{size:90,st:'boom',life:0.9});shake(0.4);for(let j=0;j<n;j++){const a=a0+(j-(n-1)/2)*0.42;for(let i=0;i<12;i++){const d=6+i*3.6;addFire(ox+Math.sin(a)*d,oz+Math.cos(a)*d,2.0,BT.aka.brLife,i*0.06)}}},// ox, oz: where the fire starts (5面: shBrO)
 spin(dir){spins.push({dir,t:-BT.aka.spinTel});snd('charge');addText('メラメラ',W/2,H*0.26,{size:90,st:'boom',life:0.9})},
 lwave(dl){lwaves.push({z:-13,dl,hit:false});if(!dl){snd('roar',0.5);addText('ザザァ…',W/2,H*0.28,{size:100,st:'ink',life:0.9})}},
 sweep(dir,dur,R,d){sweeps.push({dir,t:0,dur,hit:false,R:R||BT.nyudo.swR,d:d||BT.nyudo.swDmg});snd('whoosh');snd('boom',0.5);lines(0.6,'#c20020');shake(0.4);addText('ブォン！',W/2,H*0.3,{size:110,st:'boom',life:0.5})},
@@ -113,9 +113,9 @@ const ring=(x,z)=>{const s=6+Math.sin(t*20)*0.8;put(RING,x,0.12,z,0,0,0,s,1,s,C.
 if(st==='up'&&b.bk==='nyudo')ring(b.tx,b.tz);
 else if(st==='up2'){ring(b.tx,b.tz);ring(b.p0,b.p1)}
 else if(st==='wave'&&b.stT<K.waveTel+0.1){if(Math.sin(t*22)>-0.2){box(0,0.11,-11,BX*2,0.02,2.2,C.red,0,0,NF);for(let i=0;i<5;i++)put(PYR,(i-2)*8,0.14,-6.5,PI/2,0,0,2.4,0.8,1.5,C.red,0,0,NF)}}
-else if(st==='breath'){const n=K.brN[pi],ox=b.bk==='shiro'?b.p1||0:0;
- if(b.stT<K.brTel){if(Math.sin(t*(b.stT>K.brTel-0.3?40:16))>-0.3)for(let j=0;j<n;j++){const a=b.p0+(j-(n-1)/2)*0.42;mPush();mT(ox+Math.sin(a)*24,0.12,-17+Math.cos(a)*24);mRY(a);mS(3.4,0.02,38);emit(BOX,C.red,0,0,NF,0);mPop()}}
- else if(b.stT<K.brTel+0.8){const mo=b.bk==='shiro'?shMouth(b,1):null,mx=mo?mo[0]:b.hx*2.7,my=mo?mo[1]:23.4+b.yo,mz=mo?mo[2]:-19.6;for(let j=0;j<n;j++){const a=b.p0+(j-(n-1)/2)*0.42,gx=ox+Math.sin(a)*7,gz=-17+Math.cos(a)*7;for(let i=1;i<7;i++){const u=i/7;bill(BURST,lerp(mx,gx,u),lerp(my,0.8,u),lerp(mz,gz,u),2.2+u*2.4,t*9+i,i%2?C.orange:C.yellow,NF)}}}}
+else if(st==='breath'){const n=K.brN[pi],ox=b.bk==='shiro'?b.p1||0:0,oz=b.bk==='shiro'?shBrO(b)[1]:-17;
+ if(b.stT<K.brTel){if(Math.sin(t*(b.stT>K.brTel-0.3?40:16))>-0.3)for(let j=0;j<n;j++){const a=b.p0+(j-(n-1)/2)*0.42;mPush();mT(ox+Math.sin(a)*24,0.12,oz+Math.cos(a)*24);mRY(a);mS(3.4,0.02,38);emit(BOX,C.red,0,0,NF,0);mPop()}}
+ else if(b.stT<K.brTel+0.8){const mo=b.bk==='shiro'?shMouth(b,1):null,mx=mo?mo[0]:b.hx*2.7,my=mo?mo[1]:23.4+b.yo,mz=mo?mo[2]:-19.6;for(let j=0;j<n;j++){const a=b.p0+(j-(n-1)/2)*0.42,gx=ox+Math.sin(a)*7,gz=oz+Math.cos(a)*7;for(let i=1;i<7;i++){const u=i/7;bill(BURST,lerp(mx,gx,u),lerp(my,0.8,u),lerp(mz,gz,u),2.2+u*2.4,t*9+i,i%2?C.orange:C.yellow,NF)}}}}
 else if(st==='sweep'){const tel=K.swTel[pi],per=tel+K.swDur[pi]+0.35,i=Math.min((b.n||1)-1,Math.floor(b.stT/per)),q=b.stT-i*per,dir=b.p0*(i%2?-1:1);
  if(q<tel&&Math.sin(t*(q>tel-0.3?40:14))>-0.3)for(let j=0;j<9;j++){const a=-1.2+j*0.3;for(const R of[18,28,38]){const x=Math.sin(a)*R,z=-26+Math.cos(a)*R;if(Math.abs(x)>BX||z>BZ1||z<BZ0)continue;put(PYR,x,0.14,z,PI/2,a+dir*PI/2,0,1.8,0.8,1.2,C.red,0,0,NF)}}}}
 // 大入道: a bald giant, copper skin, orange kimono, a big lantern at his waist, the ink 三つ巴 on his forehead (= the weak point, where the old boss has its third eye)

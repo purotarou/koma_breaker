@@ -16,7 +16,7 @@ const MBT={
  twin:{hp:3000,spd:6.4,keep:10,apart:9,range:30,cd:[0.75,1.3],w1:0.5,w2:0.6,w3:0.5,w4:0.8,rec:0.42,recR:0.25,sv:21,dmg:13,big:18,dash:17,dashT:0.5,dashDmg:16,blind:4.4,rage:1.45},
  dmon:{hp:6500,spd:4.0,keep:[6,12],range:32,cd:[0.75,1.25],w1:0.65,w2:0.8,w3:0.85,w4:0.45,w5:0.65,rec:0.55,rec2:0.35,pilT:0.34,sv:19,dmg:22,ring:16,burstR:8,burstDmg:14,blind:5.2,pilN:5,
   charge:21,chargeT:0.9,chargeDmg:22,score:3000}};
-const MB_NAME=['アカツキ','ヨイヤミ'],MB_SHOT={8:1,9:1,10:1.6,11:1.6,12:2.4,13:2.6};// slash shots: k -> size (8 fire / 9 dark / 10,11 big / 12 huge 焔墨 / 13 シロヌキ第3形態の白い斬撃: wide and low, jump over it)
+const MB_NAME=['アカツキ','ヨイヤミ'],MB_SHOT={8:1,9:1,10:1.6,11:1.6,12:2.4,13:2.6,14:1.4};// slash shots: k -> size (8 fire / 9 dark / 10,11 big / 12 huge 焔墨 / 13 シロヌキ第3形態の白い斬撃: wide and low, jump over it)
 Object.assign(C,{fireD:hex(0xb3262a),darkP:hex(0x5a2a8a)});
 // ---- blindness (local, every peer for its own player) ----
 function plBlind(t){if(pl.dead)return;t*=SK.steady?0.5:1;if(!(pl.blind>0))addText('目ガ…！',W/2,H*0.6,{size:70,st:'ink',life:0.7});pl.blind=Math.max(pl.blind||0,t);pl.blindM=Math.max(pl.blind,pl.blindM||0)}
@@ -32,12 +32,12 @@ const mbFace=(e,wy,dt,lock)=>{if(!lock)e.yaw+=angDiff(wy,e.yaw)*Math.min(1,dt*10
 // host: hits of the slash shots (from shotUpd2). true = handled
 function mbShot(s){if(s.life<=0||Math.abs(s.x)>BX+2||s.z>BZ1+2||s.z<BZ0-2){popShot(s);return true}if(wpBarShot(s))return true;
 const w=MB_SHOT[s.k]||1,l=Math.hypot(s.vx,s.vz)||1,ux=s.vx/l,uz=s.vz/l;
-for(const p of allP()){if(p.dead)continue;const dx=p.x-s.x,dz=p.z-s.z,al=dx*ux+dz*uz,pp=dx*uz-dz*ux;if(Math.abs(al)<0.9&&Math.abs(pp)<1.3*w&&(s.k===13?(p.y||0)<0.9:Math.abs((p.y||0)+1.0-s.y)<0.8*w+0.5)){
+for(const p of allP()){if(p.dead)continue;const dx=p.x-s.x,dz=p.z-s.z,al=dx*ux+dz*uz,pp=dx*uz-dz*ux;if(Math.abs(al)<0.9&&Math.abs(pp)<1.3*w&&(s.k===13?(p.y||0)<0.9:s.k===14?(p.y||0)>0.5&&Math.abs((p.y||0)+1.0-s.y)<1.6:Math.abs((p.y||0)+1.0-s.y)<0.8*w+0.5)){
  if(!wpGuardShot(p,s)){hurtT(p,s.dmg,s.x,s.z,0,s.bl);if(s.k===8||s.k===10)ev('mbFire',r1(p.x),r1(p.z));popShot(s)}return true}}
 return true}
-function mbPop(s){const c=s.k===9||s.k===11?C.darkP:s.k===12?C.red:s.k===13?C.white:C.orange;fxStar(s.x,s.y,s.z,1.6*(MB_SHOT[s.k]||1),C.white,0.08);fxSparks(s.x,s.y,s.z,6,6,c);fxBlobs(s.x,s.y,s.z,3,5,s.k===9||s.k===11?C.inkD:C.orange,0.14)}
+function mbPop(s){const c=s.k===9||s.k===11?C.darkP:s.k===12?C.red:s.k>=13?C.white:C.orange;fxStar(s.x,s.y,s.z,1.6*(MB_SHOT[s.k]||1),C.white,0.08);fxSparks(s.x,s.y,s.z,6,6,c);fxBlobs(s.x,s.y,s.z,3,5,s.k===9||s.k===11?C.inkD:C.orange,0.14)}
 // a crescent standing across the flight direction
-function mbDrawShot(s){const NF=F_UNLIT|F_NOCAST,w=MB_SHOT[s.k]||1,dark=s.k===9||s.k===11,dual=s.k===12,l=Math.hypot(s.vx,s.vz)||1;if(s.k===13)return snDrawShot(s,w,l);
+function mbDrawShot(s){const NF=F_UNLIT|F_NOCAST,w=MB_SHOT[s.k]||1,dark=s.k===9||s.k===11,dual=s.k===12,l=Math.hypot(s.vx,s.vz)||1;if(s.k===13||s.k===14)return snDrawShot(s,w,l);
 mPush();mT(s.x,s.y,s.z);mRY(Math.atan2(s.vx,s.vz));mRZ(dark?-0.45:0.45);mS(w,w,w);
 for(let i=-6;i<=6;i++){const a=i*0.19,x=Math.sin(a)*1.35,z=Math.cos(a)*0.55-0.55,th=1-Math.abs(i)/7,c=dual?(i<0?C.inkD:C.red):dark?C.inkD:C.red,c2=dual?(i<0?C.darkP:C.yellow):dark?C.darkP:C.yellow;
  put(BOX,x,0,z,0,a,0,0.27,0.1+0.6*th,0.12,c,0,0,dark||dual&&i<0?0:NF);put(BOX,x,0,z+0.08,0,a,0,0.24,0.05+0.32*th,0.06,c2,0,0,NF|F_NOEDGE);put(BOX,x,0,z+0.12,0,a,0,0.22,0.02+0.1*th,0.04,C.white,0,0,NF|F_NOEDGE)}

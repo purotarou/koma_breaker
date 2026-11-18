@@ -161,6 +161,7 @@ if(!quiet){fxStar(hx,hy,hz,crit?1.6:1.1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy
 if(lim('hitT',0.24))sideText(crit?pick(['キィン！','ズキュン！']):pick(['バキッ！','ガッ！','ドカッ！','ズガッ！']),e,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});
 if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*7;e.kz=(e.z-pl.z)/d*7}}
 else if(lim('bh'+e.seed,0.07)){fxStar(hx+rnd(-1,1),hy+rnd(-1,1),hz,1.8,C.cyan,0.1);fxBlobs(hx,hy,hz,3,7,C.ink,0.16)}
+if(e.bk==='shiro'&&e.phase===2&&e.hp2){const gi=shGi(e,hx,hz);if(isCli()){const k=gi?-e.id:e.id;net.dacc[k]=(net.dacc[k]||0)+dmg;return}shDmg2(e,gi,dmg);return}// 5面 第2形態: two giants, two HP pools (boss5.js)
 if(isCli()){net.dacc[e.id]=(net.dacc[e.id]||0)+dmg;return}e.hp-=dmg;if(e.hp<=0)kill(e,pl.slot)}
 function killFx(e){const F=FOE[e.type],mine=!net.on||e.mine>now-0.7,y=F?F.ctr(e)[1]:e.type==='lan'?e.y:e.type==='bru'?1.6:0.6;
 if(mine){wtKill(e);G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.3;addGauge((F?F.g:({imp:6,lan:8,bru:25})[e.type])+SK.gKill);if(SK.vamp&&!pl.dead)pl.hp=Math.min(SK.hp,pl.hp+SK.vamp);if(SK.aKill&&pl.reload<=0&&wpW().ammo)pl.ammo=Math.min(SK.mag,pl.ammo+SK.aKill);if(SK.kAmmo&&wpW().ammo&&!pl.sp){pl.reload=0;pl.ammo=SK.mag}
