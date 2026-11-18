@@ -451,7 +451,7 @@ for(let i=0;i<WPN.length;i++){const c=i%EQL.cols,r=(i/EQL.cols)|0,x=EQL.x0+c*(EQ
  ctx.restore();
 // scroll bar + more-below hint
 const mx=eqMax();if(mx>0){const tx=594,th=Math.max(46,EQL.vh*EQL.vh/(EQL.vh+mx)),ty=EQL.vy+clamp(EQL.y/mx,0,1)*(EQL.vh-th);ctx.fillStyle='rgba(22,18,31,.35)';ctx.fillRect(tx,EQL.vy,8,EQL.vh);ctx.fillStyle='#ffd91a';ctx.fillRect(tx,ty,8,th);ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(tx,ty,8,th);
- if(Math.sin(now*6)>-0.3){if(EQL.y<mx-8)txt('▼',EQL.x0+EQL.cols*(EQL.cw+EQL.gap)/2-6,EQL.vy+EQL.vh-8,30,'#ffd91a',INK,6);if(EQL.y>8)txt('▲',EQL.x0+EQL.cols*(EQL.cw+EQL.gap)/2-6,EQL.vy-4,30,'#ffd91a',INK,6)}}
+ {if(EQL.y<mx-8)txt('▼',EQL.x0+EQL.cols*(EQL.cw+EQL.gap)/2-6,EQL.vy+EQL.vh-8,30,'#ffd91a',INK,6);if(EQL.y>8)txt('▲',EQL.x0+EQL.cols*(EQL.cw+EQL.gap)/2-6,EQL.vy-4,30,'#ffd91a',INK,6)}}
 // preview frame (the 3D weapon is drawn through the hole by wpPreview)
 ctx.fillStyle=INK;ctx.fillRect(X+PW,Y+10,9,PH);ctx.fillRect(X+9,Y+PH,PW,10);ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(X,Y,PW,PH);
 if(!ok)txt('？',X+PW-50,Y+50,64,'#fff',INK,10);
