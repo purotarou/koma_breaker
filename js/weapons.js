@@ -176,7 +176,7 @@ pl.rEnd=wallT;if(hit){addGauge(0.5);hitMark=0.08;if(lim('rlh',0.12))snd('hit')}
 if(lim('zap',0.09))snd('zap');if(wallT<120&&lim('rwl',0.08))fxSparks(ox+d[0]*wallT,oy+d[1]*wallT,oz+d[2]*wallT,3,5,ice?C.white:C.cyan)}
 // ---- 祓い刀: a short lunge towards the nearest enemy in front, then the cut (in front, ±70°, 3.5 m) ----
 function katanaSlash(){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);let best=null,bd=7.5;
-for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk))continue;const dx=e.x-pl.x,dz=e.z-pl.z,d=Math.hypot(dx,dz);if(d<bd&&d>0.01&&(dx*fx+dz*fz)/d>0.82){bd=d;best=e}}
+for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk&&!e.mob))continue;const dx=e.x-pl.x,dz=e.z-pl.z,d=Math.hypot(dx,dz);if(d<bd&&d>0.01&&(dx*fx+dz*fz)/d>0.82){bd=d;best=e}}
 let lx=fx,lz=fz,dist=1.3;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hypot(dx,dz);lx=dx/d;lz=dz/d;dist=clamp(d-1.5-(best.r||0.5),0,5.5)}
 pl.cool=0.42;pl.slN=pl.slN?0:1;wpAct(1+pl.slN);pl.lgx=lx;pl.lgz=lz;pl.lgT=0.12;pl.lgV=pl.frz>0?0:dist/0.12;pl.lgP=1;snd('slash');
 addText(pick(['ザンッ！','ズバッ！','シュバッ']),W*0.62+rnd(-60,80),H*0.58+rnd(-30,30),{size:56,st:'cyan',life:0.3})}
@@ -226,7 +226,7 @@ if(b.own){const pw=pl.pow>0?2:1,base=(big?520*SK.spw:mi?55:130)*pw,fx=x-b.vx*0.1
  for(const s of shots)if(!s.dead&&Math.hypot(s.x-x,s.y-y,s.z-z)<R){popShot(s);if(isCli())net.q.ps.push(s.id)}
  if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-x,o.z-z)<R&&Math.abs(o.y+1-y)<R)pvHit(o,(big?60:38)*pw,false,o.x,o.y+1.1,o.z);
  if(!big&&!mi)wtBombHit(b,x,y,z);
- if(big){const onB=he&&he.type==='boss'?he:null,fixed=onB&&!onB.monk;// the fixed demon king burns on his chest (not on a hand slammed next to the player)
+ if(big){const onB=he&&he.type==='boss'?he:null,fixed=onB&&!onB.monk&&!onB.mob;// the fixed demon king burns on his chest (not on a hand slammed next to the player)
   wfires.push({x:fixed?0:x,y:fixed?17:onB?y:0.1,z:fixed?-17.5:z,r:5.5,t:6,own:1,tk:0,e:onB,ox:onB?x-onB.x:0,oz:onB?z-onB.z:0,big:fixed?1:0})}}
 else if(big)wfires.push({x,y:0.1,z,r:5.5,t:6,own:0})}
 // ---- per frame: bombs, waves, fire zones, trails (everyone's, only the owner's deal damage) ----
@@ -248,7 +248,7 @@ for(let i=wwaves.length-1;i>=0;i--){const w=wwaves[i],d0=w.d;w.d+=50*dt;w.t+=dt;
   if(G.mode==='pvp')for(const o of others)if(!o.dead&&!w.hit.has(o)&&crossed(o.x,o.z,0.6,ww,o.y+1.1)){w.hit.add(o);pvHit(o,(w.sm?12:70)*pw,false,o.x,o.y+1.1,o.z)}}
  if(w.d>5&&lim('wvs'+i,0.04)){const fx=w.x+w.dx*w.cy*w.d,fz=w.z+w.dz*w.cy*w.d;fxSparks(fx,w.y+w.sy*w.d,fz,4,6,C.cyan)}
  if(w.d>(w.sm?WT_KTR:80))wwaves.splice(i,1)}
-for(let i=wfires.length-1;i>=0;i--){const f=wfires[i];f.t-=dt;if(f.e){if(f.e.dead)f.e=null;else if(f.e.monk){f.x=f.e.x+f.ox;f.z=f.e.z+f.oz}}
+for(let i=wfires.length-1;i>=0;i--){const f=wfires[i];f.t-=dt;if(f.e){if(f.e.dead)f.e=null;else if(f.e.monk||f.e.mob){f.x=f.e.x+f.ox;f.z=f.e.z+f.oz}}
  if(f.own&&f.t>0){f.tk-=dt;if(f.tk<=0){f.tk=0.3;const pw=pl.pow>0?2:1,dm=60*0.3*SK.spw*pw;if(f.e)damage(f.e,dm*1.5,false,f.x,f.y,f.z,true);
   for(const e of enemies){if(e.dead||e.st==='spawn'||e===f.e)continue;for(const s of spheres(e))if(Math.hypot(s[0]-f.x,s[2]-f.z)<f.r+s[3]*0.5&&s[1]-s[3]<2.5){damage(e,dm,false,s[0],s[1],s[2],true);break}}
   if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-f.x,o.z-f.z)<f.r&&o.y<1.5)pvHit(o,8*pw,false,o.x,o.y+1,o.z)}}

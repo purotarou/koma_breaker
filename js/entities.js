@@ -40,10 +40,10 @@ else{if(e.ap&&e.hp<=e.bh){e.ap=0;e.st='stun';e.stT=0;e.cd=2;ev('icebrk',r1(e.x),
   else if(e.stT>1.7){e.st='rec';e.stT=0;e.cd=2.5}}
  else if(e.st==='swing'){if(e.stT>0.6&&!e.hd){e.hd=true;const sx=e.x+Math.sin(e.yaw)*2.4,sz=e.z+Math.cos(e.yaw)*2.4;ev('smash',r1(sx),r1(sz));areaHurt(sx,sz,3.3,18,1)}if(e.stT>1.2){e.st='chase';e.cd=Math.max(e.cd,1)}}
  else if(e.stT>(e.st==='stun'?1.5:0.5))e.st='chase'}
-if(e.type!=='lan'){collide(e,e.r);if(boss&&e.type!=='crow'){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.8:8,bx=e.x-cx,bz=e.z-cz,bd=Math.hypot(bx,bz)||1;if(bd<R&&!(mk&&boss.y>2)){e.x=cx+bx/bd*R;e.z=cz+bz/bd*R}}}}
+if(e.type!=='lan'){collide(e,e.r);if(boss&&e.type!=='crow'){const mk=boss.monk||boss.mob,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=boss.mob?1.6:mk?MK_R+0.8:8,bx=e.x-cx,bz=e.z-cz,bd=Math.hypot(bx,bz)||1;if(bd<R&&!(mk&&boss.y>2)){e.x=cx+bx/bd*R;e.z=cz+bz/bd*R}}}}
 for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.type==='lan'||a.type==='boss'||a.type==='crow')continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.type==='lan'||b.type==='boss'||b.type==='crow')continue;const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz)||0.01,rr=a.r+b.r+0.25;if(d<rr){const p=(rr-d)/2/d;a.x-=dx*p;a.z-=dz*p;b.x+=dx*p;b.z+=dz*p}}}}
 // ---- boss ----
-const restH=(s,yo)=>({x:s*5.3,y:9.35+yo,z:-16.6});
+const restH=(s,yo)=>boss&&boss.bk==='shiro'?shRestH(s,yo):({x:s*5.3,y:9.35+yo,z:-16.6});
 function updBoss(b,dt){b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);const hands=[b.hL,b.hR];T=bossT(b);
 if(b.st==='rise'){b.yo=Math.min(0,-38+b.stT/2.6*38);trauma=Math.max(trauma,0.3);for(const s of[-1,1]){const h=s<0?b.hL:b.hR,r=restH(s,b.yo);h.x=r.x;h.y=r.y;h.z=r.z}
  if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12)){fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3);fxSmoke(rnd(-8,8),0.5,-18,1,1.6,C.smokeD,2)}

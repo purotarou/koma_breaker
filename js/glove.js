@@ -35,7 +35,7 @@ if(pl.glQ>0){pl.glQ-=dt;if(pl.cool<=0&&!pl.gp){pl.glQ=0;glPunch()}}}
 function glPunch(){const S=W2.gl;if(now-(pl.glL||-9)>S.combo+S.cool[2])pl.glN=0;const k=(pl.glN|0)%(wb('gl_hook')?4:3);pl.glN=(k+1)%(wb('gl_hook')?4:3);pl.glL=now;
 pl.cool=k===3?S.hookCool:S.cool[k];wpAct(k===3?31:25+k);snd('whoosh');
 const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);let best=null,bd=S.lungeR;
-for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk))continue;const dx=e.x-pl.x,dz=e.z-pl.z,d=Math.hypot(dx,dz);if(d<bd&&d>0.01&&(dx*fx+dz*fz)/d>0.8){bd=d;best=e}}
+for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk&&!e.mob))continue;const dx=e.x-pl.x,dz=e.z-pl.z,d=Math.hypot(dx,dz);if(d<bd&&d>0.01&&(dx*fx+dz*fz)/d>0.8){bd=d;best=e}}
 let lx=fx,lz=fz,dist=0.5;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hypot(dx,dz);lx=dx/d;lz=dz/d;dist=clamp(d-1.2-(best.r||0.5),0,3)}
 const brk=now<pl.glB;pl.glB=0;pl.glP={k,m:brk?S.brk:1};pl.lgx=lx;pl.lgz=lz;pl.lgT=0.06;pl.lgV=pl.frz>0?0:dist/0.06;pl.lgP=2;
 if(brk)addText('ガード明け！',W/2,H*0.36,{size:52,st:'fire',life:0.45})}

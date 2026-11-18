@@ -38,22 +38,22 @@ function m3axis(ax,a){const c=Math.cos(a),s=Math.sin(a),[x,y,z]=ax,t=1-c;return 
 function m3from(a,b){const ax=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],s=Math.hypot(...ax),c=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 if(s<1e-6)return c>0?m3id(new Float32Array(9)):m3axis(Math.abs(a[0])<0.9?v3n([0,-a[2],a[1]]):v3n([-a[2],0,a[0]]),PI);return m3axis([ax[0]/s,ax[1]/s,ax[2]/s],Math.atan2(s,c))}
 const HX=[1,0,0],HY=[0,1,0],HZ=[0,0,1];
-function hRot(n,ax,a){if(!a)return;const L=HERO.L[HERO.bi[n]];m3mul(L,m3axis(ax,a),L)}
+function hRot(n,ax,a,H=HERO){if(!a)return;const L=H.L[H.bi[n]];m3mul(L,m3axis(ax,a),L)}
 // two-bone IK: shoulder s, target t, lengths l1/l2, pole p (direction the elbow bends towards) -> elbow, wrist
 function ik2(s,t,l1,l2,p){let d=[t[0]-s[0],t[1]-s[1],t[2]-s[2]],dl=Math.hypot(...d);const u=v3n(d);dl=clamp(dl,Math.abs(l1-l2)+1e-3,l1+l2-1e-3);
 const a=(l1*l1+dl*dl-l2*l2)/(2*dl),h=Math.sqrt(Math.max(0,l1*l1-a*a)),pu=p[0]*u[0]+p[1]*u[1]+p[2]*u[2],v=v3n([p[0]-u[0]*pu,p[1]-u[1]*pu,p[2]-u[2]*pu]);
 const e=[s[0]+u[0]*a+v[0]*h,s[1]+u[1]*a+v[1]*h,s[2]+u[2]*a+v[2]*h];return{e,w:[s[0]+u[0]*dl,s[1]+u[1]*dl,s[2]+u[2]*dl]}}
-// ---- pose + skin one hero into a pool buffer; returns its two prim indices ----
-function heroGlobals(rootY){const H=HERO;for(let b=0;b<H.nb;b++){const p=H.par[b],h=H.head[b];
+// ---- pose + skin one hero into a pool buffer; returns its prim indices. The optional last argument H picks another skinned model (the final boss, js/boss5.js) ----
+function heroGlobals(rootY,H=HERO){for(let b=0;b<H.nb;b++){const p=H.par[b],h=H.head[b];
  if(p<0){H.GR[b].set(H.L[b]);H.GT[b]=[h[0],h[1]+rootY,h[2]];continue}
  const hp=H.head[p],r=m3v(H.GR[p],[h[0]-hp[0],h[1]-hp[1],h[2]-hp[2]]),tp=H.GT[p];m3mul(H.GR[p],H.L[b],H.GR[b]);H.GT[b]=[tp[0]+r[0],tp[1]+r[1],tp[2]+r[2]]}}
 // put an arm on the IK solution: upper arm / forearm world rotations follow the solved directions (forearm twist carried on from the upper arm)
-function heroArm(s,tgt,pole,handTw){const H=HERO,A=H.arm[s],iu=H.bi['upperarm_'+s],ifo=H.bi['forearm_'+s],ih=H.bi['hand_'+s],sh=H.GT[iu];
+function heroArm(s,tgt,pole,handTw,H=HERO){const A=H.arm[s],iu=H.bi['upperarm_'+s],ifo=H.bi['forearm_'+s],ih=H.bi['hand_'+s],sh=H.GT[iu];
 const k=ik2(sh,tgt,A.l1,A.l2,pole),Ru=m3from(A.d1,v3n([k.e[0]-sh[0],k.e[1]-sh[1],k.e[2]-sh[2]]));
 const cur=m3v(Ru,A.d2),Rf=m3mul(m3from(cur,v3n([k.w[0]-k.e[0],k.w[1]-k.e[1],k.w[2]-k.e[2]])),Ru,new Float32Array(9));
 H.GR[iu]=Ru;H.GR[ifo]=Rf;H.GT[ifo]=k.e;const fd=v3n([k.w[0]-k.e[0],k.w[1]-k.e[1],k.w[2]-k.e[2]]);
 H.GR[ih]=m3mul(m3axis(fd,handTw),Rf,new Float32Array(9));H.GT[ih]=k.w}
-function heroSkin(){const H=HERO,S=H.S;for(let b=0;b<H.nb;b++){const R=H.GR[b],h=H.head[b],t=H.GT[b],o=b*12,rh=m3v(R,h);S.set(R,o);S[o+9]=t[0]-rh[0];S[o+10]=t[1]-rh[1];S[o+11]=t[2]-rh[2]}
+function heroSkin(H=HERO){const S=H.S;for(let b=0;b<H.nb;b++){const R=H.GR[b],h=H.head[b],t=H.GT[b],o=b*12,rh=m3v(R,h);S.set(R,o);S[o+9]=t[0]-rh[0];S[o+10]=t[1]-rh[1];S[o+11]=t[2]-rh[2]}
 if(H.at!==now){H.at=now;H.used=0}
 let e=H.pool[H.used];if(!e){const vbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,H.nv*24,gl.DYNAMIC_DRAW);
  e=H.pool[H.used]={vbo,out:new Float32Array(H.nv*6),pi:H.idx.map(ix=>addIdxPrim(vbo,H.uvb,ix))}}H.used++;

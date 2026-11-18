@@ -31,7 +31,7 @@ vec4 l=uLVP*vec4(w.xyz+vN*0.07,1.0);vL=l.xyz*0.5+0.5;vC=iC;vX=iX;gl_Position=uVP
 const FS_G=`#version 300 es
 precision highp float;precision mediump sampler2DShadow;
 in vec3 vN,vW,vO,vL;in vec4 vC,vX;in vec2 vU;
-uniform sampler2DShadow uSh;uniform sampler2D uHT;uniform vec3 uLD,uCam;uniform mat4 uV;uniform float uT;
+uniform sampler2DShadow uSh;uniform sampler2D uHT,uBT,uBM;uniform vec3 uLD,uCam;uniform mat4 uV;uniform float uT;
 layout(location=0) out vec4 o0;layout(location=1) out vec4 o1;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float ln(float d,float w){float a=fwidth(d)*1.2+1e-5;return 1.0-smoothstep(w-a,w+a,d);}
@@ -44,7 +44,12 @@ L=min(L,mix(0.2,1.0,sh));
 float pf=1.0-smoothstep(28.0,80.0,length(vW-uCam));
 // mat 10/11: textured (the hero, uHT on unit 3, UV at location 8). 11 also turns the strongly red texels (the coat) into the instance colour,
 // keeping the texture's shading. A flash (gTint, which also sets the unlit flag) whitens it.
-if(mat>9.5){vec3 t=texture(uHT,vU).rgb;
+// mat 12-14: the final boss (js/boss5.js; colour uBT on unit 4, skin mask uBM on unit 5). The UV of his right half carries u+1.
+// 12 = as baked (white), 13 = the skin becomes the instance colour, 14 = his right half red / left half black (the first form).
+if(mat>11.5){float sd=step(1.0,vU.x);vec2 uv=vec2(vU.x-sd,vU.y);vec3 t=texture(uBT,uv).rgb;
+ if(mat>12.5){float m=texture(uBM,uv).r;vec3 tc=mat>13.5?mix(vec3(0.2,0.2,0.22),vec3(0.86,0.1,0.1),sd):vC.rgb;t=mix(t,tc*clamp((t.r+t.g+t.b)*0.3833,0.3,1.15),m);}
+ alb=unlit>0.5?mix(t,vec3(1.0),0.85):t;}
+else if(mat>9.5){vec3 t=texture(uHT,vU).rgb;
  if(mat>10.5){float c=(t.r-max(t.g,t.b))/max(t.r,0.001);float k=smoothstep(0.25,0.45,c)*step(0.12,t.r)*(1.0-smoothstep(0.03,0.07,t.g-t.b));
   t=mix(t,vC.rgb*clamp((t.r+t.g+t.b)/1.1,0.35,1.15),k);}
  alb=unlit>0.5?mix(t,vec3(1.0),0.85):t;}
@@ -167,14 +172,21 @@ dir=clamp(dir*rc,vec2(-8.0),vec2(8.0))*uPx;
 vec3 A=0.5*(texture(uT,U+dir*(1.0/3.0-0.5)).rgb+texture(uT,U+dir*(2.0/3.0-0.5)).rgb);
 vec3 B=A*0.5+0.25*(texture(uT,U+dir*-0.5).rgb+texture(uT,U+dir*0.5).rgb);
 float lb=dot(B,lu);oC=vec4((lb<mn||lb>mx)?A:B,1.0);}`;
-const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT','uHT']);
+const pG=mkProg(VS_G,FS_G,['uVP','uLVP','uSh','uLD','uCam','uV','uT','uHT','uBT','uBM']);
 // textured models (kb_mat 10/11) sample uHT on texture unit 3 (units 0-2 are the shadow map / G-buffer). A 1x1 white stands in until a texture loads,
 // so the sampler never shares a unit with the shadow sampler. setModelTex() swaps in the real one (js/hero.js).
-gl.useProgram(pG.p);gl.uniform1i(pG.u.uHT,3);
+gl.useProgram(pG.p);gl.uniform1i(pG.u.uHT,3);gl.uniform1i(pG.u.uBT,4);gl.uniform1i(pG.u.uBM,5);
 let modelTex=gl.createTexture();gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,modelTex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));gl.activeTexture(gl.TEXTURE0);
 function setModelTex(img){const t=gl.createTexture();gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.activeTexture(gl.TEXTURE0);gl.deleteTexture(modelTex);modelTex=t}
+// the final boss's colour (unit 4) and skin mask (unit 5): 1x1 white / black until js/boss5.js loads them
+function texUnit(u,img,px){const t=gl.createTexture();gl.activeTexture(gl.TEXTURE0+u);gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+if(img){gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR)}
+else{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(px));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR)}
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.activeTexture(gl.TEXTURE0);return t}
+const bossTexU=[texUnit(4,null,[255,255,255,255]),texUnit(5,null,[0,0,0,255])];
+function setBossTex(i,img){gl.deleteTexture(bossTexU[i]);bossTexU[i]=texUnit(4+i,img)}
 const pS=mkProg(VS_S,FS_S,['uLVP','uT']);
 const pP=mkProg(VS_Q,FS_P,['uC','uN','uD','uPx','uTan','uFocus','uNear','uFar','uTime','uMood','uFlash','uInv','uMono','uHurt','uCR','uCU','uCF','uS0','uS1','uS2','uFogC','uGrade','uNight','uShade','uFogR','uVS']);
 const pF=mkProg(VS_Q,FS_F,['uT','uPx','uVS']);

@@ -9,7 +9,7 @@
 //   2 アカベタ   追い火柱 (chase) fire pillars burst under each target one after another: keep moving
 //   3 大入道     岩の波紋 (ripple) rings of rock spikes spread from his fists, each ring with gaps: stand in a gap or dash through
 //   4 鐘の僧     鐘の残響 (exMonk) every few seconds ice spikes burst under every player and around them
-//   5 シロヌキ   墨柱 / 追い火柱 / 墨の段波 (rows: rows of ink pillars sweep down the yard; each row has a gap that drifts) in its three stages (BT.shiro.pats, boss5.js)
+//   5 シロヌキ   墨柱 + 墨の段波 / 追い火柱 + 墨の段波 / 追い火柱 (rows: rows of ink pillars sweep down the yard; each row has a gap that drifts) in its three forms (BT.shiro.pats, boss5.js)
 // The pillars are one hazard list (erupts): a red ring warns, then the pillar bursts once (no jumping over it).
 // The host sends one event per pattern (ev), every peer builds the same pillars and checks only its own player.
 let exSel=0;try{exSel=(+localStorage.getItem('koma_ex'))?1:0}catch(e){}

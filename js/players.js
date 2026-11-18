@@ -88,7 +88,7 @@ function hurtT(p,d,x,z,fz,bl){if(p===pl){const h=pl.hp;hurtPlayer(d,x,z);if(fz&&
 function plFreeze(t){pl.frz=t;pl.vx=pl.vz=0;pl.dashT=0;snd('clank');shake(0.3);addText('カチーン！',W/2,H*0.4,{size:100,st:'cyan',life:0.7})}
 function jumpHeld(){if(keys.Space)return true;for(const id in touch.hold)if(touch.hold[id]==='jump')return true;return false}
 function areaHurt(x,z,r,d,jump){for(const p of allP())if(Math.hypot(p.x-x,p.z-z)<r&&!(jump&&p.y>0.7))hurtT(p,d,x,z)}
-function eCenter(e){const F=FOE[e.type];if(F)return F.ctr(e);if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
+function eCenter(e){const F=FOE[e.type];if(F)return F.ctr(e);if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.bk==='shiro')return shCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
 function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)return;const f=H/2/Math.tan(cam.fov/2),er=Math.min(280,c[3]*f/p.w),size=o.size||44,w=size*0.9*str.length;sideFlip=-sideFlip;let x=p.x+sideFlip*(er+w/2+20);if(x<w/2+50||x>W-w/2-50)x=p.x-sideFlip*(er+w/2+20);addText(str,x,p.y-er*0.5-rnd(0,24),o)}
 function resetPlayer(x,z,yaw){pl.wp=typeof wpCur==='function'?wpCur():0;skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,bls:0,reload:0,cool:0,gauge:SK.g0,spX:0,spF:0,dq:0,dqT:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0,heat:0,ovh:0,rOn:0,rt:0,rEnd:0,bombs:typeof wtBombMax==='function'?wtBombMax():3,bombT:0,bq:[],hon:0,hc:0,slamT:0,slamC:0,kkT:0,lgT:0,lgV:0,lgx:0,lgz:0,lgP:0,ak:0,at:9,slN:0,cutT:0,crackT:0,fb:null,fsp:null,fsA:0,fsT:0,spk:0,spkT:-9,grd:0,gp:0,gdT:0,jrT:0,lastDash:-9,shHit:-9,blind:0,blindM:0})}
 resetPlayer(0,16,0);
@@ -190,7 +190,8 @@ if(b.st==='rise'){trauma=Math.max(trauma,0.3);if(lim('gogo',0.45))addText('ゴ�
 else if(b.st==='die')bossDieFx(b)}
 // boss defeat: a few spaced pops while the boss trembles, then one big burst (bossEnd) at BDIE_END
 const BDIE_POPS=[[0.3,-5,24,3.2],[0.7,5,15,3],[1.05,-3,25,3.4],[1.35,3,20,3.6]],BDIE_END=1.85;
-function bossDieFx(b){b.pops=b.pops||0;for(let i=0;i<BDIE_POPS.length;i++){const q=BDIE_POPS[i];if(b.stT>=q[0]&&!(b.pops&(1<<i))){b.pops|=1<<i;const x=q[1]+rnd(-1.5,1.5),y=q[2]+b.yo+rnd(-2,2),z=-15.5;explode(x,y,z,q[3],{ink:1,quiet:1});sfxAt(i%2?'ボンッ':'バンッ',x,y+3,z,{size:90,st:'boom',life:0.45});snd('boom',0.8);flash(0.35);shake(0.5);b.flash=0.08}}
+function bossDieFx(b){b.pops=b.pops||0;for(let i=0;i<BDIE_POPS.length;i++){const q=BDIE_POPS[i];if(b.stT>=q[0]&&!(b.pops&(1<<i))){b.pops|=1<<i;const mb=b.mob,x=mb?b.x+rnd(-0.8,0.8):q[1]+rnd(-1.5,1.5),y=mb?rnd(0.8,2.4):q[2]+b.yo+rnd(-2,2),z=mb?b.z+rnd(-0.8,0.8):-15.5;explode(x,y,z,mb?q[3]*0.45:q[3],{ink:1,quiet:1});// mob = the white oni of stage 5 (boss5.js)
+sfxAt(i%2?'ボンッ':'バンッ',x,y+3,z,{size:90,st:'boom',life:0.45});snd('boom',0.8);flash(0.35);shake(0.5);b.flash=0.08}}
  if(b.stT>1.4)b.flash=Math.sin(b.stT*48)>0?0.03:0;trauma=Math.max(trauma,b.stT>1.4?0.45:0.12)}
 // ---- shared FX events (host runs + broadcasts, clients replay) ----
 const FXE={
@@ -204,7 +205,7 @@ ban(ch,name){G.banner={ch,name};G.bannerT=0;snd('ui')},
 say(a,b,who){say(b?[a,b]:[a],who)},
 txt(s,x,y,z,size,st){sfxAt(s,x,y,z,{size,st,life:0.7})},
 heal(){if(!pl.dead)pl.hp=Math.min(SK.hp,pl.hp+30*SK.heal*SK.heal2)},
-bossEnd(){for(let i=0;i<5;i++)explode(rnd(-9,9),rnd(8,30),-19+rnd(-2,2),rnd(2.5,4),{quiet:1,ink:1});explode(0,22,-18.5,8,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.25);for(let i=0;i<24;i++)fxOrb(rnd(-6,6),rnd(10,26),-18)}};
+bossEnd(){const mb=boss&&boss.mob?boss:null;if(mb){for(let i=0;i<5;i++)explode(mb.x+rnd(-2,2),rnd(0.5,4),mb.z+rnd(-2,2),rnd(1.4,2.2),{quiet:1,ink:1});explode(mb.x,1.5,mb.z,4.5,{text:'ドォォォォン！'})}else{for(let i=0;i<5;i++)explode(rnd(-9,9),rnd(8,30),-19+rnd(-2,2),rnd(2.5,4),{quiet:1,ink:1});explode(0,22,-18.5,8,{text:'ドォォォォン！'})}invA=1;flash(1);stopT(0.25);for(let i=0;i<24;i++)fxOrb(rnd(-6,6),rnd(10,26),-18)}};
 function ev(n,...a){FXE[n](...a);if(net.on&&net.host)net.evq.push([++net.evseq,n,a,now])}
 function updateShocks(dt){for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=s.v*dt;if(s.r>0&&!s.hit&&!pl.dead&&Math.abs(Math.hypot(pl.x-s.x,pl.z-s.z)-s.r*0.97)<0.8&&pl.y<0.55&&!(s.mk&&monkCover(s.x,s.z,pl.x,pl.z))){s.hit=true;const h=pl.hp;hurtPlayer(s.d,s.x,s.z);if(s.bl&&pl.hp<h)plBlind(s.bl)}if(s.r>s.max)shocks.splice(i,1)}}
 // ---- items ----
@@ -226,7 +227,7 @@ mPush();mT(0,1.3,0.12);mRX(-o.pitch);put(BOX,0.3,0,0.3,0,0,0,0.17,0.17,0.62,c);p
 o.gx=M[0]*0.22+M[4]*0.1+M[8]*1.4+M[12];o.gy=M[1]*0.22+M[5]*0.1+M[9]*1.4+M[13];o.gz=M[2]*0.22+M[6]*0.1+M[10]*1.4+M[14];mPop();gTint=0;mPop()}
 function drawHeroFx(o){if(o.fireT>0){bill(BURST,o.gx,o.gy,o.gz,0.7,now*30,C.yellow,F_UNLIT|F_NOCAST);bill(STAR,o.gx,o.gy,o.gz,0.36,0,C.white,F_UNLIT|F_NOCAST)}
 if(o.sp){const cp=Math.cos(o.pitch),dx=-Math.sin(o.yaw)*cp,dy=Math.sin(o.pitch),dz=-Math.cos(o.yaw)*cp;mPush();mT(o.gx+dx*45,o.gy+dy*45,o.gz+dz*45);orient(dx,dy,dz);mRX(PI/2);mS(1.3,90,1.3);emit(CYL,C.white,0,0,F_UNLIT|F_NOCAST,0);mPop();bill(BURST,o.gx,o.gy,o.gz,2.4,now*25,C.cyan,F_UNLIT|F_NOCAST)}if(o.rb)wpOtherBeam(o)}
-function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawTpsHero();drawHeroTest();drawWpWorld();
+function drawExtra(){const NF=F_UNLIT|F_NOCAST;for(const o of others)drawHero(o);drawTpsHero();drawHeroTest();drawShiroTest();drawWpWorld();
 for(const it of items){const y=1.05+Math.sin(it.t*3)*0.15,col=[C.heart,C.orange,C.cyan][it.k],rs=1.7+Math.sin(it.t*5)*0.15,sc=Math.min(1,it.t*4);put(RING,it.x,0.12,it.z,0,0,0,rs,1,rs,col,0,0,NF);
 mPush();mT(it.x,y,it.z);mRY(it.t*2.2);mS(sc,sc,sc);if(it.k===0){sph(-0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);sph(0.19,0.1,0,0.46,0.46,0.34,C.heart,0,1);put(CONE,0,-0.2,0,PI,0,0,0.7,0.56,0.34,C.heart,0,1)}
 else if(it.k===1){put(SPIKE,0,0,0,it.t*3,0,0,0.9,0.9,0.9,C.orange,0,0,F_UNLIT);put(SPIKE,0,0,0,0,it.t*4,0.6,0.55,0.55,0.55,C.yellow,0,0,F_UNLIT)}
