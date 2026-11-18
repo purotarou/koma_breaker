@@ -236,8 +236,13 @@ const sp=gaD.spOn&&gaD.spT<2,pre=!gaD.spOn&&gaD.t>GA_SPAT-1.2;
 ctx.save();ctx.beginPath();ctx.rect(R.px,R.py,R.pw,R.ph);ctx.clip();
 if(sp){ctx.translate(R.px+135,R.py+78);ctx.rotate(-0.08);const k=easeBack(sat(gaD.spT/0.25))*sat((2-gaD.spT)/0.2),s=k*(1+0.04*Math.sin(now*10))*0.85;ctx.scale(s,s);burstPath(5,7,190,56,14,1.25,6);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,190,56,14,1.25,6);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
  txt('必殺技！',0,-18,34,'#ffd91a',INK,8);txt(w.sp,0,24,w.sp.length>5?26:32,'#fff',INK,7)}
-else{ctx.translate(R.px+148,R.py+R.ph-50);ctx.rotate(-0.03);ctx.scale(0.8,0.8);para(-170,-36,330,72,18);ctx.fillStyle=INK;ctx.fill();para(-164,-30,318,60,15);ctx.fillStyle=pre?'#ffd91a':'#fff';ctx.fill();
- txt(pre?'必殺技 まもなく…':'通常攻撃',-4,-8,pre?26:32,INK);fitTxt(pre?w.sp:w.d[0],-150,20,15,300,'#3a3f55')}
+ctx.restore();ctx.save();ctx.beginPath();ctx.rect(R.px,R.py,R.pw,R.ph);ctx.clip();
+// caption box: normal attack (white) / special (yellow, with the special's explanation in two lines)
+const spo=!!gaD.spOn;ctx.translate(R.px+148,R.py+R.ph-(spo?58:50));ctx.rotate(-0.03);ctx.scale(0.8,0.8);
+const bh=spo?100:60;para(-170,-bh/2-6,330,bh+12,18);ctx.fillStyle=INK;ctx.fill();para(-164,-bh/2,318,bh,15);ctx.fillStyle=spo||pre?'#ffd91a':'#fff';ctx.fill();
+if(spo){const d=w.s||'',k=d.indexOf('。'),m=k>0&&k<d.length-1?k+1:Math.ceil(d.length/2),a=d.length>19?d.slice(0,m):d,b=d.slice(a.length);
+ txt('必殺技　'+w.sp,-4,-30,w.sp.length>6?22:26,INK);fitTxt(a,-150,-4,16,300,'#3a3f55');if(b)fitTxt(b,-150,20,16,300,'#3a3f55')}
+else{txt(pre?'必殺技 まもなく…':'通常攻撃',-4,-8,pre?26:32,INK);fitTxt(pre?w.sp:w.d[0],-150,20,15,300,'#3a3f55')}
 ctx.restore()}
 // ================= EQUIP SCREEN:「強化」(必殺 level-ups waiting from gacha duplicates) =================
 let wpUpPop=null;
