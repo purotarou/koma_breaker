@@ -7,7 +7,8 @@
 // Each weapon has its own normal attack and its own special (必殺); the gauge (妖珠) is shared. Skills: damage / special power /
 // gauge work for every weapon; magazine / reload / fire rate only for the ones with ammo (wpApply scales SK after skApply).
 //  連珠銃 32発・威力24・毎秒7発・装填0.8秒・反動なし / 珠時雨: 5 s of free ammo, double rate, homing aim.
-//  散華砲 8 pellets in a fan (closer = stronger), staggers 鎧鬼, gauge x1.5 / 大散華: 36 pellets through walls and enemies.
+//  散華砲 8 pellets in a fan (closer = stronger), staggers 鎧鬼, gauge x1.5 / 大散華: one burst of 36 pellets through walls and enemies,
+//    then (like 珠時雨) 5 s of free ammo, double rate and a tighter fan that homes in.
 //  氷魄砲 hold = piercing beam, heat gauge, overheat → forced cooling / 妖光・氷牢: 8 s ice beam, frozen 3 s (x1.5 damage), bosses slowed.
 //  祓い刀 no ammo, lunge slash, cuts enemy ink shots / 一閃・天断ち: a huge flying slash (reaches the boss).
 //  火消しの大槌 hold to charge, release = slam + shock ring in front (wider when charged), staggers 鎧鬼 / 駒砕き: leap + slam, the screen
@@ -22,7 +23,7 @@ const WPN=[
  d:['16発の連射銃。撃ち切ったら装填','いちばん扱いやすい標準の武器'],s:'正面に太い光線を一直線に放つ'},
 {id:'rifle',name:'連珠銃',type:'アサルト',kind:'gun',btn:'撃',file:'weapon_rifle',col:'#3f6fd8',bg:[.84,.88,1],ammo:1,mag:32,dmg:24,cool:1/7,rel:0.8,kick:0.006,shk:0.03,snd:'rshot',g:1,sp:'珠時雨',spd:5,spMode:'buff',muz:[0,0.03,-0.6],fore:0.27,
  d:['32発・威力24の速射銃','妖弾銃の上位版。反動がなく装填も速い'],s:'数秒間、弾が減らずに連射２倍。弾が敵を追う'},
-{id:'shotgun',name:'散華砲',type:'ショットガン',kind:'gun',btn:'撃',file:'weapon_shotgun',col:'#ff7aa8',bg:[1,.9,.93],ammo:1,mag:6,dmg:15,pel:8,cool:0.72,rel:1.5,kick:0.09,shk:0.22,snd:'sgun',g:1.5,sp:'大散華',spd:0.5,spMode:'once',muz:[0,0.055,-0.56],fore:0.3,
+{id:'shotgun',name:'散華砲',type:'ショットガン',kind:'gun',btn:'撃',file:'weapon_shotgun',col:'#ff7aa8',bg:[1,.9,.93],ammo:1,mag:6,dmg:15,pel:8,cool:0.72,rel:1.5,kick:0.09,shk:0.22,snd:'sgun',g:1.5,sp:'大散華',spd:5,spMode:'buff',muz:[0,0.055,-0.56],fore:0.3,
  d:['扇状に散弾を撃つ。近いほど強い','鎧鬼をのけぞらせる。必殺ゲージが早くたまる'],s:'超広範囲の散弾。全弾が壁も敵も貫通する'},
 {id:'rail',name:'氷魄砲',type:'レールガン',kind:'rail',btn:'撃',file:'weapon_railgun',col:'#5fd0ff',bg:[.85,.96,1],ammo:0,g:1,sp:'妖光・氷牢',spd:4,spMode:'mode',muz:[0,0.05,-0.87],fore:0.33,
  d:['長押しで、敵をつらぬく光線を連射','熱がたまりきると、しばらく冷却'],s:'４秒間、凍結光線を出しっぱなし。凍った敵は被ダメ1.5倍'},
@@ -136,8 +137,8 @@ if(w.kind==='bomb'&&f&&pl.cool<=0&&!pl.sp&&pl.bombs>0)throwBomb(0);
 if(W2K[w.kind])w2Update(w,dt,f)}
 // ---- 散華砲: golden-angle fan of pellets; damage falls off with distance. big = 大散華 (through walls and enemies) ----
 function shotgunFire(w,big){const pw=pl.pow>0?2:1,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2];
-const d0=big?aimDir():aimAssist(aimDir(),as?0.1:0.04,as?0.7:0.4),r=v3n([d0[2],0,-d0[0]]),u=[r[1]*d0[2]-r[2]*d0[1],r[2]*d0[0]-r[0]*d0[2],r[0]*d0[1]-r[1]*d0[0]];
-const n=big?36:w.pel,spr=big?0.36:0.085,seen=new Set(),bru=new Map(),R=big?45:60;
+const buff=!big&&pl.sp===2&&w.spMode==='buff',d0=big?aimDir():aimAssist(aimDir(),buff?0.3:as?0.1:0.04,buff?1:as?0.7:0.4),r=v3n([d0[2],0,-d0[0]]),u=[r[1]*d0[2]-r[2]*d0[1],r[2]*d0[0]-r[0]*d0[2],r[0]*d0[1]-r[1]*d0[0]];
+const n=big?36:w.pel,spr=big?0.36:buff?0.06:0.085,seen=new Set(),bru=new Map(),R=big?45:60;
 for(let i=0;i<n;i++){const a=i*2.39996+rnd(0,0.3),q=spr*Math.sqrt((i+0.5)/n),d=v3n([d0[0]+(r[0]*Math.cos(a)+u[0]*Math.sin(a))*q,d0[1]+(r[1]*Math.cos(a)+u[1]*Math.sin(a))*q,d0[2]+(r[2]*Math.cos(a)+u[2]*Math.sin(a))*q]);
  if(big){for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0&&t<tm)tm=t}
    if(tm<R){wpDmg(e,34*SK.spw*pw,ox+d[0]*tm,oy+d[1]*tm,oz+d[2]*tm,{quiet:seen.has(e)});seen.add(e);if(e.type==='bru')wpEffect(e,2)}}
@@ -254,13 +255,13 @@ w2OtherAct(o,ak);if(ak===1||ak===2){wslash.push({x:o.x,y:o.y+1.15,z:o.z,yaw:o.ya
 function wpSpStart(){const w=wpW();pl.hon=0;switch(w.id){
 case'gun':snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1;break;
 case'rifle':snd('charge');addText('ダダダダダッ！',W/2,H*0.15,{size:80,st:'cyan',life:0.9,grow:0.1,rot:-0.08});flash(0.35);pl.ammo=SK.mag;pl.reload=0;break;
-case'shotgun':pl.flashT=0.08;pl.kick+=0.12;shotgunFire(w,1);if(wb('sg_sp'))pl.sgS=0.55;snd('sgun');snd('boom',1.4);flash(0.6);invA=1;shake(0.8);addText('ズドドドン！',W/2,H*0.15,{size:90,st:'boom',life:0.9,rot:-0.08});break;
+case'shotgun':pl.ammo=SK.mag;pl.reload=0;pl.cool=0.3;pl.flashT=0.08;pl.kick+=0.12;shotgunFire(w,1);if(wb('sg_sp'))pl.sgS=0.55;snd('sgun');snd('boom',1.4);flash(0.6);invA=1;shake(0.8);addText('ズドドドン！',W/2,H*0.15,{size:90,st:'boom',life:0.9,rot:-0.08});break;
 case'rail':snd('freeze');addText('パキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.08});flash(0.5);invA=1;pl.ovh=0;break;
 case'katana':katanaWave();break;
 case'hammer':pl.vy=Math.max(pl.vy,10);pl.kkT=0.42;wpAct(8);snd('jump');snd('charge');addText('ハァァッ！',W/2,H*0.16,{size:84,st:'boom',life:0.6,rot:-0.06});break;
 case'bomb':throwBomb(1);if(wb('bm_sp'))pl.bmS={n:2,t:0.45};break;
 default:w2SpStart(w)}}
-function wpSpTick(dt){const w=wpW();if(w.id==='gun'){trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt)}else if(w.id==='rail'){lines(0.25,'#bfefff')}else if(w.id==='rifle'&&lim('rfx',0.5))lines(0.3,'#fff');else if(w.id==='spear'&&lim('spx',0.6))lines(0.2,'#ffe680')}
+function wpSpTick(dt){const w=wpW();if(w.id==='gun'){trauma=Math.max(trauma,0.6);pl.rec=1;lines(0.6,'#fff');beamDamage(dt)}else if(w.id==='rail'){lines(0.25,'#bfefff')}else if((w.id==='rifle'||w.id==='shotgun')&&lim('rfx',0.5))lines(0.3,'#fff');else if(w.id==='spear'&&lim('spx',0.6))lines(0.2,'#ffe680')}
 // ================= 必殺のカットイン (cutSp 0.6 → 0): a band with the hero's eye, one style per weapon =================
 // bg band colour, rot band tilt, iris colour, fx pattern, mir = eye on the right (text on the left), tc '必殺！' colour
 const CUTS={gun:{bg:'#2f6fd8',rot:-0.07,iris:'#ff9d00',fx:'speed'},rifle:{bg:'#23306e',rot:0.06,iris:'#59d8ff',fx:'beads',mir:1},
@@ -414,7 +415,7 @@ function wpStats(w){const gun=(dm,cool,n)=>[['威力',dm+(n?' × '+n+'粒':'')],
 switch(w.id){
 case'gun':return[...gun(w.dmg,w.cool),['秒間ダメージ','約 '+eqR0(w.dmg/w.cool)],['射程','140 m'],gp,['','必殺 '+w.sp],['光線','毎秒 1400・'+w.spd+' 秒間'],['範囲','正面の太い一直線・墨弾も消す']];
 case'rifle':return[...gun(w.dmg,w.cool),['秒間ダメージ','約 '+eqR0(w.dmg/w.cool)],['反動','なし'],gp,['','必殺 '+w.sp],['時間',w.spd+' 秒間'],['効果','弾が減らない・連射２倍（毎秒 '+eqR0(2/w.cool)+' 発）・弾が敵を追う']];
-case'shotgun':return[...gun(w.dmg,w.cool,w.pel),['距離','3 m 以内 ×1.55 → 15 m 以上 ×0.3'],['１発の最大','約 '+eqR0(w.dmg*w.pel*1.55)],['鎧鬼','近くで３粒当てるとのけぞる'],gp,['','必殺 '+w.sp],['威力','34 × 36粒・壁も敵も貫通'],['射程','45 m']];
+case'shotgun':return[...gun(w.dmg,w.cool,w.pel),['距離','3 m 以内 ×1.55 → 15 m 以上 ×0.3'],['１発の最大','約 '+eqR0(w.dmg*w.pel*1.55)],['鎧鬼','近くで３粒当てるとのけぞる'],gp,['','必殺 '+w.sp],['威力','最初に 34 × 36粒・壁も敵も貫通（45 m）'],['時間',w.spd+' 秒間'],['効果','弾が減らない・連射２倍・散弾が敵を追う']];
 case'rail':return[['威力',RAIL_DM+'（0.06 秒ごと）'],['秒間ダメージ','約 '+eqR0(RAIL_DM/0.06)+'・敵をすべて貫通'],['熱','4.7 秒撃ち続けると過熱'],['冷却','過熱したら約 2 秒撃てない'],['射程','120 m（壁まで）'],gp,['','必殺 '+w.sp],['光線',RAIL_ICE+'（0.06 秒ごと）・毎秒 約 '+eqR0(RAIL_ICE/0.06)],['時間',w.spd+' 秒間・熱なし'],['凍結','3 秒・凍った敵は被ダメ ×1.5'],['ボス','凍らない代わりに動きが鈍る']];
 case'katana':return[['威力','62'],['振る間隔','0.42 秒（毎秒 約 2.4 回）'],['秒間ダメージ','約 '+eqR0(62/0.42)],['範囲','前方 3.5 m・左右 70°'],['踏み込み','7.5 m 以内の正面の敵へ最大 5.5 m'],['墨弾','斬って消せる'],gp,['','必殺 '+w.sp],['威力','430・敵ごとに１回'],['範囲','幅 15 m・80 m 先まで・壁を越える']];
 case'hammer':return[['威力','55 〜 160（溜めで上がる）'],['溜め','最大まで 1.1 秒'],['範囲','2.1 m 前・半径 2.8 〜 6.2 m'],['振る間隔','0.5 秒'],['鎧鬼','怯ませる'],['小鬼','はじき飛ばす'],gp,['','必殺 '+w.sp],['威力','380'],['範囲','自分のまわり 半径 16 m']];
