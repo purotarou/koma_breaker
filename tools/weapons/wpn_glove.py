@@ -155,10 +155,10 @@ def side2s(y, z):   # a point on the thumb side, by its y as seen in the side vi
     return f(i) * (1 - t) + f(i + 1) * t
 def hit(s, z): return ray(s2phi(s, z), z)
 SP = lambda x, y: (side2s(PY(x), PZ(y)), PZ(y))
-# a horizontal band along the thumb side (s, z): pointed end toward the cuff, rounded over the front corner
-PS = 0.040   # shift of the whole band toward the thumb side (s=0 is the middle of the punching face)
-outline = [(s_ + PS, z) for s_, z in [(0.185, -0.002), (0.160, 0.031), (0.100, 0.032), (0.040, 0.036), (0.000, 0.040), (-0.016, 0.037),
-           (-0.024, 0.024), (-0.026, 0.000), (-0.024, -0.022), (-0.016, -0.032), (0.000, -0.034), (0.040, -0.037), (0.100, -0.035), (0.160, -0.036)]]
+# an upright plate on the punching face, centred on the gem (s, z); pointed end down toward the palm, rounded top
+GS, GZ, W = -0.012, 0.012, 0.036
+outline = [(GS + u, GZ + v) for u, v in [(0.0, -0.090), (W, -0.066), (W, 0.044), (0.030, 0.057), (0.018, 0.064), (0.0, 0.066),
+           (-0.018, 0.064), (-0.030, 0.057), (-W, 0.044), (-W, -0.066)]]
 pts, tris = tess([outline])
 pm = bmesh.new(); V = [pm.verts.new((u, z, 0)) for u, z in pts]
 for t in tris:
@@ -186,13 +186,12 @@ def frame_at(s, z, lift):
     p, n = hit(s, z)
     return T(*(p + n * lift)) @ n.to_track_quat('Z', 'Y').to_matrix().to_4x4()
 S = bmesh.new()
-for s, z in [(0.152, 0.016), (0.152, -0.020), (0.105, 0.021), (0.105, -0.024), (0.070, -0.026), (-0.012, 0.024),
-             (-0.016, 0.000), (-0.012, -0.022)]:
-    s += PS
+for s, z in [(GS + u, GZ + v) for u, v in [(0.021, -0.062), (-0.021, -0.062), (0.024, -0.034), (-0.024, -0.034),
+                                             (0.024, 0.040), (-0.024, 0.040), (0.0, 0.053)]]:
     s_ = uvsphere(0.0066, 16, 8, 1, 1, 0.62); xf(s_, frame_at(s, z, TOP - 0.0005)); merge(S, s_)
 add('Studs', S, [gold], 50)
 BZ_, GM_ = bmesh.new(), bmesh.new()
-gs, gz = 0.034 + PS, 0.000
+gs, gz = GS, GZ
 gem_on(frame_at(gs, gz, TOP - 0.003), 0.0160, 0.62, 0.0, 0.0160, 0.0215, 0.0062, BZ_, GM_)
 add('Bezel', BZ_, [gold]); add('Gem', GM_, [gem], 60)
 
