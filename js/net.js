@@ -47,7 +47,7 @@ if(net.host){if(m.ef)for(const a of m.ef){const e=enemies.find(q=>q.id===a[0]);i
  if(m.d)for(const a of m.d){if(a[0]<0){const b=enemies.find(q=>q.id===-a[0]);if(b&&b.monk)monkBell(b,a[1]);continue}const e=enemies.find(q=>q.id===a[0]);if(e&&!e.dead&&!(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))){e.hp-=a[1];e.flash=0.07;if(e.hp<=0)kill(e,o.slot)}}
  if(m.ps)for(const id of m.ps){const s=shots.find(q=>q.id===id);if(s)popShot(s)}if(m.pk)for(const id of m.pk){const i=items.findIndex(q=>q.id===id);if(i>=0)items.splice(i,1)}if(m.kb)for(const k of m.kb)pvTally(k,o.slot)}}
 function updateOthers(dt){const k=Math.min(1,dt*12);for(const o of others){const px=o.x,pz=o.z;o.x+=(o.nx-o.x)*k;o.z+=(o.nz-o.z)*k;o.y+=(o.ny-o.y)*k;o.yaw+=angDiff(o.nyaw,o.yaw)*k;o.pitch+=(o.np-o.pitch)*k;o.mv=lerp(o.mv,Math.min(1,Math.hypot(o.x-px,o.z-pz)/Math.max(dt,0.001)/5),k);o.wt+=dt;o.at=(o.at||0)+dt;o.fireT-=dt;o.flash-=dt}}
-const TC={i:'imp',l:'lan',b:'bru',f:'fox',k:'kasa',r:'roku',y:'yuki',g:'gun',s:'shade',c:'crow'};
+const TC={t:'twin',d:'dmon',i:'imp',l:'lan',b:'bru',f:'fox',k:'kasa',r:'roku',y:'yuki',g:'gun',s:'shade',c:'crow'};
 function snapMsg(){const m={t:'s',gs:G.state,r:net.roster.map(r=>[r.id,r.slot]),g:[G.wave,G.kills,G.score,r1(G.time),G.pk,G.pd,r1(G.tm)],it:items.map(i=>[i.id,i.k,r1(i.x),r1(i.z)])};
 if(G.mode!=='pvp'){m.e=[];for(const e of enemies)if(!e.dead&&e.type!=='boss')m.e.push([e.id,e.type[0],r1(e.x),r1(e.y),r1(e.z),r2(e.yaw),e.st,r2(e.stT),Math.ceil(e.hp),r2(e.sc),e.v,e.frz>0?1:0,r1(e.tx||0),r1(e.tz||0),e.ap?1:0,e.stn>0?(e.stnZ?2:1):0]);
 m.sh=shots.filter(s=>!s.dead).map(s=>[s.id,s.k,r1(s.x),r1(s.y),r1(s.z),r1(s.vx),r1(s.vy),r1(s.vz),s.tx||0,s.tz||0]);m.et=r1(G.endT);
@@ -65,10 +65,10 @@ if(m.e){const map={},keep={};for(const e of enemies)map[e.id]=e;
   if(b.st!==a[1]){b.st=a[1];b.stT=a[2];if(a[1]==='die')musOn=0}else if(Math.abs(b.stT-a[2])>0.3)b.stT=a[2];
   b.hp=a[3];b.mhp=a[4];b.nx=a[5];b.ny=a[6];b.nz=a[7];b.nyaw=a[8];b.phase=a[9];b.bhp=a[10];b.bmax=a[11];b.tx=a[12];b.tz=a[13];if(a[14]&&!b.bell2)b.bell2=mkBell2(b,a[14][0],a[14][1],a[14][2]);b.bell=a[15];b.tfB=a[16];b.dur=a[17];b.sl2=a[18];keep[a[0]]=1}
  for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(keep[e.id])continue;if(e.type==='boss')boss=null;else killFx(e);enemies.splice(i,1)}
- const sm={},sk={};for(const s of shots)sm[s.id]=s;for(const a of m.sh){let s=sm[a[0]];if(!s){s={id:a[0],k:a[1],r:a[1]?0.55:0.28,g:a[1]===1||a[1]>3?16:0,dead:false,life:9};shots.push(s)}if(!s.dead){s.x=a[2];s.y=a[3];s.z=a[4];s.vx=a[5];s.vy=a[6];s.vz=a[7];s.tx=a[8];s.tz=a[9]}sk[a[0]]=1}
+ const sm={},sk={};for(const s of shots)sm[s.id]=s;for(const a of m.sh){let s=sm[a[0]];if(!s){s={id:a[0],k:a[1],r:a[1]?0.55:0.28,g:a[1]===1||a[1]>3&&a[1]<8?16:0,dead:false,life:9};shots.push(s)}if(!s.dead){s.x=a[2];s.y=a[3];s.z=a[4];s.vx=a[5];s.vy=a[6];s.vz=a[7];s.tx=a[8];s.tz=a[9]}sk[a[0]]=1}
  for(let i=shots.length-1;i>=0;i--){const s=shots[i];if(sk[s.id])continue;if(!s.dead&&s.k===0)popShot(s);shots.splice(i,1)}
  if(m.et>=0&&G.endT<0)G.endT=m.et}
-if(m.h)for(const h of m.h)if(h[0]===net.slot){const hp=pl.hp;hurtPlayer(h[1],h[2],h[3]);if(h[4]&&pl.hp<hp)plFreeze(h[4])}
+if(m.h)for(const h of m.h)if(h[0]===net.slot){const hp=pl.hp;hurtPlayer(h[1],h[2],h[3]);if(h[4]&&pl.hp<hp)plFreeze(h[4]);if(h[5]&&pl.hp<hp)plBlind(h[5])}
 if(m.ev)for(const e of m.ev)if(e[0]>net.evDone){net.evDone=e[0];FXE[e[1]](...e[2])}}
 function clientInterp(dt){const k=Math.min(1,dt*10);for(const e of enemies){if(e.monk){e.x+=(e.nx-e.x)*k;e.y+=(e.ny-e.y)*k;e.z+=(e.nz-e.z)*k;e.yaw+=angDiff(e.nyaw,e.yaw)*k;monkCos(e,dt);continue}if(e.type==='boss'){bossCos(e,dt);e.yo+=(e.nyo-e.yo)*k;if(e.nL){e.hL.x+=(e.nL[0]-e.hL.x)*k;e.hL.y+=(e.nL[1]-e.hL.y)*k;e.hL.z+=(e.nL[2]-e.hL.z)*k;e.hR.x+=(e.nR[0]-e.hR.x)*k;e.hR.y+=(e.nR[1]-e.hR.y)*k;e.hR.z+=(e.nR[2]-e.hR.z)*k}continue}
 if(!(e.frz>0||e.stn>0)){e.t+=dt;e.stT+=dt}e.flash-=dt;e.x+=(e.nx-e.x)*k;e.y+=(e.ny-e.y)*k;e.z+=(e.nz-e.z)*k;e.yaw+=angDiff(e.nyaw,e.yaw)*k}

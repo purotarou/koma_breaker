@@ -37,6 +37,7 @@
   - 作業は Blender MCP を使うので**手元（Mac）のセッションで行う**（クラウドでは Blender を動かせない）。
   - 方式は未決定。案A: 鐘の僧と同じ「部品ごとに別ノード・単色の材質・コードで動かす」（`blender/boss_monk.blend` → `tools/blender_export_stage.py` → `js/boss4.js` の作り方を参考に。輪郭線・トーンになじみやすく早い）。案B: 主人公と同じ「テクスチャ＋骨（CPU スキニング）」（`js/hero.js`、スキル `add-character` の手順を参考に）。決める前にユーザーに確認する。
   - **ゲームの中身（3段階）は実装済み・見た目はコードの仮の姿**: `js/boss5.js`（`STG[4].bk='shiro'`。1〜3面と同じく北端に立ち、手・同期 `m.b`・`updBoss2` を使う）。体力バーは1本で、`SH_TH`（2/3・1/3）の線までしか減らず、印が壊れると次の段階へ（`brk` 約2.6秒、無敵、台詞 `SH_SAY`）。弱点は第1段階=胸の黒い印（向かって左）、第2段階=胸の赤い印（右）、第3段階=額の赤い巴（`shSph`、弱点 ×`SH_WEAK`、ほか ×`SH_BODY`）。技は `BT.shiro.pats`（[普通1〜3, 極1〜3]）: 第1=ベタグロ系（拳・墨弾・両拳・墨の波・召喚）、第2=アカベタ系（掌＋炎の十字・火球・炎の息・火の線の回転）、第3=両手に刀を持ち、刀の斬撃（赤い帯の予告、`shCut`）・白抜き（床のコマ割り、光るコマが白く抜ける。2回目は1回目の逆、`shKoma`）・刀の薙ぎ払い（ジャンプ）・吸い込み（口へ引き寄せ、近いほど痛い、`shSuck`）。新しい危険地帯は `shz`（各端末が自分のプレイヤーだけ判定、`shTick`/`shDraw`）。HUD は段階の線と「〇〇を撃て！」（`shHUD`）。3Dモデルに差し替えるときは `drawShiro`・`shHand`・`shSph`（弱点の位置）を直す。
+- **5面の中ボス**（`js/midboss.js`、コードで描く）: 5面は全5話（`WAVESET[4]`: 雑魚・雑魚・第三話 双子剣鬼・第四話 墨焔鬼ゴウエン・最終話 シロヌキ）。波の表に `{twin:1}` / `{dmon:1}` と書くと `spawnGroup` が `MBS` で出す。敵の型は `FOE.twin`（`v`=0 炎アカツキ / 1 闇ヨイヤミ、通信の文字 `t`）と `FOE.dmon`（`d`）、数値は `MBT`。双子は相手をはさんで反対側に回る（`mbSib`）、4技 `w1`〜`w4`（`w4` は2体同時）。ゴウエンは5技 `w1`〜`w5`（`a4` `a5` が続き）。斬撃は敵の弾 `k` 8〜12（8炎・9闇・10/11大・12焔墨。当たり判定はホストの `mbShot`、撃ち落とせない、大楯で防げる）。闇は**盲目**（`plBlind`、`pl.blind`、`mbBlindUI` が画面を暗くする）。ホストの `hurtT(p,d,x,z,fz,bl)` の `bl` が盲目の秒数で、`net.hq` の6番目で届く。波動は `shocks` の `bl`。HP バーは `mbHUD`。
 - **新しい操作キャラを入れるときは先にスキル `add-character`（`.claude/skills/add-character/SKILL.md`）を読む**（手順・つまずき・確認の仕方・複数キャラにするときの注意）。
 - 主人公カケル: Tripo で生成した `blender/src/komabure_chara_kakeru.glb` → `blender/hero_kakeru.blend` → `tools/blender_export_hero.py` で `assets/hero_kakeru.glb`（+ `.glb.js`）。**主人公だけはテクスチャと骨（スキニング）を使う**（ほかのモデルは今まで通り単色・骨なし）。
   - .blend の中身: `KK_Source`（Tripo の12部品をつないだもの。焼き付けの元、非表示）、`KK_Hero`（厚み付け＋ボクセル再構成で穴のない1つの形にして約8,000三角面に減面。UV は新しく作り、顔の部分を大きめに取ってある）、`KK_Rig`（16本の骨: hips / spine / chest / head、upperarm・forearm・hand、thigh・shin・foot の左右。自動の重み付け）。身長2.0、前が -Y、キャラの右が -X。
@@ -52,7 +53,7 @@
 
 ## 技術メモ
 - `index.html`（骨組みのみ）+ `css/style.css` + `js/*.js` に分割済み。WebGL2、独自シェーダーで輪郭線・トーン描画。
-- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → foes → boss123 → extreme → boss5 → hero → weapons → weapons2 → gacha → net → game-v2 → stagesel → settings → game）で、**順序を変えると壊れる**。
+- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → foes → boss123 → extreme → boss5 → midboss → hero → weapons → weapons2 → gacha → net → game-v2 → stagesel → settings → game）で、**順序を変えると壊れる**。
 - ファイルをまたぐトップレベルの処理は、呼び出す関数が先のファイルで定義済みであることが必要（別ファイルの後ろの関数はトップレベルでは呼べない。関数の中からなら可）。
 - ローカル確認は `file://` ではなく簡易サーバー（`python3 -m http.server`）を使う。
 - GLB は `loadGlbBuf()`（glb.js）で読む。`index.html` を直接開いた（`file://`）ときは fetch が使えないので、隣の `assets/*.glb.js`（同じ GLB を base64 にしたもの）を `<script>` で読む。`tools/blender_export_stage.py` が .glb と一緒に書き出すので、**GLB を書き出したら .glb.js も一緒に commit する**（古いままだと直接開いたときだけ古い形になる）。

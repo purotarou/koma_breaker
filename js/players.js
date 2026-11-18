@@ -22,7 +22,7 @@ const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:4,fox:
 [{ch:'第一話',name:'爆弾鬼、乱入！',g:[{imp:3,bom:3},{imp:3,bom:3,gun:1}],say:['赤いのは','爆発する!']},{ch:'第二話',name:'鉄砲鬼の狙撃',g:[{gun:2,lan:3},{gun:3,bom:3}],say:['赤い線に','気をつけろ!']},{ch:'第三話',name:'双鬼の門番',g:[{bru:2,imp:2},{gun:2,lan:3,bom:2},{bru:1,gun:2,lan:2}],say:['二体も','いるのか!']},{ch:'最終話',name:'紅蓮魔王アカベタ',boss:1}],
 [{ch:'第一話',name:'唐傘、舞う',g:[{kasa:3,imp:2},{kasa:3,lan:2}],say:['傘が','跳んでくる!']},{ch:'第二話',name:'ろくろ首の夜道',g:[{roku:1,lan:4},{roku:2,kasa:2,lan:2}],say:['首が','伸びた!?']},{ch:'第三話',name:'橋の上の鎧鬼',g:[{bru:1,kasa:3},{roku:2,lan:3},{bru:1,roku:1,kasa:2}]},{ch:'最終話',name:'大入道',boss:1}],
 [{ch:'第一話',name:'吹雪の参道',g:[{yuki:3,imp:3},{yuki:3,imp:3}],say:['さ、寒い…!']},{ch:'第二話',name:'凍える鎧鬼',g:[{ibru:1,yuki:2},{ibru:1,lan:3,imp:2}],say:['氷の鎧…','硬いぞ!']},{ch:'第三話',name:'鐘の消えた鐘楼',g:[{yuki:4,imp:3},{ibru:1,yuki:3},{ibru:1,lan:2,yuki:2}],say:['鐘が','ない…?']},{ch:'最終話',name:'鐘の僧',boss:1}],
-[{ch:'第一話',name:'墨に溶ける色',g:[{shade:2,imp:4},{shade:2,lan:3}],say:['足元の','墨が動く!']},{ch:'第二話',name:'過去の影',g:[{shade:2,shadeR:2},{shadeR:2,bom:3,lan:2}],say:['見覚えが','あるぞ…']},{ch:'第三話',name:'最後の門番',g:[{bru:1,shade:2,imp:2},{shadeR:2,lan:3,bom:3},{bru:2,shade:2}]},{ch:'最終話',name:'白抜魔王シロヌキ',boss:1}]];
+[{ch:'第一話',name:'墨に溶ける色',g:[{shade:2,imp:4},{shade:2,lan:3}],say:['足元の','墨が動く!']},{ch:'第二話',name:'過去の影',g:[{shade:2,shadeR:2},{shadeR:2,bom:3,lan:2},{bru:1,shade:2,imp:2}],say:['見覚えが','あるぞ…']},{ch:'第三話',name:'双子剣鬼、見参！',g:[{twin:1}],say:['双子の','剣鬼か!']},{ch:'第四話',name:'墨焔鬼ゴウエン',g:[{dmon:1}],say:['デカい…','炎と墨だ!']},{ch:'最終話',name:'白抜魔王シロヌキ',boss:1}]];
 // Difficulty by stage (the later the stage, the bigger the step): enemy HP / boss HP (the bell too) / damage dealt to the player / small-enemy ink-imp speed.
 // Meant to keep pace with the skill tree and the weapon gacha; tune here. Not used in the demo or versus. A 6th stage onwards keeps climbing by the last step.
 // Story mode (普通) is a little easier than before, most of all on the early stages. 難易度：極 (G.ex, js/extreme.js) multiplies it by EXK.
@@ -81,25 +81,25 @@ function allP(){const a=[];if(!pl.dead)a.push(pl);for(const o of others)if(!o.de
 function pickT(x,z){let b=pl,bd=1e9;for(const p of allP()){const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}return b}
 function pickR(){const a=allP();return a.length?a[(Math.random()*a.length)|0]:pl}
 function bossT(b){let p=null;if(b.ti!=null)p=allP().find(q=>q.slot===b.ti);if(!p){p=pickR();b.ti=p.slot}return p}
-function hurtT(p,d,x,z,fz){if(p===pl){const h=pl.hp;hurtPlayer(d,x,z);if(fz&&pl.hp<h)plFreeze(fz)}else net.hq.push(fz?[p.slot,d,r1(x),r1(z),fz]:[p.slot,d,r1(x),r1(z)])}
+function hurtT(p,d,x,z,fz,bl){if(p===pl){const h=pl.hp;hurtPlayer(d,x,z);if(fz&&pl.hp<h)plFreeze(fz);if(bl&&pl.hp<h)plBlind(bl)}else net.hq.push(bl?[p.slot,d,r1(x),r1(z),fz||0,r1(bl)]:fz?[p.slot,d,r1(x),r1(z),fz]:[p.slot,d,r1(x),r1(z)])}// bl = 盲目の秒数 (midboss.js)
 // frozen solid (bell monk's striker): can't move, jump or dash for t seconds
 function plFreeze(t){if(SK.steady)t*=0.5;pl.frz=t;pl.vx=pl.vz=0;pl.dashT=0;snd('clank');shake(0.3);addText('カチーン！',W/2,H*0.4,{size:100,st:'cyan',life:0.7})}
 function jumpHeld(){if(keys.Space)return true;for(const id in touch.hold)if(touch.hold[id]==='jump')return true;return false}
 function areaHurt(x,z,r,d,jump){for(const p of allP())if(Math.hypot(p.x-x,p.z-z)<r&&!(jump&&p.y>0.7))hurtT(p,d,x,z)}
 function eCenter(e){const F=FOE[e.type];if(F)return F.ctr(e);if(e.type==='imp')return[e.x,e.y+0.62*e.sc,e.z,0.8*e.sc];if(e.type==='lan')return[e.x,e.y,e.z,1];if(e.type==='bru')return[e.x,1.9,e.z,2];if(e.monk)return monkCenter(e);if(e.type==='boss')return[e.hx*2.7,25+e.yo,-24,6.5];return[e.x,e.y+1,e.z,1.1]}
 function sideText(str,e,o){const c=eCenter(e),p=project(c[0],c[1],c[2]);if(!p)return;const f=H/2/Math.tan(cam.fov/2),er=Math.min(280,c[3]*f/p.w),size=o.size||44,w=size*0.9*str.length;sideFlip=-sideFlip;let x=p.x+sideFlip*(er+w/2+20);if(x<w/2+50||x>W-w/2-50)x=p.x-sideFlip*(er+w/2+20);addText(str,x,p.y-er*0.5-rnd(0,24),o)}
-function resetPlayer(x,z,yaw){pl.wp=typeof wpCur==='function'?wpCur():0;skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,bls:0,reload:0,cool:0,gauge:SK.g0,spX:0,spF:0,dq:0,dqT:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0,heat:0,ovh:0,rOn:0,rt:0,rEnd:0,bombs:3,bombT:0,bq:[],hon:0,hc:0,slamT:0,slamC:0,kkT:0,lgT:0,lgV:0,lgx:0,lgz:0,lgP:0,ak:0,at:9,slN:0,cutT:0,crackT:0,fb:null,fsp:null,fsA:0,fsT:0,spk:0,spkT:-9,grd:0,gp:0,gdT:0,jrT:0,lastDash:-9,shHit:-9})}
+function resetPlayer(x,z,yaw){pl.wp=typeof wpCur==='function'?wpCur():0;skApply();Object.assign(pl,{x,z,yaw,pitch:0,frz:0,vx:0,vz:0,y:0,vy:0,hp:SK.hp,ammo:SK.mag,aj:0,revU:0,bls:0,reload:0,cool:0,gauge:SK.g0,spX:0,spF:0,dq:0,dqT:0,dashT:0,dashCd:0,ddx:0,ddz:0,inv:0,bob:0,kick:0,rec:0,sp:0,spT:0,dead:false,deadT:0,gunDip:0,spin:0,flashT:0,moving:0,tilt:0,pow:0,respT:0,revT:0,lastBy:-1,land:0,slot:pl.slot||0,heat:0,ovh:0,rOn:0,rt:0,rEnd:0,bombs:3,bombT:0,bq:[],hon:0,hc:0,slamT:0,slamC:0,kkT:0,lgT:0,lgV:0,lgx:0,lgz:0,lgP:0,ak:0,at:9,slN:0,cutT:0,crackT:0,fb:null,fsp:null,fsA:0,fsT:0,spk:0,spkT:-9,grd:0,gp:0,gdT:0,jrT:0,lastDash:-9,shHit:-9,blind:0,blindM:0})}
 resetPlayer(0,16,0);
 // aim assist: pull d towards the nearest target within cone (rad) by k (enemy parts, enemy shots, versus players)
 function aimAssist(d,cone,k){const AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2];let best=cone,bp=null;
 const chk=(x,y,z,bias)=>{const px=x-ox,py=y-oy,pz=z-oz,l=Math.hypot(px,py,pz)||1,a=Math.acos(clamp((px*d[0]+py*d[1]+pz*d[2])/l,-1,1))-bias;if(a<best){best=a;bp=[px/l,py/l,pz/l]}};
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)chk(s.x,s.y,s.z,0);if(G.mode==='pvp')for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))chk(s[0],s[1],s[2],s[5]==='bell'?0.04:s[4]>1.5&&!(e.monk&&e.bell)?0.02:0)}for(const s of shots)if(s.k<8)chk(s.x,s.y,s.z,0);if(G.mode==='pvp')for(const o of others)if(!o.dead)chk(o.x,o.y+1.2,o.z,0);
 if(bp){d=[lerp(d[0],bp[0],k),lerp(d[1],bp[1],k),lerp(d[2],bp[2],k)];const l=Math.hypot(d[0],d[1],d[2]);d=[d[0]/l,d[1]/l,d[2]/l]}return d}
 // one hitscan ray: the first thing hit (wall / enemy part / the monk's bell or the fallen bell / an enemy shot / a versus player)
 function rayHit(ox,oy,oz,d,maxT){let tw=rayWorld(ox,oy,oz,d[0],d[1],d[2],maxT),he=null,hm=1,hs=null,ho=null,htg=0;const wallT=tw;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;let tm=1e9,mm=0,tg=0,tb=1e9;for(const s of spheres(e)){const t=raySph(ox,oy,oz,d,s[0],s[1],s[2],s[3]);if(t>0){if(e.monk){if(s[5]==='bell'){if(t<tb)tb=t}if(t<tm){tm=t;mm=s[4];tg=s[5]}}else{if(t<tm)tm=t;if(s[4]>mm)mm=s[4]}}}if(e.monk&&tg!=='bell'&&tb<tm+1.6){tm=tb;tg='bell';mm=1}if(tm<tw){tw=tm;he=e;hm=mm;htg=tg}}
 if(boss&&boss.monk&&boss.bell2&&boss.bell2.y<0.3){const c=boss.bell2,t=raySph(ox,oy,oz,d,c.x,1.6,c.z,MK_BELL_R+0.2);if(t>0&&t<tw){tw=t;he=null;htg='cover'}}
-for(const s of shots){const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.35);if(t>0&&t<tw){tw=t;he=null;hs=s}}
+for(const s of shots){if(s.k>=8)continue;const t=raySph(ox,oy,oz,d,s.x,s.y,s.z,s.r+0.35);if(t>0&&t<tw){tw=t;he=null;hs=s}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const t1=raySph(ox,oy,oz,d,o.x,o.y+0.85,o.z,0.6),t2=raySph(ox,oy,oz,d,o.x,o.y+1.62,o.z,0.34),t=t1>0&&t2>0?Math.min(t1,t2):Math.max(t1,t2);if(t>0&&t<tw){tw=t;he=null;hs=null;ho=o;hm=t2>0?2:1}}
 return{t:tw,wallT,e:he,m:hm,s:hs,o:ho,tg:htg}}
 // what a ray hit takes: dmg on a body part (weak point / 破砕 / the monk's front and bell as before); pv = scale against versus players
@@ -204,7 +204,7 @@ txt(s,x,y,z,size,st){sfxAt(s,x,y,z,{size,st,life:0.7})},
 heal(){if(!pl.dead)pl.hp=Math.min(SK.hp,pl.hp+30*SK.heal*SK.heal2)},
 bossEnd(){for(let i=0;i<5;i++)explode(rnd(-9,9),rnd(8,30),-19+rnd(-2,2),rnd(2.5,4),{quiet:1,ink:1});explode(0,22,-18.5,8,{text:'ドォォォォン！'});invA=1;flash(1);stopT(0.25);for(let i=0;i<24;i++)fxOrb(rnd(-6,6),rnd(10,26),-18)}};
 function ev(n,...a){FXE[n](...a);if(net.on&&net.host)net.evq.push([++net.evseq,n,a,now])}
-function updateShocks(dt){for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=s.v*dt;if(s.r>0&&!s.hit&&!pl.dead&&Math.abs(Math.hypot(pl.x-s.x,pl.z-s.z)-s.r*0.97)<0.8&&pl.y<0.55&&!(s.mk&&monkCover(s.x,s.z,pl.x,pl.z))){s.hit=true;hurtPlayer(s.d,s.x,s.z)}if(s.r>s.max)shocks.splice(i,1)}}
+function updateShocks(dt){for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=s.v*dt;if(s.r>0&&!s.hit&&!pl.dead&&Math.abs(Math.hypot(pl.x-s.x,pl.z-s.z)-s.r*0.97)<0.8&&pl.y<0.55&&!(s.mk&&monkCover(s.x,s.z,pl.x,pl.z))){s.hit=true;const h=pl.hp;hurtPlayer(s.d,s.x,s.z);if(s.bl&&pl.hp<h)plBlind(s.bl)}if(s.r>s.max)shocks.splice(i,1)}}
 // ---- items ----
 function spawnItem(k,x,z){items.push({id:++eidN,k,x,z,t:0});fxStar(x,1,z,2,C.white,0.12)}
 function updateItems(dt){G.itemT-=dt;if(G.itemT>0)return;G.itemT=rnd(9,14)/(G.mode==='pvp'?1.5:1);if(items.length>=3+(G.np>2?1:0))return;let x=0,z=0;for(let i=0;i<14;i++){x=rnd(-BX+3.6,BX-3.6);z=rnd(boss?-8:BZ0+5.6,BZ1-3.6);let ok=true;for(const c of colC)if(Math.hypot(c.x-x,c.z-z)<c.r+1.5)ok=false;for(const b of colB)if(x>b.x0-1.5&&x<b.x1+1.5&&z>b.z0-1.5&&z<b.z1+1.5)ok=false;if(ok)break}
@@ -230,4 +230,4 @@ mPush();mT(it.x,y,it.z);mRY(it.t*2.2);mS(sc,sc,sc);if(it.k===0){sph(-0.19,0.1,0,
 else if(it.k===1){put(SPIKE,0,0,0,it.t*3,0,0,0.9,0.9,0.9,C.orange,0,0,F_UNLIT);put(SPIKE,0,0,0,0,it.t*4,0.6,0.55,0.55,0.55,C.yellow,0,0,F_UNLIT)}
 else{cyl(0,-0.06,0,0.46,0.5,0.46,C.cyan,0,1);cyl(0,0.26,0,0.22,0.18,0.22,C.white);sph(0,0.4,0,0.2,0.16,0.2,C.woodD)}mPop();
 bill(STAR,it.x+Math.sin(it.t*4)*0.5,y+0.5,it.z+Math.cos(it.t*4)*0.5,0.22,it.t*5,C.white,NF)}
-for(const s of shocks)if(s.r>0.5){put(RING2,s.x,0.16,s.z,0,0,0,s.r*2,1,s.r*2,C.red,0,0,NF);put(RING2,s.x,0.18,s.z,0,0,0,s.r*2-1.4,1,s.r*2-1.4,C.white,0,0,NF)}}
+for(const s of shocks)if(s.r>0.5){put(RING2,s.x,0.16,s.z,0,0,0,s.r*2,1,s.r*2,s.bl?C.darkP:C.red,0,0,NF);put(RING2,s.x,0.18,s.z,0,0,0,s.r*2-1.4,1,s.r*2-1.4,C.white,0,0,NF)}}

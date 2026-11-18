@@ -170,13 +170,14 @@ shade:{sc:300,g:14,
   else for(let i=0;i<3;i++){const a=t*1.5+i*TAU/3;sph(Math.cos(a)*0.24,1.5+Math.sin(a)*0.24,0.86,0.3,0.3,0.1,C.red,0,0,F_UNLIT)}
   gTint=0;mPop()}}};
 // ---- enemy shots of the new kinds: 2 ice shard / 3 bullet (both straight) / 4 fire ball / 5 falling rubble / 6 thrown lantern (lobbed) ----
-function shotUpd2(s){if(s.k===3){for(const c of colC)if(s.y<c.h&&Math.hypot(s.x-c.x,s.z-c.z)<c.r){popShot(s);return true}for(const b of colB)if(s.y<b.h&&s.x>b.x0&&s.x<b.x1&&s.z>b.z0&&s.z<b.z1){popShot(s);return true}}
+function shotUpd2(s){if(s.k>=8)return mbShot(s);// 中ボスの斬撃 (midboss.js)
+if(s.k===3){for(const c of colC)if(s.y<c.h&&Math.hypot(s.x-c.x,s.z-c.z)<c.r){popShot(s);return true}for(const b of colB)if(s.y<b.h&&s.x>b.x0&&s.x<b.x1&&s.z>b.z0&&s.z<b.z1){popShot(s);return true}}
 if(s.k<4)return false;
 if(s.k===6){if(s.vy<0&&s.y<3.5){s.dead=true;ev('lanpop',r1(s.x),r1(s.y),r1(s.z));if(enemies.length<14){const e=mkEnemy('lan',s.x,s.z);e.y=e.by=Math.max(2.6,s.y)}}}
 else if(s.y<0.35){s.dead=true;if(s.k===4){ev('fball',r1(s.x),r1(s.z),s.sm?1:0);areaHurt(s.x,s.z,s.sm?2.4:3.0,s.dmg)}else{ev('rubble',r1(s.x),r1(s.z));areaHurt(s.x,s.z,2.8,s.dmg)}}return true}
-function popShot2(s){if(s.k===2){fxStar(s.x,s.y,s.z,1.2,C.white,0.08);fxSparks(s.x,s.y,s.z,5,5,C.ice)}else if(s.k===3){fxStar(s.x,s.y,s.z,0.9,C.yellow,0.07);fxSparks(s.x,s.y,s.z,4,5,C.yellow)}
+function popShot2(s){if(s.k>=8)return mbPop(s);if(s.k===2){fxStar(s.x,s.y,s.z,1.2,C.white,0.08);fxSparks(s.x,s.y,s.z,5,5,C.ice)}else if(s.k===3){fxStar(s.x,s.y,s.z,0.9,C.yellow,0.07);fxSparks(s.x,s.y,s.z,4,5,C.yellow)}
 else if(s.k===6){fxStar(s.x,s.y,s.z,2,C.yellow,0.1);fxSmoke(s.x,s.y,s.z,4,0.8,C.smoke,2)}else explode(s.x,s.y,s.z,1.1,{quiet:1})}
-function drawShot2(s){const NF=F_UNLIT|F_NOCAST;
+function drawShot2(s){const NF=F_UNLIT|F_NOCAST;if(s.k>=8)return mbDrawShot(s);
 if(s.k===2){mPush();mT(s.x,s.y,s.z);orient(s.vx,s.vy,s.vz);mRX(PI/2);mS(0.3,0.9,0.3);emit(CONE,C.ice,0,1,0,0);mPop();bill(STAR,s.x,s.y,s.z,0.4,now*9,C.white,NF);return}
 if(s.k===3){sph(s.x,s.y,s.z,0.3,0.3,0.3,C.yellow,0,0,NF);mPush();mT(s.x-s.vx*0.025,s.y,s.z-s.vz*0.025);orient(s.vx,s.vy,s.vz);mS(0.07,0.07,1.4);emit(BOX,C.white,0,0,NF,0);mPop();return}
 const r=(s.k===5?5.6:s.k===6?2.4:s.sm?4.8:6)+Math.sin(now*18)*0.4;
@@ -189,7 +190,7 @@ put(RING,s.tx,0.11,s.tz,0,0,0,r,1,r,s.k===6?C.orange:C.red,0,0,NF)}
 function addFire(x,z,r,life,dl,long){if(Math.abs(x)>BX+1||z>BZ1+1||z<BZ0-1)return;if(long){let n=0,first=-1;for(let i=0;i<fires.length;i++)if(fires[i].long){n++;if(first<0)first=i}if(n>=BT.aka.fireMax)fires.splice(first,1)}
 if(fires.length>70)fires.shift();fires.push({x,z,r,life,max:life,dl:dl||0,long:long?1:0,s:rnd(0,9)})}
 const spinA=(s,k)=>s.dir*(-1.6-k*BT.aka.spinGap+BT.aka.spinW*Math.max(0,s.t));
-function hazTick(dt){if(boss&&boss.st==='die')hazReset();const live=!pl.dead&&(G.state==='play'||G.demoOn);exTick(dt,live);shTick(dt,live);
+function hazTick(dt){if(boss&&boss.st==='die')hazReset();const live=!pl.dead&&(G.state==='play'||G.demoOn);exTick(dt,live);shTick(dt,live);mbTick(dt,live);
 if(ices.length&&!(boss&&boss.monk))for(let i=ices.length-1;i>=0;i--){ices[i].life-=dt/7;if(ices[i].life<=0)ices.splice(i,1)}
 for(let i=fires.length-1;i>=0;i--){const f=fires[i];if(f.dl>0){f.dl-=dt;if(f.dl<=0){fxStar(f.x,0.6,f.z,f.r*1.6,C.orange,0.12);if(lim('fwh',0.15))snd('whoosh')}continue}f.life-=dt;if(f.life<=0){fires.splice(i,1);continue}
  if(live&&pl.y<1.5&&Math.hypot(pl.x-f.x,pl.z-f.z)<f.r*0.9&&lim('burn',BT.aka.burnT)){const h=pl.hp;hurtPlayer(BT.aka.burn,f.x,f.z);if(pl.hp<h)addText('アチチ！',W/2,H*0.62,{size:64,st:'boom',life:0.45})}}

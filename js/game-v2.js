@@ -7,12 +7,12 @@ Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:
 net.evseq=0;net.evDone=0;net.dacc={};net.pvAcc={};net.q={f:[],pk:[],kb:[],ps:[],wx:[],ef:[]};sndVol=1;musOn=1;snd('ui');eidN=0;
 if(pvp){G.banner={ch:'対戦',name:'10撃破で勝利！'};G.bannerT=0;pl.inv=2}else if(G.ex){G.banner={ch:'難易度：極',name:'強化された妖怪たち'};G.bannerT=0}else if(!net.on)say(['ここが…','漫画の中!?'],0);else{G.banner={ch:'協力',name:'力を合わせて倒せ！'};G.bannerT=0}}
 function startGame(){G.mode='solo';beginGame()}
-function spawnGroup(g){for(const k in g){const n=Math.round(g[k]*(1+0.5*(G.np-1))*(G.ex?EXK.more:1));for(let i=0;i<n;i++)spawnNear(k)}if(G.ex)exGroup()}
+function spawnGroup(g){for(const k in g){if(MBS[k]){MBS[k]();continue}/* 中ボス (midboss.js) */const n=Math.round(g[k]*(1+0.5*(G.np-1))*(G.ex?EXK.more:1));for(let i=0;i<n;i++)spawnNear(k)}if(G.ex)exGroup()}
 function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.boss){spawnBoss();if(!STG[G.stage].monk)ev('say','全テヲ',STG[G.stage].line,1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
 function updateWaves(dt){G.time+=dt;if(G.clearT>=0){G.clearT-=dt;if(G.clearT<0)startWave(G.wave+1);return}if(G.wave<0)return;const w=WAVESET[G.stage][G.wave];G.waveT+=dt;
 if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>2.3){G.state='clear';G.resT=0;snd('ui');saveHi();skReward(1)}}return}
 if(G.grp<w.g.length){if(enemies.length<=1||G.waveT>G.grp*12){spawnGroup(w.g[G.grp]);G.grp++}}
-else if(enemies.length===0){G.clearT=2.8;ev('heal');ev('ban','撃破！','体力回復 ＋30');if(G.wave===2)ev('say','次で','最後だ…!',0);else ev('say','よし、','次！',0)}}
+else if(enemies.length===0){G.clearT=2.8;ev('heal');ev('ban','撃破！','体力回復 ＋30');if(G.wave===WAVESET[G.stage].length-2)ev('say','次で','最後だ…!',0);else ev('say','よし、','次！',0)}}
 function gameOver(){G.state='over';G.resT=0;musOn=0;skReward(0);if(!net.on){slowT=2;slowK=0.3}}
 function rank(){const v=100-G.dmg*0.2-Math.max(0,G.time-200)*0.08+Math.min(6,G.score/5000);return v>=98?'S+':v>=90?'S':v>=76?'A':v>=60?'B':'C'}
 function getHi(s){try{return+(localStorage.getItem('koma_hi'+s)||0)}catch(e){return 0}}
