@@ -345,9 +345,9 @@ if(skConf){const f=skRespecInfo();btns.length=0;ctx.fillStyle='rgba(10,12,40,.72
  txt('現在 '+SKS.pt+' → 変更後 '+(SKS.pt+f.back),x+w/2,y+274,34,'#e5402b','#fff',7);
  B(x+40,y+306,240,58,'やめる',()=>{skConf=false},{size:26});B(x+w-280,y+306,240,58,'振り直す',()=>{skConf=false;skReset()},{size:26,col:'#ff4a3d',tc:'#fff'})}}
 
-// 索敵（守・治癒の三段）: 1人称のとき、画面に映っていない敵のいる方向を、照準のまわりの赤い矢印で示す（近いほど大きく濃い・ボスは大きい）
+// 索敵（守・治癒の三段）: 1人称のとき、画面に映っていない敵のいる方向を、画面の端の赤い矢印で示す（近いほど大きく濃い・ボスは大きい）
 function drawFoeArrows(){if(!SK.radar||tpsOn()||pl.dead||G.mode==='pvp')return;
- const cx=W/2,cy=H/2,rr=250,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),rx=Math.cos(pl.yaw),rz=-Math.sin(pl.yaw),L=[];
+ const cx=W/2,cy=H/2,rr=40,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),rx=Math.cos(pl.yaw),rz=-Math.sin(pl.yaw),L=[];
  for(const e of enemies){if(e.dead)continue;let x=e.x,z=e.z,y=(e.y||0)+1;
   if(e.type==='boss'&&!e.monk){try{const sp=spheres(e);let b=sp[0];for(const q of sp)if(q[3]>b[3])b=q;x=b[0];y=b[1];z=b[2]}catch(_){continue}}
   if(!isFinite(x)||!isFinite(z))continue;
@@ -357,7 +357,8 @@ function drawFoeArrows(){if(!SK.radar||tpsOn()||pl.dead||G.mode==='pvp')return;
   L.push({a:Math.atan2(f,r),d,boss:e.type==='boss'||!!e.monk})}
  L.sort((a,b)=>a.d-b.d);ctx.save();ctx.lineJoin='miter';
  for(const o of L.slice(0,12)){const k=sat(1-(o.d-4)/40),s=(o.boss?1.5:1)*(0.7+0.5*k),pu=0.8+0.2*Math.sin(now*9),ux=Math.cos(o.a),uy=-Math.sin(o.a);
-  ctx.save();ctx.translate(cx+ux*rr,cy+uy*rr);ctx.rotate(Math.atan2(uy,ux));ctx.scale(s,s);ctx.globalAlpha=(0.55+0.45*k)*pu;
+  const t=Math.min((W/2-rr)/Math.max(1e-3,Math.abs(ux)),(H/2-rr)/Math.max(1e-3,Math.abs(uy)));// 画面の端（四角い枠の内側）に置く
+  ctx.save();ctx.translate(cx+ux*t,cy+uy*t);ctx.rotate(Math.atan2(uy,ux));ctx.scale(s,s);ctx.globalAlpha=(0.55+0.45*k)*pu;
   ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(-12,-19);ctx.lineTo(-4,0);ctx.lineTo(-12,19);ctx.closePath();
   ctx.fillStyle='#ff2a2a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();ctx.restore()}
  ctx.restore()}
