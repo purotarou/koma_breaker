@@ -163,7 +163,7 @@ for(let a=0;a<4;a++)for(let i=0;i<3;i++){const[x,y]=pos(a,i),big=i===2,st=i<T[a]
  wtGem(x,y,r,st,big,a);btns.push({x:x-r-8,y:y-r*1.22-8,w:r*2+16,h:r*2.44+16,cb:()=>{wtSel={id,a,i}}})}
 // info (right)
 const ix=X+404,iw=PW-ix+X-20;
-txt('凸',ix,Y+40,22,INK,null,0,'left');txt(tp+' / '+WT_MAX,ix+30,Y+40,28,'#e5402b',null,0,'left');txt('のこり',ix,Y+76,18,'#555a70',null,0,'left');txt(String(fr),ix+62,Y+76,30,fr?'#e5402b':'#555a70',null,0,'left');
+txt('凸',ix,Y+40,22,INK,null,0,'left');txt(tp+' / '+WT_MAX,ix+30,Y+40,28,'#e5402b',null,0,'left');txt('のこり',ix,Y+76,18,'#555a70',null,0,'left');txt(String(fr),ix+62,Y+76,30,fr?'#e5402b':'#555a70',null,0,'left');txt('強化',ix+70+String(fr).length*18,Y+78,18,'#555a70',null,0,'left');
 ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(ix,Y+100,iw,2);
 if(wtSel.a<0){wtWrap('ひし形をタップすると効果が見られる。凸１つで１個とれる（手前から順に）。十字の先の大きいひし形は大技',ix,Y+132,17,iw,26,'#3a3f55')}
 else{const a=wtSel.a,i=wtSel.i,n=WTREE[id][a][i],d=T[a];
