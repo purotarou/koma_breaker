@@ -12,7 +12,7 @@ function spheres(e){const fx=Math.sin(e.yaw),fz=Math.cos(e.yaw);{const F=FOE[e.t
 if(e.type==='imp')return[[e.x,e.y+0.62*e.sc,e.z,0.68*e.sc,1]];
 if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.3,2]];
 if(e.type==='bru')return[[e.x,1.0,e.z,0.95,1],[e.x,2.0,e.z,1.1,1],[e.x+fx*0.2,3.0,e.z+fz*0.2,0.55,2]];
-if(e.monk)return monkSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
+if(e.monk)return monkSph(e);if(e.bk==='shiro')return shSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
 function updateEnemies(dt){for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.dead){enemies.splice(i,1);if(e===boss)boss=null;continue}
 if(e.monk){if(e.stn>0){e.stn-=dt;e.flash-=dt;continue}const sl=e.slw>0;if(sl)e.slw-=dt;updMonk(e,sl?dt*0.5:dt);if(G.ex)exMonk(e,sl?dt*0.5:dt);continue}
 if(e.frz>0&&e.type!=='boss'){e.frz-=dt;e.flash-=dt;continue}if(e.stn>0&&e.type!=='boss'){e.stn-=dt;e.flash-=dt;continue}// 雷 / 盾で押された (weapons2.js)// frozen by 妖光・氷牢 (weapons.js): no moves, no attacks
@@ -96,7 +96,7 @@ box(0,-0.3,0.4,0.5,0.08,0.1,C.inkD);mPop();if(ic){C.skin=s0;C.skinD=s1;if(e.ap){
 function drawBossArm(b,s){const h=s<0?b.hL:b.hR,sx=s*9.2+b.hx*2,sy=20.6+b.yo,sz=-26.5,mx=(sx+h.x)/2+s*2,my=Math.max(sy,h.y)+3,mz=(sz+h.z)/2,len=Math.hypot(h.x-sx,h.y-sy,h.z-sz),n=clamp(Math.ceil(len/1.7),5,26);gId=nid();
 for(let i=0;i<=n;i++){const u=i/n,a=(1-u)*(1-u),bb=2*u*(1-u),c=u*u,d=lerp(5.8,2.8,u);sph(a*sx+bb*mx+c*h.x,a*sy+bb*my+c*h.y,a*sz+bb*mz+c*h.z,d,d,d,b.bk==='nyudo'&&u<0.42?C.kim:BI,0,.6,0,1)}gId=0;
 mPush();mT(h.x,h.y,h.z);mRY(Math.atan2(h.x-sx,h.z-sz));if(b.bk){bkHand(b,s);mPop();return}sph(0,0,0,3.6,2.3,3.8,BI,0,.8,0,1);for(let i=0;i<4;i++)put(CONE,-1.2+i*0.8,-0.3,1.9,1.9,0,0,0.7,1.8,0.7,C.paper);put(CONE,-s*1.9,-0.2,0.6,1.6,-s*1.2,0,0.7,1.5,0.7,C.paper);mPop()}
-function drawBoss(b){if(b.bk==='nyudo'){drawNyudo(b);return}const yo=b.yo,t=b.t,p2=b.phase>1,eye=p2?C.red:C.yellow;gTint=b.flash>0?0.45:0;
+function drawBoss(b){if(b.bk==='nyudo'){drawNyudo(b);return}if(b.bk==='shiro'){drawShiro(b);return}const yo=b.yo,t=b.t,p2=b.phase>1,eye=p2?C.red:C.yellow;gTint=b.flash>0?0.45:0;
 put(CYL,0,0.1,-21.5,0,0,0,27,0.1,13,C.inkD,0,0,F_NOCAST);for(let i=0;i<6;i++){const a=i*1.05+t*0.3;sph(Math.cos(a)*11.5,0.1,-21.5+Math.sin(a)*5.5,2.2+Math.sin(t*2+i)*0.6,0.9,2.2,C.inkD)}
 mPush();mT(0,yo,-27);mS(2.1,2.1,2.1);gId=nid();sph(0,4.2,0,11,10,8,BI,0,.6,0,1);sph(b.hx,8.6,0.2,9.5,6.5,6.5,BI,0,.6,0,1);sph(-4.4+b.hx,9.8,0.3,4.2,3.6,4,BI,0,.6,0,1);sph(4.4+b.hx,9.8,0.3,4.2,3.6,4,BI,0,.6,0,1);gId=0;
 for(let i=0;i<7;i++){const a=(i-3)*0.42;put(CONE,Math.sin(a)*3.4+b.hx,10.2-Math.abs(i-3)*0.12,Math.cos(a)*3.2,1.9,a,0,0.9,1.9,0.9,C.gold,0,.6)}

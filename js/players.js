@@ -10,12 +10,12 @@ Object.assign(G,{menu:'main',mode:'solo',stage:0,np:1,paused:false,pk:[0,0,0,0],
 // Stage table. hard: tougher boss (faster attacks, more HP, wider shock waves) / bom: boss summons bomb oni / ink: enemy ink colour /
 // line: second half of the boss's opening line / cut: boss name split for the cut-in (small, big) / pfx: ambient particles /
 // sun: light direction (default = high noon) / shade: shadow-tone tint / fogR: fog start, end, strength.
-// bk: boss kind of stages 1-3 (js/boss123.js: beta / aka / nyudo). Stage 5 has no boss of its own yet: the old demon king stands in (STORY.md 5).
+// bk: boss kind (js/boss123.js: beta / aka / nyudo; js/boss5.js: shiro = 白抜魔王シロヌキ, three stages). Stage 4 is the bell monk (monk, js/boss4.js).
 const STG=[{name:'朱の神社',sub:'ステージ１',desc:['桜舞う境内で','墨の妖怪を迎え撃て'],col:'#e5402b',s0:[.14,.45,.95],s1:[.5,.8,1],s2:[.93,.97,1],fog:[.93,.97,1],grade:[1,1,1],night:0,boss:'大墨魔王ベタグロ',cut:['大墨魔王','ベタグロ'],hard:0,bom:0,ink:C.ink,line:'黒ク塗ル!!',pfx:0,bk:'beta'},
 {name:'月下の天守',sub:'ステージ２',desc:['爆弾鬼が走る夜の城','強敵・紅蓮魔王'],col:'#7a3fd0',s0:[.04,.05,.22],s1:[.12,.16,.46],s2:[.42,.36,.66],fog:[.26,.26,.5],grade:[.74,.8,1],night:1,boss:'紅蓮魔王アカベタ',cut:['紅蓮魔王','アカベタ'],hard:1,bom:1,ink:C.crim,line:'紅ク染メル!!',pfx:1,bk:'aka'},
 {name:'黄昏の町',sub:'ステージ３',desc:['墨が降る夕暮れの町','橋の上で灯りを守れ'],col:'#ff8a2b',s0:[.26,.15,.44],s1:[.96,.5,.32],s2:[1,.84,.55],fog:[1,.8,.6],grade:[1.04,.94,.86],night:0,boss:'大入道',cut:['','大入道'],hard:1,bom:0,ink:C.ink,line:'叩キ壊ス!!',bk:'nyudo',pfx:2,sun:[-0.8,0.48,-0.32],shade:[.64,.42,.6],fogR:[50,430,0.75]},
 {name:'雪の古寺',sub:'ステージ４',desc:['吹雪の山寺で','封印の秘密に迫れ'],col:'#3f9fe0',s0:[.52,.64,.82],s1:[.78,.85,.94],s2:[.95,.97,1],fog:[.9,.93,.98],grade:[.94,.98,1.06],night:0,boss:'鐘の僧',cut:['','鐘の僧'],monk:1,hard:1,bom:0,ink:C.ink,line:'封ジル!!',pfx:3,arena:[31.6,-37,33.6],sun:[0.42,0.72,0.55],shade:[.6,.68,.9],fogR:[22,240,0.85]},
-{name:'墨の池',sub:'ステージ５',desc:['色が溶けて消える','封印の最奥'],col:'#16121f',s0:[.78,.78,.8],s1:[.9,.9,.9],s2:[.97,.96,.93],fog:[.94,.93,.9],grade:[1,1,1],night:0,boss:'白抜魔王シロヌキ',cut:['白抜魔王','シロヌキ'],hard:1,bom:1,ink:C.ink,line:'白ク抜ク!!',pfx:4,shade:[.56,.56,.6],fogR:[30,300,0.85]}];
+{name:'墨の池',sub:'ステージ５',bk:'shiro',desc:['色が溶けて消える','封印の最奥'],col:'#16121f',s0:[.78,.78,.8],s1:[.9,.9,.9],s2:[.97,.96,.93],fog:[.94,.93,.9],grade:[1,1,1],night:0,boss:'白抜魔王シロヌキ',cut:['白抜魔王','シロヌキ'],hard:1,bom:1,ink:C.ink,line:'白ク抜ク!!',pfx:4,shade:[.56,.56,.6],fogR:[30,300,0.85]}];
 // Waves per stage: g = groups (the next group comes when one enemy is left, or after 12 s). Names: imp 墨鬼 / lan 化け提灯 / bru 鎧鬼 / bom 爆弾鬼 /
 // fox 墨狐 / gun 鉄砲鬼 / kasa 唐傘お化け / roku ろくろ首 / yuki 雪坊主 / ibru 氷の鎧鬼 / shade 影法師 (黒) / shadeR 影法師 (紅)  (js/foes.js)
 const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:4,fox:1}]},{ch:'第二話',name:'化け提灯の群れ',g:[{lan:3,imp:2},{lan:3,fox:2}],say:['上か！']},{ch:'第三話',name:'鎧鬼、突撃！',g:[{bru:1,imp:3},{lan:3,fox:2},{bru:1,lan:2,fox:1}],say:['デカい','のが来た!']},{ch:'最終話',name:'大墨魔王ベタグロ',boss:1}],
@@ -154,7 +154,7 @@ d*=difOf(G.stage).dmg;d*=SK.def*(SK.fud&&pl.hp<SK.hp*0.5?0.9:1)*(pl.y>0.05?SK.ai
 addText(pick(['ガッ！','ドカッ！','グハッ']),W/2+(Math.random()<.5?-1:1)*rnd(260,420),H*0.5+rnd(-60,120),{size:80,st:'hurt',life:0.5});
 if(pl.hp<=0&&(pl.revU|0)<SK.rev){pl.revU=(pl.revU|0)+1;pl.hp=Math.round(SK.hp*SK.revH);pl.inv=2.5;flash(0.5);snd('item');lines(0.9,'#ffd91a');if(SK.revClr)for(const q of shots.slice()){popShot(q);if(isCli())net.q.ps.push(q.id)}addText('不屈！！',W/2,H*0.38,{size:110,st:'boom',life:1.1,rot:-0.06})}
 else if(pl.hp<=0){pl.hp=0;pl.dead=true;pl.deadT=0;pl.revT=0;pl.sp=0;if(!net.on)gameOver();else if(G.mode==='pvp'){pl.respT=3;if(net.host)pvTally(pl.lastBy,net.slot);else net.q.kb.push(pl.lastBy)}else pl.respT=15}}
-function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;if(e.frz>0)dmg*=1.5;dmg*=skAtk()*(crit?SK.crit:1)*(pl.bls>0?pl.blsA:1);if(e.type==='boss'&&SK.boss>1)dmg*=SK.boss;if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
+function damage(e,dmg,crit,hx,hy,hz,quiet){if(e.dead)return;if(e.frz>0)dmg*=1.5;dmg*=skAtk()*(crit?SK.crit:1)*(pl.bls>0?pl.blsA:1);if(e.type==='boss'&&SK.boss>1)dmg*=SK.boss;if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'||e.st==='brk'))return;e.flash=0.07;hitMark=0.12;hitCrit=crit;e.mine=now;
 if(!quiet){fxStar(hx,hy,hz,crit?1.6:1.1,crit?C.yellow:C.white,0.1);fxBlobs(hx,hy,hz,4,5,C.ink,0.13);addGauge(crit?3:2);snd(crit?'crit':'hit');stopT(0.012);
 if(lim('hitT',0.24))sideText(crit?pick(['キィン！','ズキュン！']):pick(['バキッ！','ガッ！','ドカッ！','ズガッ！']),e,{size:crit?48:42,st:crit?'fire':'hit',life:0.3});
 if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*7;e.kz=(e.z-pl.z)/d*7}}
@@ -166,7 +166,7 @@ if(mine){G.combo++;G.maxc=Math.max(G.maxc||0,G.combo);G.comboT=2.6;G.comboPop=0.
 if(F&&F.die)F.die(e);else if(F||e.type==='imp'){if(e.v&&!F)explode(e.x,0.8,e.z,1.6);else{fxStar(e.x,y,e.z,2.8,C.white,0.1);fxBall(e.x,y,e.z,1.9,C.ink,0.3);fxBlobs(e.x,y,e.z,14,7,C.ink,0.2);fxSmoke(e.x,y,e.z,4,0.8,C.smoke,2);fxRing(e.x,0.1,e.z,3.2,C.white,0.25);if(!pl.sp||lim('spx',0.5))sideText(pick(['ドシャッ','グシャ！','バシュッ']),e,{size:58,st:'ink',life:0.5});snd('kill');stopT(0.05);shake(0.2)}}
 else if(e.type==='lan')explode(e.x,y,e.z,1.1);else{explode(e.x,1.8,e.z,2.3,{text:'ズドォォン！'});fxBlobs(e.x,1.5,e.z,20,10,C.ink,0.25);stopT(0.12);invA=1}
 for(let i=0;i<(e.type==='bru'?8:3);i++)fxOrb(e.x,y,e.z)}
-function kill(e,by){if(e.monk&&(e.phase<2||e.st==='trans')&&e.st!=='die'){e.hp=Math.max(1,e.hp);return}if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
+function kill(e,by){if(e.monk&&(e.phase<2||e.st==='trans')&&e.st!=='die'){e.hp=Math.max(1,e.hp);return}if(e.bk==='shiro'&&(e.phase<3||e.st==='brk')&&e.st!=='die'){e.hp=Math.max(1,e.hp);return}/* 5面: the seals first (boss5.js) */if(e.type==='boss'){if(e.st!=='die'){e.st='die';e.stT=0;e.hp=0;e.ah=-1;stopT(0.25);G.kcT=0;musOn=0;invA=1;for(const o of enemies)if(o!==e&&!o.dead)kill(o,by);shots.length=0}return}
 if(e.dead)return;e.dead=true;G.kills++;if(by>=0)G.pk[by]++;G.score+=(FOE[e.type]?FOE[e.type].sc:({imp:100,lan:150,bru:500})[e.type])*(10+Math.min(G.combo,10))/10|0;killFx(e);
 if(boss===null&&Math.random()<(e.type==='bru'?1:0.12))spawnItem((Math.random()*3)|0,e.x,e.z);
 if(e.v){areaHurt(e.x,e.z,2.8,14);for(const o of enemies)if(!o.dead&&o.type!=='boss'&&Math.hypot(o.x-e.x,o.z-e.z)<3.8){o.hp-=70;o.flash=0.1;if(o.hp<=0)kill(o,by)}}}

@@ -15,7 +15,7 @@
 
 ## 3Dモデルの制作フロー（予定）
 - キャラ・武器: Meshy AI で生成 → Blender に取り込み、ポリゴン削減・向き/スケール調整・リグ/アニメ追加 → GLB で書き出して `assets/` に配置。
-- 地形・ステージ: **全5ステージ Blender 化済み**（1 朱の神社 / 2 月下の天守 / 3 黄昏の町 / 4 雪の古寺 / 5 墨の池）。3面と5面のボスはまだ無く、最終話は既存の魔王を代役にしている（名前・台詞だけ STORY.md のもの）。4面は専用ボス「鐘の僧」（下記）。
+- 地形・ステージ: **全5ステージ Blender 化済み**（1 朱の神社 / 2 月下の天守 / 3 黄昏の町 / 4 雪の古寺 / 5 墨の池）。1〜3面のボスは `js/boss123.js`、4面は専用ボス「鐘の僧」（下記）、5面は最終ボス「白抜魔王シロヌキ」（下記。今はコードで描いた仮の姿）。
   - 元データ: `blender/stage_{shrine,castle,town,temple,inkpond}.blend` → `tools/blender_export_stage.py` で `assets/stage_*.glb`（同名）に書き出す（Blender MCP から `exec`。ファイルを開いた呼び出しとは別の呼び出しで書き出すこと。同じ呼び出しだと書き出しが context エラーになる）。
   - ゲーム側は `js/glb.js` が起動時に5つの GLB を読み、既存のインスタンス描画（輪郭線・トーン）にそのまま流す。読めなかったステージだけコード版（`buildStage1Code()` は stage.js、`buildStage2Code()` は players.js、`buildStage3Code()`〜`buildStage5Code()` は stage345.js）で起動。`?stage1=code` 〜 `?stage5=code` でコード版を強制表示できる（見比べ用）。
   - ステージごとの空・霧・影の色・太陽の向き・粒子・難しさは `STG`（players.js）にまとめてある（`hard` `bom` `ink` `line` `cut` `pfx` `sun` `shade` `fogR`）。遊べる範囲は標準で x ±21.6、z -25.6〜21.6 で、`STG[n].arena`（[半幅, 北端z, 南端z]）でステージごとに変えられる（雪の古寺は x ±31.6、z -37〜33.6 で、本堂の石段の前まで歩ける）。魔王型のボスは z -21.5 から出て、体は z -35 あたりまで占めるので、ボスがいる間は北端が z -25.6 に戻る（`collide()`）。4面の鐘の僧は動き回るので、北端は戻さない。当たり判定は高さを見ない（ジャンプしても越えられない）が、弾は `kb_col` の高さより上を通る（雪の古寺の池は高さ 0.12 の判定で、人は入れず弾は通る）。雪の古寺の本堂の中央の扉は GLB ではなくコードで毎フレーム描く（`drawTempleDoor`、stage345.js）。`templeDoor.target=1` で開き、0 で閉じる（ボスが本堂から出てくる演出用。ステージを切り替えると閉じた状態に戻る）。
@@ -33,10 +33,10 @@
   - 抽選は `gaRates()`（ピックアップ `GA_PU`=30%、ほかは均等。凸Lv10（`WLV`、強化待ち込み）の武器は除く。全部が最大になったら全部が抽選対象に戻り、最大の武器が重なると `GA_MAXPT`=3 のスキルポイント（`SKS.pt`）になる＝引くのが止まらない。超強化 DEV 中はコマ札を使わず何回でも引ける）。1回=1枚、6回=5枚。結果は引いた瞬間に保存し、そのあと演出（`gaA`: 封じられたコマが割れる → 武器の絵 → 6回なら一覧）。
   - 必殺レベル: `WS.lv[id]`（使っているLv）と `WS.up[id]`（強化待ち）。重複は `wsGive` が強化待ちを増やすだけで、装備画面の「詳細」の隣の「強化」（`wpUpBtn`）で `wpLvUp` を押して上げる。最大は `WLV`=10。効果は `SPLV`（レベルごとの [必殺の威力, 必殺の時間, 通常攻撃の威力]。`wpApply` が `SK.spw`・`SK.beam`・`SK.atk` に掛ける）で、**Lv5 と Lv10 で大きく跳ねる**（`SPLV_BIG`）。
   - 画面の絵は `assets/gacha/cut_*.webp`（元絵 `weapon_*.webp` を切り詰めて640pxにしたもの。作り直しは `python3 tools/gacha/cutout.py`、Pillow が必要）。右側の枠（`GA_SPIN_R`）は `gaD`：まず武器が回る（`wpPreviewIn`、装備画面と同じ描き方。「武器の全体像」）→ 4.5秒後に**同じ枠の中で**ステージ1のデモプレイ（ハイライト、`gaDemoStart`。`G.demoOn` のまま `G.state='menu'`、タイトルのデモと同じ AI）。ハイライトは 1人称 → 3人称 → 2人称 の順で、各視点とも「通常攻撃」（`GA_SPAT`=4.5秒まで）→ 必殺（`gaSeg`、`SET.view` を一時的に切り替える）を見せ、最後に回転に戻って繰り返す。枠の中への描画は `gaFrame()`（枠の矩形 `GA_VPR`）が真の間 `render3d`（game.js）が `scenePass()` を2回回す：1回目は枠の外の背景（`orbitCam()` の周回カメラ、静的レイヤーのみ・画面全体）、2回目はデモのカメラを枠の大きさの viewport に描いて最終合成で枠の位置に置く（シェーダーの `uVS` が W×H のバッファの左下だけを読む）。3D の矩形は `vpR`（gfx.js、通常は `VPR_FULL`。`camUpdate` の縦横比と `project()` が使う）。枠の外にはみ出す描き文字・効果は `drawUI` で枠にクリップする。ガチャ演出・設定を開いている間は止まり、ガチャを出るときは `gaDemoEnd` で元に戻す（`SET.view` も戻す）。
-- **最終ボス「白抜魔王シロヌキ」第3形態（未着手）**: 元モデルは `blender/src/komabure_chara_last_boss3.glb`（本体。14部品・テクスチャ付き）と `..._sword_right.glb` / `..._sword_left.glb`（両手の剣）。出どころ・ライセンスは未確認（`ASSETS.md`）。
+- **最終ボス「白抜魔王シロヌキ」第3形態の3Dモデル（未着手）**: 元モデルは `blender/src/komabure_chara_last_boss3.glb`（本体。14部品・テクスチャ付き）と `..._sword_right.glb` / `..._sword_left.glb`（両手の剣）。出どころ・ライセンスは未確認（`ASSETS.md`）。
   - 作業は Blender MCP を使うので**手元（Mac）のセッションで行う**（クラウドでは Blender を動かせない）。
   - 方式は未決定。案A: 鐘の僧と同じ「部品ごとに別ノード・単色の材質・コードで動かす」（`blender/boss_monk.blend` → `tools/blender_export_stage.py` → `js/boss4.js` の作り方を参考に。輪郭線・トーンになじみやすく早い）。案B: 主人公と同じ「テクスチャ＋骨（CPU スキニング）」（`js/hero.js`、スキル `add-character` の手順を参考に）。決める前にユーザーに確認する。
-  - 5面の最終ボスは今は旧魔王の代役（`players.js` の `spawnBoss`、`G.stage>=4`）。第1・第2形態のモデルはまだ無い。STORY.md 5 の「5面の3段階（案）」が設計の元。
+  - **ゲームの中身（3段階）は実装済み・見た目はコードの仮の姿**: `js/boss5.js`（`STG[4].bk='shiro'`。1〜3面と同じく北端に立ち、手・同期 `m.b`・`updBoss2` を使う）。体力バーは1本で、`SH_TH`（2/3・1/3）の線までしか減らず、印が壊れると次の段階へ（`brk` 約2.6秒、無敵、台詞 `SH_SAY`）。弱点は第1段階=胸の黒い印（向かって左）、第2段階=胸の赤い印（右）、第3段階=額の赤い巴（`shSph`、弱点 ×`SH_WEAK`、ほか ×`SH_BODY`）。技は `BT.shiro.pats`（[普通1〜3, 極1〜3]）: 第1=ベタグロ系（拳・墨弾・両拳・墨の波・召喚）、第2=アカベタ系（掌＋炎の十字・火球・炎の息・火の線の回転）、第3=両手に刀を持ち、刀の斬撃（赤い帯の予告、`shCut`）・白抜き（床のコマ割り、光るコマが白く抜ける。2回目は1回目の逆、`shKoma`）・刀の薙ぎ払い（ジャンプ）・吸い込み（口へ引き寄せ、近いほど痛い、`shSuck`）。新しい危険地帯は `shz`（各端末が自分のプレイヤーだけ判定、`shTick`/`shDraw`）。HUD は段階の線と「〇〇を撃て！」（`shHUD`）。3Dモデルに差し替えるときは `drawShiro`・`shHand`・`shSph`（弱点の位置）を直す。
 - **新しい操作キャラを入れるときは先にスキル `add-character`（`.claude/skills/add-character/SKILL.md`）を読む**（手順・つまずき・確認の仕方・複数キャラにするときの注意）。
 - 主人公カケル: Tripo で生成した `blender/src/komabure_chara_kakeru.glb` → `blender/hero_kakeru.blend` → `tools/blender_export_hero.py` で `assets/hero_kakeru.glb`（+ `.glb.js`）。**主人公だけはテクスチャと骨（スキニング）を使う**（ほかのモデルは今まで通り単色・骨なし）。
   - .blend の中身: `KK_Source`（Tripo の12部品をつないだもの。焼き付けの元、非表示）、`KK_Hero`（厚み付け＋ボクセル再構成で穴のない1つの形にして約8,000三角面に減面。UV は新しく作り、顔の部分を大きめに取ってある）、`KK_Rig`（16本の骨: hips / spine / chest / head、upperarm・forearm・hand、thigh・shin・foot の左右。自動の重み付け）。身長2.0、前が -Y、キャラの右が -X。
@@ -52,7 +52,7 @@
 
 ## 技術メモ
 - `index.html`（骨組みのみ）+ `css/style.css` + `js/*.js` に分割済み。WebGL2、独自シェーダーで輪郭線・トーン描画。
-- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → foes → boss123 → extreme → hero → weapons → weapons2 → gacha → net → game-v2 → stagesel → settings → game）で、**順序を変えると壊れる**。
+- JS は ES Modules ではなく**通常の `<script>` を順番に読み込む**方式（元は1つの IIFE だったため、全ファイルでグローバルのスコープを共有している）。読み込み順は `index.html` の `<script>` の並び（core → gfx → glb → stage → fx → audio → entities → skills → players → stage345 → boss4 → foes → boss123 → extreme → boss5 → hero → weapons → weapons2 → gacha → net → game-v2 → stagesel → settings → game）で、**順序を変えると壊れる**。
 - ファイルをまたぐトップレベルの処理は、呼び出す関数が先のファイルで定義済みであることが必要（別ファイルの後ろの関数はトップレベルでは呼べない。関数の中からなら可）。
 - ローカル確認は `file://` ではなく簡易サーバー（`python3 -m http.server`）を使う。
 - GLB は `loadGlbBuf()`（glb.js）で読む。`index.html` を直接開いた（`file://`）ときは fetch が使えないので、隣の `assets/*.glb.js`（同じ GLB を base64 にしたもの）を `<script>` で読む。`tools/blender_export_stage.py` が .glb と一緒に書き出すので、**GLB を書き出したら .glb.js も一緒に commit する**（古いままだと直接開いたときだけ古い形になる）。

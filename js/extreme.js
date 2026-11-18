@@ -9,7 +9,7 @@
 //   2 アカベタ   追い火柱 (chase) fire pillars burst under each target one after another: keep moving
 //   3 大入道     岩の波紋 (ripple) rings of rock spikes spread from his fists, each ring with gaps: stand in a gap or dash through
 //   4 鐘の僧     鐘の残響 (exMonk) every few seconds ice spikes burst under every player and around them
-//   5 (代役魔王) 墨の段波 (rows) rows of ink pillars sweep down the yard; each row has a gap that drifts
+//   5 シロヌキ   墨柱 / 追い火柱 / 墨の段波 (rows: rows of ink pillars sweep down the yard; each row has a gap that drifts) in its three stages (BT.shiro.pats, boss5.js)
 // The pillars are one hazard list (erupts): a red ring warns, then the pillar bursts once (no jumping over it).
 // The host sends one event per pattern (ev), every peer builds the same pillars and checks only its own player.
 let exSel=0;try{exSel=(+localStorage.getItem('koma_ex'))?1:0}catch(e){}
@@ -42,7 +42,7 @@ function exBoss(b,dt,hands,p2){const u=b.stT,st=b.st;
  if(st==='ripple'){const tel=0.9;b.mouth=u<tel?0.5:1;for(let i=0;i<2;i++){const h=hands[i],k=Math.min(1,dt*(u<tel?5:30));h.x+=((i?3.5:-3.5)-h.x)*k;h.y+=((u<tel?15:1.1)-h.y)*k;h.z+=(-12-h.z)*k}
   if(!b.k&&u>=tel){b.k=1;ev('slam',0,-12);ev('erip',p2?4:3,r2(rnd(0,1)))}return u>tel+3}
  return true}
-// stage 5 stand-in demon king (entities.js updBoss)
+// stage 5 (シロヌキ 第3段階 in 極, boss5.js; also the old demon king in entities.js updBoss)
 function exRows(b,dt,hands){const u=b.stT,tel=1.0;b.mouth=1;for(let i=0;i<2;i++){const h=hands[i],k=Math.min(1,dt*(u<tel?4:30));h.x+=((i?9:-9)-h.x)*k;h.y+=((u<tel?16:1.1)-h.y)*k;h.z+=(-13-h.z)*k}
  if(!b.k&&u>=tel){b.k=1;ev('smash',-9,-13);ev('smash',9,-13);let g=rnd(-12,12);const gaps=[];for(let i=0;i<9;i++){gaps.push(r1(g));g=clamp(g+rnd(-6,6),-15,15)}ev('erow',gaps)}
  return u>tel+5.4}
