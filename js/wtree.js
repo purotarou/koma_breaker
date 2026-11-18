@@ -174,5 +174,5 @@ else{const a=wtSel.a,i=wtSel.i,n=WTREE[id][a][i],d=T[a];
 para(X+16,Y-22,Math.min(PW-40,170+w.name.length*26),44,12);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の強化',X+40,Y+1,24,'#fff',INK,6,'left')}
 // 「強化」 button of the equip screen: opens / closes the tree on the right
 function wtBtn(w,x,y,bw,bh,ok){const id=w.id,own=ok&&id!=='gun'&&!!WS.own[id],fr=own?wtFree(id):0,on=own&&eqTree;
-B(x,y,bw,bh,on?'閉じる':'強化',own?()=>{eqTree=eqTree?0:1;eqDet=0;wtSel=null}:null,{col:!own?'#d8d8e0':on?'#59d8ff':fr?'#ff4a3d':'#fff',tc:own&&!on&&fr?'#fff':INK,size:28});
+B(x,y,bw,bh,on?'閉じる':'強化',own?()=>{eqTree=eqTree?0:1;eqDet=0;wtSel=null}:null,{col:!own?'#d8d8e0':on?'#59d8ff':'#ff4a3d',tc:own&&!on?'#fff':INK,size:28});
 if(fr&&!on){ctx.beginPath();ctx.arc(x+bw+8,y+4,16,0,TAU);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('+'+fr,x+bw+8,y+5,16,INK)}}
