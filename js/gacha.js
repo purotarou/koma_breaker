@@ -18,7 +18,8 @@ const GA_IMG={};
 function gaImg(id){let m=GA_IMG[id];if(!m){m=GA_IMG[id]=new Image();m.src='assets/gacha/cut_'+(GA_PIC[id]||id)+'.webp'}return m.complete&&m.naturalWidth>0?m:null}
 function gaPreload(){for(const id of GA_IDS)gaImg(id)}
 // ---- reward (called once per game from skReward) ----
-function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>4)return;if((GA.paid[i]|0)>=2){G.fuda=0;return}
+const GA_BASE_N=2;// ステージ番号ぶんもらえる回数（これ以降は一律1枚）
+function gaReward(cl){G.fuda=null;G.fudaFlat=0;if(!cl)return;const i=G.stage;if(i<0||i>4)return;if((GA.paid[i]|0)>=GA_BASE_N){GA.f+=1;G.fuda=1;G.fudaFlat=1;gaSave();return}// 3回目以降は全ステージ一律1枚
 GA.paid[i]=(GA.paid[i]|0)+1;GA.f+=i+1;G.fuda=i+1;gaSave()}
 // ---- draw logic ----
 const gaPool=()=>{const P=GA_IDS.filter(id=>wpLvAll(id)<WLV);return P.length?P:GA_IDS.slice()};// 全部が最大なら全部が出る（重なるとスキルP）
@@ -65,7 +66,7 @@ if(GA.f>0){ctx.save();ctx.translate(x+w-8,y+10);ctx.rotate(0.12);const s=1+0.06*
 function gaUpBadge(x,y){let n=0;for(const id of GA_IDS)if(WS.own[id]&&wpLv(id)<WLV)n+=WS.up[id]|0;if(!n)return;ctx.beginPath();ctx.arc(x,y,15,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('!',x,y+1,20,'#fff')}
 // ---- result screen: the コマ札 of this clear ----
 function gaRewardCard(u){if(G.fuda==null)return;const k=easeBack(sat(u/0.25));ctx.save();ctx.translate(1158,62);ctx.rotate(0.06);ctx.scale(k,k);ctx.fillStyle=INK;ctx.fillRect(-86,-38,180,84);ctx.fillStyle='#fff';ctx.fillRect(-92,-44,180,84);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(-92,-44,180,84);
-gaFuda(-58,-2,1.05,-0.15);txt('コマ札',22,-20,20,INK);if(G.fuda>0)txt('＋'+G.fuda,22,14,40,'#e5402b',INK,4);else{txt('受取済み',22,8,20,'#555a70');txt('（各ステージ2回まで）',22,28,12,'#555a70')}ctx.restore()}
+gaFuda(-58,-2,1.05,-0.15);txt('コマ札',22,-20,20,INK);if(G.fudaFlat){txt('＋1',22,10,34,'#e5402b',INK,4);txt('（3回目以降は一律）',22,32,12,'#555a70')}else if(G.fuda>0)txt('＋'+G.fuda,22,14,40,'#e5402b',INK,4);ctx.restore()}
 // ================= GACHA SCREEN =================
 const GC={x:40,y:196,w:530,h:412};// the weapon card
 function drawGacha(dt){const id=GA_IDS[gaSel],wi=wpIdx(id),w=WPN[wi],own=!!WS.own[id],all=wpLvAll(id),R=gaRates(),pu=GA.pick===id,X=GC.x,Y=GC.y,CW=GC.w,CH=GC.h;
@@ -76,7 +77,7 @@ drawLogo(250,70,0.34);head('武器ガチャ');gearBtn(W-86,24);
 // wallet + where the 札 come from
 const wx=W-420,wy=28;para(wx+5,wy+6,300,58,14);ctx.fillStyle=INK;ctx.fill();para(wx,wy,300,58,14);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();gaFuda(wx+44,wy+29,1,-0.15);txt('コマ札',wx+74,wy+30,22,INK,null,0,'left');txt(String(GA.f),wx+272,wy+30,42,'#e5402b',INK,4,'right');
 txt('ステージクリアでもらえる',wx+150,wy+82,15,'#fff',INK,5);for(let i=0;i<5;i++){const cx=wx+8+i*60,cy=wy+110,left=2-(GA.paid[i]|0);para(cx,cy-14,54,28,6);ctx.fillStyle=left>0?'#fff':'#9a9db4';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.stroke();txt((i+1)+'面',cx+18,cy+1,13,INK);txt('＋'+(i+1),cx+42,cy+1,13,left>0?'#e5402b':'#555a70')}
-txt('各ステージ2回まで（のこり：白）',wx+150,wy+140,13,'#fff',INK,4);
+txt('各ステージ2回まで（のこり：白）／3回目以降は一律＋1',wx+150,wy+140,13,'#fff',INK,4);
 // highlight caption (right side)
 gaBackUI(w);
 // ---- card ----
