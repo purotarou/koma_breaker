@@ -67,7 +67,7 @@ const wtDesc=n=>n.b?n.d:Object.keys(n.s).map(k=>wtPct(k,n.s[k])).join('・');
 // ---- effects ----
 let WTB={};
 const wb=k=>!!WTB[k];
-function wtApply(s,w){WTB={};if(G.demoOn||!w||!WTREE[w.id]||!WS.own[w.id])return;const T=wtTr(w.id);
+function wtApply(s,w){WTB={};if(G.demoOn||!w||!WTREE[w.id]||!(WS.own[w.id]||DEV))return;const T=wtTr(w.id);
 for(let a=0;a<4;a++)for(let i=0;i<Math.min(3,T[a]);i++){const n=WTREE[w.id][a][i];if(n.b)WTB[n.b]=1;
  for(const k in n.s||{}){const v=n.s[k];if(k==='mag')s.mag=Math.max(2,Math.round(s.mag*v));else s[k]*=v}}
 if(WTB.rf_pierce)s.pierce=1;if(WTB.rf_ammo)s.aKill+=2;if(WTB.sg_boom)s.boom=1}
@@ -141,7 +141,7 @@ const g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);g.addColorStop(0,'#fff8c8'
 wtOriginPath(cx,cy,R*0.5);ctx.fillStyle='#fff3b0';ctx.fill();ctx.strokeStyle='rgba(140,90,0,.5)';ctx.lineWidth=1.5;ctx.stroke();
 wtOriginPath(cx,cy,R);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();ctx.restore()}
 // ◆×4 under a weapon's name (equip list): the 3rd node of each arm
-function wtPips(x,y,id,s){const T=WS.own[id]?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++)wtGem(x+i*22*s,y,6.5*s,T[i]>=3?2:0,0,i)}
+function wtPips(x,y,id,s){const T=(WS.own[id]||DEV)?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++)wtGem(x+i*22*s,y,6.5*s,T[i]>=3?2:0,0,i)}
 // wrap s into lines of maxw (by character)
 function wtWrap(s,x,y,size,maxw,lh,col){ctx.font='900 '+size+'px '+FONT;let line='',n=0;const out=l=>{txt(l,x,y+n*lh,size,col,null,0,'left');n++};
 for(const ch of s){if(ctx.measureText(line+ch).width>maxw&&line){out(line);line=ch}else line+=ch}if(line)out(line);return n}
@@ -173,6 +173,6 @@ else{const a=wtSel.a,i=wtSel.i,n=WTREE[id][a][i],d=T[a];
  B(ix,Y+PH-74,iw,54,lab,can?()=>{T[a]++;wsSave();snd('item');wtPop={id,a,i,t:now};if(i===2)addText('大技 開放！',X+200,Y+60,{size:52,st:'boom',life:0.8});skApply()}:rm?()=>{T[a]--;wsSave();snd('clank');skApply()}:null,{col:can?'#ff4a3d':rm?'#fff':'#d8d8e0',tc:can?'#fff':INK,size:i===d-1||can?26:20,sk:10})}
 para(X+16,Y-22,Math.min(PW-40,170+w.name.length*26),44,12);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の強化',X+40,Y+1,24,'#fff',INK,6,'left')}
 // 「強化」 button of the equip screen: opens / closes the tree on the right
-function wtBtn(w,x,y,bw,bh,ok){const id=w.id,own=ok&&id!=='gun'&&!!WS.own[id],fr=own?wtFree(id):0,on=own&&eqTree;
+function wtBtn(w,x,y,bw,bh,ok){const id=w.id,own=ok&&id!=='gun'&&!!(WS.own[id]||DEV),fr=own?wtFree(id):0,on=own&&eqTree;
 B(x,y,bw,bh,on?'閉じる':'強化',own?()=>{eqTree=eqTree?0:1;eqDet=0;wtSel=null}:null,{col:!own?'#d8d8e0':on?'#59d8ff':'#ff4a3d',tc:own&&!on?'#fff':INK,size:28});
 if(fr&&!on){ctx.beginPath();ctx.arc(x+bw+8,y+4,16,0,TAU);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('+'+fr,x+bw+8,y+5,16,INK)}}

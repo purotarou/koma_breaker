@@ -53,7 +53,7 @@ function wsSave(){try{localStorage.setItem('koma_wpn',JSON.stringify(WS))}catch(
 const WT_MAX=12;
 if(!WS.tp||typeof WS.tp!=='object')WS.tp={};if(!WS.tr||typeof WS.tr!=='object')WS.tr={};
 if(WS.lv||WS.up){const L=WS.lv||{},U=WS.up||{};for(const id in WS.own)if(WS.own[id])WS.tp[id]=Math.min(WT_MAX,Math.max(WS.tp[id]|0,((L[id]|0)||1)-1+(U[id]|0)));delete WS.lv;delete WS.up;wsSave()}
-const wtTp=id=>WS.own[id]?clamp(WS.tp[id]|0,0,WT_MAX):0,wtTr=id=>{let a=WS.tr[id];if(!Array.isArray(a)||a.length!==4)a=WS.tr[id]=[0,0,0,0];return a},
+const wtTp=id=>WS.own[id]?clamp(WS.tp[id]|0,0,WT_MAX):0,wtTr=id=>{if(DEV)return[3,3,3,3];let a=WS.tr[id];if(!Array.isArray(a)||a.length!==4)a=WS.tr[id]=[0,0,0,0];return a},
 wtUsed=id=>wtTr(id).reduce((p,q)=>p+q,0),wtFree=id=>WS.own[id]?Math.max(0,wtTp(id)-wtUsed(id)):0,wtBigN=id=>WS.own[id]?wtTr(id).filter(v=>v>=3).length:0;
 // the gacha (gacha.js) hands out a weapon with wsGive(id): 'new' (first one), 'up' (duplicate → 凸+1 = one more tree point), 'max' (already 凸12 → the gacha gives skill points instead)
 function wsGive(id){if(id==='gun')return'';if(!WS.own[id]){WS.own[id]=1;WS.tp[id]=0;wsSave();return'new'}if(wtTp(id)>=WT_MAX)return'max';WS.tp[id]=wtTp(id)+1;wsSave();return'up'}

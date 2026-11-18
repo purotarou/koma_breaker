@@ -53,7 +53,7 @@ ctx.save();ctx.translate(0,36);ctx.rotate(now*1.5);ctx.beginPath();ctx.arc(0,0,2
 ctx.fillStyle=INK;ctx.fillRect(-30,62,60,26);
 ctx.beginPath();ctx.moveTo(-30,62);ctx.lineTo(30,62);ctx.lineTo(27,72);ctx.lineTo(-27,72);ctx.closePath();ctx.fillStyle='#c4c9d6';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke();ctx.beginPath();ctx.moveTo(-20,66);ctx.lineTo(-8,66);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore()}
 // 凸: four simple diamonds = the 3rd (big) node of each arm of the weapon's tree (filled = taken)
-function gaPips(x,y,id,s){const T=WS.own[id]?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++){ctx.save();ctx.translate(x+i*24*s,y);ctx.rotate(PI/4);const r=7*s;ctx.fillStyle=T[i]>=3?WT_AC[i][2]:INK;ctx.fillRect(-r,-r,r*2,r*2);ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(-r,-r,r*2,r*2);ctx.restore()}}
+function gaPips(x,y,id,s){const T=(WS.own[id]||DEV)?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++){ctx.save();ctx.translate(x+i*24*s,y);ctx.rotate(PI/4);const r=7*s;ctx.fillStyle=T[i]>=3?WT_AC[i][2]:INK;ctx.fillRect(-r,-r,r*2,r*2);ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(-r,-r,r*2,r*2);ctx.restore()}}
 // picture contained in a box (centre cx,cy), with a float
 function gaPic(id,cx,cy,bw,bh,k){const im=gaImg(id);if(!im){txt('…',cx,cy,40,INK);return}const s=Math.min(bw/im.naturalWidth,bh/im.naturalHeight)*(k==null?1:k),w=im.naturalWidth*s,h=im.naturalHeight*s;ctx.drawImage(im,cx-w/2,cy-h/2,w,h)}
 function gaRays(cx,cy,R,n,c1,a,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.globalAlpha=a;ctx.fillStyle=c1;ctx.beginPath();for(let i=0;i<n;i++){const a0=i/n*TAU,a1=(i+0.5)/n*TAU;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a0)*R,Math.sin(a0)*R);ctx.lineTo(Math.cos(a1)*R,Math.sin(a1)*R)}ctx.fill();ctx.restore()}
