@@ -255,7 +255,7 @@ w2OtherAct(o,ak);if(ak===1||ak===2){wslash.push({x:o.x,y:o.y+1.15,z:o.z,yaw:o.ya
 function wpSpStart(){const w=wpW();pl.hon=0;switch(w.id){
 case'gun':snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cyan',life:1.0,grow:0.1,rot:-0.08});flash(0.6);invA=1;break;
 case'rifle':snd('charge');addText('ダダダダダッ！',W/2,H*0.15,{size:80,st:'cyan',life:0.9,grow:0.1,rot:-0.08});flash(0.35);pl.ammo=SK.mag;pl.reload=0;break;
-case'shotgun':pl.ammo=SK.mag;pl.reload=0;pl.cool=0.3;pl.flashT=0.08;pl.kick+=0.12;shotgunFire(w,1);if(wb('sg_sp'))pl.sgS=0.55;snd('sgun');snd('boom',1.4);flash(0.6);invA=1;shake(0.8);addText('ズドドドン！',W/2,H*0.15,{size:90,st:'boom',life:0.9,rot:-0.08});break;
+case'shotgun':pl.ammo=SK.mag;pl.reload=0;pl.cool=0.3;pl.flashT=0.08;pl.kick+=0.06;shotgunFire(w,1);if(wb('sg_sp'))pl.sgS=0.55;snd('sgun');snd('boom',1.4);flash(0.6);invA=1;shake(0.35);addText('ズドドドン！',W/2,H*0.15,{size:90,st:'boom',life:0.9,rot:-0.08});break;
 case'rail':snd('freeze');addText('パキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.08});flash(0.5);invA=1;pl.ovh=0;break;
 case'katana':katanaWave();break;
 case'hammer':pl.vy=Math.max(pl.vy,10);pl.kkT=0.42;wpAct(8);snd('jump');snd('charge');addText('ハァァッ！',W/2,H*0.16,{size:84,st:'boom',life:0.6,rot:-0.06});break;

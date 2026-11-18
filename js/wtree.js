@@ -76,7 +76,7 @@ const wtBombMax=()=>wb('bm_more')?5:3,shSlow=()=>wb('sh_move')?1:W2.sh.slow,WT_K
 // timers of the delayed big moves (from wpUpdate)
 function wtTimers(dt,w){
 if(pl.sgD>0){pl.sgD-=dt;if(pl.sgD<=0&&w.pel){shotgunFire(w,0);snd(w.snd);pl.flashT=0.05;pl.kick+=w.kick}}
-if(pl.sgS>0){pl.sgS-=dt;if(pl.sgS<=0&&w.pel){shotgunFire(w,1);snd('sgun');snd('boom',1.4);shake(0.8);flash(0.4)}}
+if(pl.sgS>0){pl.sgS-=dt;if(pl.sgS<=0&&w.pel){shotgunFire(w,1);snd('sgun');snd('boom',1.4);shake(0.35);flash(0.4)}}
 if(pl.hq){pl.hq.t-=dt;if(pl.hq.t<=0){const q=pl.hq;pl.hq=null;hammerAt(q.x,q.z,q.r,q.c,0.6)}}
 if(pl.kq){const q=pl.kq;q.t-=dt;if(q.t<=0){q.t=0.3;hammerAt(q.x,q.z,7+q.n*3,1,1.6*SK.spw);if(++q.n>=3)pl.kq=null}}
 if(pl.bmS){const q=pl.bmS;q.t-=dt;if(q.t<=0){q.t=0.45;throwBomb(1);if(--q.n<=0)pl.bmS=null}}}

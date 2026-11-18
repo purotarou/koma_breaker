@@ -110,7 +110,7 @@ if(h.e&&h.tg==='bell')monkBellHit(h.e,dmg,hx,hy,hz,quiet);else if(h.e&&h.tg==='f
 else if(h.tg==='cover'){fxSparks(hx,hy,hz,5,6,C.gold);snd('clank')}else if(h.o)pvHit(h.o,(h.m>1.5?32:16)*pv,h.m>1.5,hx,hy,hz);else if(h.s){popShot(h.s);if(isCli())net.q.ps.push(h.s.id)}
 else if(!quiet&&h.t<maxT&&h.t===h.wallT){fxStar(hx,hy,hz,0.7,C.white,0.08);fxSparks(hx,hy,hz,4,5,C.yellow)}}
 // one shot of the equipped gun (妖弾銃 / 連珠銃; 散華砲 goes to shotgunFire in weapons.js). During 珠時雨 / 大散華 no ammo is used, the rate doubles and the aim homes in.
-function shoot(){const w=wpW(),buff=pl.sp===2&&w.spMode==='buff';if(!buff&&!(SK.save&&Math.random()<SK.save)&&!(SK.freeCombo&&G.combo>=5)){pl.ammo--;if(pl.ammo<=0)startReload()}pl.cool=0.125*SK.cool*(buff?0.5:1)*(SK.fullAtk&&spReady()?0.8:1);pl.kick+=w.kick;pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(w.shk);snd(w.snd);wtShoot(w);
+function shoot(){const w=wpW(),buff=pl.sp===2&&w.spMode==='buff';if(!buff&&!(SK.save&&Math.random()<SK.save)&&!(SK.freeCombo&&G.combo>=5)){pl.ammo--;if(pl.ammo<=0)startReload()}pl.cool=0.125*SK.cool*(buff?0.5:1)*(SK.fullAtk&&spReady()?0.8:1);const sgB=buff&&w.pel;pl.kick+=w.kick*(sgB?0.35:1);pl.rec=1;pl.flashT=0.05;pl.spin+=PI/3;shake(w.shk*(sgB?0.25:1));// 大散華: the rapid fire shakes much lesssnd(w.snd);wtShoot(w);
 if(w.pel){shotgunFire(w,0);return}
 const pw=pl.pow>0?2:1,dm=w.dmg*pw,as=touchMode||G.demoOn,AO=aimOrigin(),ox=AO[0],oy=AO[1],oz=AO[2],d=aimAssist(aimDir(),buff?0.3:as?0.1:0.035,buff?1:as?0.85:0.5),h=rayHit(ox,oy,oz,d,140),tw=h.t;
 const hx=ox+d[0]*tw,hy=oy+d[1]*tw,hz=oz+d[2]*tw;fxTracer(muz[0],muz[1],muz[2],hx,hy,hz,buff?C.cyan:pw>1?C.orange:C.white,pw>1||buff?0.11:0.07);if(net.on)net.q.f.push([r1(hx),r1(hy),r1(hz)]);
