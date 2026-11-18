@@ -81,7 +81,7 @@ for(let q=0;q<4;q++){const a=(q+1)%4,x=SKXD[q][3];// one 複合 panel per corner
 const SKI={};for(const n of SKN)SKI[n.id]=n;
 for(const n of SKN)if(n.cmp)n.tier=Math.max(...n.par.map(p=>SKI[p].tier));
 for(let b=0;b<4;b++)for(const[x,y]of SKLINK){SKI[b+x].x.push(b+y);SKI[b+y].x.push(b+x)}
-const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0]};
+const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0],cx:[0,0,0,0,0]};
 // EXP needed to go from level L to L+1 (grows a little every level)
 const skNeed=L=>Math.round(150+6*L+0.15*L*L),SKLV_HP=1,SKLV_ATK=0.003;
 try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
@@ -197,7 +197,7 @@ ctx.save();ctx.beginPath();ctx.rect(bx,by,bw,bh);ctx.clip();ctx.fillStyle=lvT<0.
 if(lvT<0.5){ctx.fillStyle='rgba(255,255,255,'+(0.8*(1-lvT/0.5))+')';ctx.fillRect(bx,by,bw,bh)}ctx.restore();
 ctx.restore()}
 function skReward(cl){if(G.mode==='pvp'||G.demoOn||G.rew!=null)return;const i=G.stage;
-if(cl&&!SKS.clr[i])SKS.clr[i]=1;const xp=skExp(cl),lv0=SKS.lv,xp0=SKS.xp,up=skGain(xp);
+if(cl&&!SKS.clr[i])SKS.clr[i]=1;if(cl&&G.ex&&!SKS.cx[i])SKS.cx[i]=1;const xp=skExp(cl),lv0=SKS.lv,xp0=SKS.xp,up=skGain(xp);
 G.rew={xp,up,lv:SKS.lv,lv0,xp0,segs:skSegs(lv0,xp0,xp),lu:0};skSave();gaReward(cl)}// コマ札 (gacha.js)
 // ---- skill tree screen: a manga panel with the cross (pan / zoom) ----
 // The cross is drawn in "world" coords around SKC and shown through a view (SKVR) that can be dragged, pinched and wheel-zoomed.

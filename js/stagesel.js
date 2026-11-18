@@ -21,7 +21,7 @@ const m=ssMax(),w=SS.CW,y=SS.Y;
 if(SS.id===null){SS.x+=SS.v*dt;SS.v*=Math.exp(-5*dt);const c=clamp(SS.x,0,m);if(c!==SS.x){SS.x=lerp(SS.x,c,Math.min(1,dt*12));SS.v=0}}
 for(let n=0;n<STG.length;n++){const x=SS.X0+n*ssP()-SS.x,s=STG[n];if(x>W||x+w<0)continue;panel(x,y,w,SS.CH);stageArt(n,x+12,y+12,w-24,176);
  para(x+12,y+198,132,36,10);ctx.fillStyle=s.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(s.sub,x+80,y+217,21,'#fff');
- if(SKS.clr[n]){// 制覇 seal stamped on the corner of the picture (clear of the stage number below it)
+ if(exSel&&exOpen()?SKS.cx[n]:SKS.clr[n]){// 制覇 seal stamped on the corner of the picture (clear of the stage number below it)
   ctx.save();ctx.translate(x+w-58,y+62);ctx.rotate(-0.22);ctx.beginPath();ctx.arc(3,4,41,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(0,0,41,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.stroke();ctx.beginPath();ctx.arc(0,0,33,0,TAU);ctx.lineWidth=2;ctx.stroke();
   txt('制覇',0,2,34,'#d9262c');ctx.restore()}
  if(!stOpen(n)){ctx.fillStyle='rgba(22,18,31,.8)';ctx.fillRect(x,y,w,SS.CH);
