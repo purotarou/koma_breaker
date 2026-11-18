@@ -24,8 +24,8 @@ const SKD=[
  ['小ジャンプ','ジャンプボタンを短く押すと小ジャンプが出せる'],['浮遊時間アップ','空中にいられる時間＋20％'],['空中射撃','空中にいる間の与ダメージ＋10％'],['極意：天狗','二段ジャンプ・空中の与ダメージ＋20％'],
  ['軽装','移動の速さ＋12％（最大体力－20）'],['身軽','空中で向きを変えやすい（受けるダメージ＋10％）']],
 [['体力アップ','最大体力 100 → 110'],['自動回復','少しずつ体力が戻る（止まっているとよく戻る）'],
- ['鉄の体','受けるダメージ－8％'],['受け流し','凍りつき・のけぞりが半分'],['不屈','体力が半分以下のとき受けるダメージ－10％'],['極意：不動明王','止まっていると、受けるダメージ半減・体力＋30'],
- ['回復上手','回復アイテム＋25％'],['救急の心得','敵の群れを倒した後の回復＋20％'],['一回復活','倒れても1度、体力30％で立ち上がる'],['極意：不死身','自動回復が2倍・復活が体力60％・復活の瞬間に敵の弾をすべて消す'],
+ ['鉄の体','受けるダメージ－8％'],['回復上手','回復アイテム＋25％'],['不屈','体力が半分以下のとき受けるダメージ－10％'],['極意：不動明王','止まっていると、受けるダメージ半減・体力＋30'],
+ ['索敵','1人称のとき、画面の外にいる敵のいる方向を赤い矢印で示す'],['救急の心得','敵の群れを倒した後の回復＋20％'],['一回復活','倒れても1度、体力30％で立ち上がる'],['極意：不死身','自動回復が2倍・復活が体力60％・復活の瞬間に敵の弾をすべて消す'],
  ['鉄壁','受けるダメージ－18％（移動－10％）'],['重装','最大体力＋20（回避の待ち時間＋30％）']],
 [['気合充填','必殺ゲージのたまり方＋15％'],['必殺の心得','必殺技の威力＋5％'],
  ['自然回復','必殺ゲージが少しずつたまる'],['連発の構え','必殺技を撃ってもゲージが10％残る'],['気迫','敵を倒すとゲージが多くたまる'],['極意：気魄','必殺ゲージが60％あれば必殺技が撃てる・最初から満タン'],
@@ -109,7 +109,7 @@ let SK={},skPop=null,skMsg=null,skSel=null;
 // effective values for the current game (neutral in versus / demo); called from resetPlayer
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=c=>on&&skHas(c);
 const s={atk:1,rel:1,mag:16,cool:1,crit:1.25,pierce:0,crush:0,low:0,def:1,spd:1,dash:1,dinv:0.34,ddist:1,dash2:0,jump:1,sj:0,grav:1,air:0,dj:0,airc:0,
- hp:100,regen:0,heal:1,heal2:1,steady:0,fud:0,rev:0,revH:0.3,gauge:1,spw:1,gReg:0,gKeep:0,gKill:0,g0:0,beam:0.8,spinv:0,gAfter:0,again:0,spCost:0,pow:12,
+ hp:100,regen:0,heal:1,heal2:1,radar:0,fud:0,rev:0,revH:0.3,gauge:1,spw:1,gReg:0,gKeep:0,gKill:0,g0:0,beam:0.8,spinv:0,gAfter:0,again:0,spCost:0,pow:12,
  run:0,dB:0,combo:0,boss:1,vamp:0,aKill:0,save:0,airDef:1,dodge:0,hinv:1,cap:0,gHit:0,gItem:0,xpk:1,still:0,dDef:1,airDodge:0,gDuring:0,gLow:0,spHeal:0,fullAtk:0,kAmmo:0,boom:0,spMin:100,freeCombo:0,revClr:0};
 // level: a small rise of the base numbers
 if(on){const k=Math.max(0,(SKS.lv|0)-1);s.hp+=k*SKLV_HP;s.atk*=1+k*SKLV_ATK}
@@ -125,8 +125,8 @@ if(h('1B3'))s.sj=1;if(h('1B4'))s.grav=1/1.2;if(h('1B5'))s.air=0.1;if(h('1B6')){s
 if(h('1C3')){s.spd*=1.12;s.hp-=20}if(h('1C4')){s.airc=1;s.def*=1.1}
 // 守
 if(h('2t1'))s.hp+=10;if(h('2t2'))s.regen=1;
-if(h('2A3'))s.def*=0.92;if(h('2A4'))s.steady=1;if(h('2A5'))s.fud=1;if(h('2A6')){s.still=0.5;s.hp+=30}
-if(h('2B3'))s.heal*=1.25;if(h('2B4'))s.heal2=1.2;if(h('2B5'))s.rev=1;if(h('2B6')){s.regen=2;s.revH=0.6;s.revClr=1}
+if(h('2A3'))s.def*=0.92;if(h('2A4'))s.heal*=1.25;if(h('2A5'))s.fud=1;if(h('2A6')){s.still=0.5;s.hp+=30}
+if(h('2B3'))s.radar=1;if(h('2B4'))s.heal2=1.2;if(h('2B5'))s.rev=1;if(h('2B6')){s.regen=2;s.revH=0.6;s.revClr=1}
 if(h('2C3')){s.def*=0.82;s.spd*=0.9}if(h('2C4')){s.hp+=20;s.dash*=1.3}
 // 技
 if(h('3t1'))s.gauge*=1.15;if(h('3t2'))s.spw*=1.05;
@@ -344,3 +344,20 @@ if(skConf){const f=skRespecInfo();btns.length=0;ctx.fillStyle='rgba(10,12,40,.72
  txt('戻るポイント　'+f.back,x+w/2,y+222,26,INK);
  txt('現在 '+SKS.pt+' → 変更後 '+(SKS.pt+f.back),x+w/2,y+274,34,'#e5402b','#fff',7);
  B(x+40,y+306,240,58,'やめる',()=>{skConf=false},{size:26});B(x+w-280,y+306,240,58,'振り直す',()=>{skConf=false;skReset()},{size:26,col:'#ff4a3d',tc:'#fff'})}}
+
+// 索敵（守・治癒の三段）: 1人称のとき、画面に映っていない敵のいる方向を、照準のまわりの赤い矢印で示す（近いほど大きく濃い・ボスは大きい）
+function drawFoeArrows(){if(!SK.radar||tpsOn()||pl.dead||G.mode==='pvp')return;
+ const cx=W/2,cy=H/2,rr=250,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),rx=Math.cos(pl.yaw),rz=-Math.sin(pl.yaw),L=[];
+ for(const e of enemies){if(e.dead)continue;let x=e.x,z=e.z,y=(e.y||0)+1;
+  if(e.type==='boss'&&!e.monk){try{const sp=spheres(e);let b=sp[0];for(const q of sp)if(q[3]>b[3])b=q;x=b[0];y=b[1];z=b[2]}catch(_){continue}}
+  if(!isFinite(x)||!isFinite(z))continue;
+  const vis=yy=>{const p=project(x,yy,z);return !!p&&p.x>=0&&p.x<=W&&p.y>=0&&p.y<=H};
+  if(vis(y)||vis(y-0.6)||vis(y+0.8))continue;// 体のどこかが画面に映っている敵には出さない
+  const dx=x-pl.x,dz=z-pl.z,f=dx*fx+dz*fz,r=dx*rx+dz*rz,d=Math.hypot(dx,dz);if(d<0.5)continue;
+  L.push({a:Math.atan2(f,r),d,boss:e.type==='boss'||!!e.monk})}
+ L.sort((a,b)=>a.d-b.d);ctx.save();ctx.lineJoin='miter';
+ for(const o of L.slice(0,12)){const k=sat(1-(o.d-4)/40),s=(o.boss?1.5:1)*(0.7+0.5*k),pu=0.8+0.2*Math.sin(now*9),ux=Math.cos(o.a),uy=-Math.sin(o.a);
+  ctx.save();ctx.translate(cx+ux*rr,cy+uy*rr);ctx.rotate(Math.atan2(uy,ux));ctx.scale(s,s);ctx.globalAlpha=(0.55+0.45*k)*pu;
+  ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(-12,-19);ctx.lineTo(-4,0);ctx.lineTo(-12,19);ctx.closePath();
+  ctx.fillStyle='#ff2a2a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();ctx.restore()}
+ ctx.restore()}
