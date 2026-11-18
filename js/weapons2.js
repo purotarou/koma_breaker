@@ -291,7 +291,7 @@ function spkTri(s){if(s.d<1.3)return;const L=Math.min(s.k===2?2:1.6,s.d-1),w=0.7
 for(const a of warrows)w2Arrow(a.x-a.dx*0.45,a.y-a.dy*0.45,a.z-a.dz*0.45,a.dx,a.dy,a.dz,0.9,a.c>=1);
 for(const a of warrows)if(!a.stk&&a.c>=0.5)bill(STAR,a.x,a.y,a.z,0.25+0.2*a.c,now*30,W2_GLOW,NF);
 // rain of arrows: falling, then stuck in the ground (a faint ring shows the area that draws faster)
-for(const r of wrains){const S=W2.bw,fade=sat((r.life-r.t)/0.6);put(CYL,r.x,0.06,r.z,0,0,0,r.r*2*fade,0.02,r.r*2*fade,[0.75,0.92,1],0,0,F_NOCAST|F_NOEDGE);
+for(const r of wrains){const S=W2.bw,fade=sat((r.life-r.t)/0.6);put(CYL,r.x,0.14,r.z,0,0,0,r.r*2*fade,0.02,r.r*2*fade,[0.75,0.92,1],0,0,F_NOCAST|F_NOEDGE);
  for(const[x,z,ti,ry,tl]of r.arr){if(r.t<ti-0.4)continue;if(r.t<ti){const y=(ti-r.t)*38;w2Arrow(x,y+0.4,z,0.08,-1,0.05,0.9,1);continue}const sink=1-fade;mPush();mT(x,0.28-sink*0.6,z);mRY(ry);mRX(tl);w2Arrow(0,0,0,0,1,0,0.7,0);mPop()}
  if(r.t<S.rainT)for(let k=0;k<4;k++)bill(STAR,r.x+rnd(-r.r,r.r)*0.7,0.3,r.z+rnd(-r.r,r.r)*0.7,0.6,now*20,C.white,NF)}
 // reflected shots
