@@ -14,10 +14,10 @@ const WT_S0=[[{atk:1.06},{atk:1.1}],[{aspd:1.06},{aspd:1.1}],[{spw:1.08},{spw:1.
 const WT_CHG=[{chg:1.12},{chg:1.18}];
 // 大技: [上, 右, 下, 左] = {b: key, n: 名前, d: 説明, s: 一緒に付く数値}
 const WT_B={
-rifle:[{b:'rf_pierce',n:'貫く珠',d:'弾が敵を１体つらぬき、後ろの敵にも当たる（ボスを除く）。威力＋10%',s:{atk:1.1}},
- {b:'rf_ramp',n:'加速連射',d:'撃ち続けるほど連射が速くなる（最大 1.7 倍）'},
- {b:'rf_sp',n:'珠時雨・極',d:'必殺中に敵を倒すたび、必殺の時間が 0.4 秒のびる'},
- {b:'rf_ammo',n:'珠戻し',d:'敵を倒すと弾が４発もどる'}],
+rifle:[{b:'rf_pierce',n:'貫く珠',d:'弾が敵を１体つらぬき、後ろの敵にも当たる（ボスを除く）。威力＋4%',s:{atk:1.04}},
+ {b:'rf_ramp',n:'加速連射',d:'撃ち続けるほど連射が速くなる（最大 1.3 倍）'},
+ {b:'rf_sp',n:'珠時雨・極',d:'必殺中に敵を倒すたび、必殺の時間が 0.2 秒のびる'},
+ {b:'rf_ammo',n:'珠戻し',d:'敵を倒すと弾が２発もどる'}],
 shotgun:[{b:'sg_close',n:'零距離',d:'4 m 以内の敵への威力が 1.5 倍。近くの鎧鬼は必ずのけぞる'},
  {b:'sg_double',n:'二連射',d:'１回撃つと、すぐにもう１回散弾が出る（弾は１発ぶん）'},
  {b:'sg_sp',n:'大散華・二輪',d:'必殺の大散華が２回放たれる'},
@@ -59,7 +59,7 @@ staff:[{b:'st_twin',n:'双玉',d:'護符の玉が２つ同時に出る'},
  {b:'st_sp',n:'祈りの波動',d:'必殺のとき、まわりの敵に大ダメージを与えて押し返す'},
  {b:'st_long',n:'長き加護',d:'加護が長く強くなる（玉の加護は２倍・必殺は 1.5 倍の時間）'}]};
 // 武器ごとの1・2個目（WT_S0 との違いだけ）
-const WT_SX={rifle:{3:[{mag:1.15},{rel:0.85}]},shotgun:{3:[{mag:1.2},{rel:0.85}]},rail:{1:[{heat:0.9},{heat:0.85}]},hammer:{1:WT_CHG},flail:{1:WT_CHG},bow:{1:WT_CHG}};
+const WT_SX={rifle:{0:[{atk:1.03},{atk:1.05}],1:[{aspd:1.03},{aspd:1.05}],2:[{spw:1.04},{spw:1.04,beam:1.03}],3:[{mag:1.08},{rel:0.93}]},shotgun:{3:[{mag:1.2},{rel:0.85}]},rail:{1:[{heat:0.9},{heat:0.85}]},hammer:{1:WT_CHG},flail:{1:WT_CHG},bow:{1:WT_CHG}};
 const WTREE={};
 for(const id in WT_B){WTREE[id]=[0,1,2,3].map(a=>{const S=(WT_SX[id]||{})[a]||WT_S0[a];return[0,1].map(i=>{const s=S[i],k=Object.keys(s)[0];return{s,n:WT_NM[k]+(i?' II':' I')}}).concat([WT_B[id][a]])})}
 const wtPct=(k,v)=>WT_SN[k]+' '+(v>=1?'＋':'－')+Math.round(Math.abs(v-1)*100)+'%';
@@ -70,7 +70,7 @@ const wb=k=>!!WTB[k];
 function wtApply(s,w){WTB={};if(G.demoOn||!w||!WTREE[w.id]||!WS.own[w.id])return;const T=wtTr(w.id);
 for(let a=0;a<4;a++)for(let i=0;i<Math.min(3,T[a]);i++){const n=WTREE[w.id][a][i];if(n.b)WTB[n.b]=1;
  for(const k in n.s||{}){const v=n.s[k];if(k==='mag')s.mag=Math.max(2,Math.round(s.mag*v));else s[k]*=v}}
-if(WTB.rf_pierce)s.pierce=1;if(WTB.rf_ammo)s.aKill+=4;if(WTB.sg_boom)s.boom=1}
+if(WTB.rf_pierce)s.pierce=1;if(WTB.rf_ammo)s.aKill+=2;if(WTB.sg_boom)s.boom=1}
 function wtReset(){pl.sgD=0;pl.sgS=0;pl.hq=null;pl.kq=null;pl.bmS=null;pl.rfR=0}
 const wtBombMax=()=>wb('bm_more')?5:3,shSlow=()=>wb('sh_move')?1:W2.sh.slow,WT_KTW=50,WT_KTR=22;
 // timers of the delayed big moves (from wpUpdate)
@@ -81,10 +81,10 @@ if(pl.hq){pl.hq.t-=dt;if(pl.hq.t<=0){const q=pl.hq;pl.hq=null;hammerAt(q.x,q.z,q
 if(pl.kq){const q=pl.kq;q.t-=dt;if(q.t<=0){q.t=0.3;hammerAt(q.x,q.z,7+q.n*3,1,1.6*SK.spw);if(++q.n>=3)pl.kq=null}}
 if(pl.bmS){const q=pl.bmS;q.t-=dt;if(q.t<=0){q.t=0.45;throwBomb(1);if(--q.n<=0)pl.bmS=null}}}
 // a shot of a gun (shoot, players.js)
-function wtShoot(w){if(w.id==='rifle'&&wb('rf_ramp')){pl.rfR=Math.min(1,(now-(pl.rfL||-9)<0.35?pl.rfR||0:0)+0.05);pl.rfL=now;pl.cool/=1+0.7*pl.rfR}
+function wtShoot(w){if(w.id==='rifle'&&wb('rf_ramp')){pl.rfR=Math.min(1,(now-(pl.rfL||-9)<0.35?pl.rfR||0:0)+0.05);pl.rfL=now;pl.cool/=1+0.3*pl.rfR}
 if(w.pel&&wb('sg_double'))pl.sgD=0.14}
 // an enemy this player killed (killFx)
-function wtKill(e){if(wb('rf_sp')&&pl.sp===2)pl.spT=Math.max(0,pl.spT-0.4)}
+function wtKill(e){if(wb('rf_sp')&&pl.sp===2)pl.spT=Math.max(0,pl.spT-0.2)}
 // the special just ended
 function wtSpEnd(){if(wb('rl_sp')){const pw=pl.pow>0?2:1;let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const B=e.type==='boss';if(!(B?e.slw>0:e.frz>0))continue;const s=spheres(e)[0]||[e.x,1,e.z];
   wpDmg(e,(B?260:200)*SK.spw*pw,s[0],s[1],s[2],{quiet:n>0});fxStar(s[0],s[1],s[2],2.6,C.white,0.14);fxSparks(s[0],s[1],s[2],12,9,C.cyan);n++}
