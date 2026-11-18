@@ -253,7 +253,8 @@ ctx.restore()}
 // 中身: fuda=コマ札の枚数, wpn=武器ID（重なれば凸が1つ増える／最大ならスキルP）, pt=スキルポイント。足すときはここに1行足すだけ（7桁の数字）。
 const GIFTS={
  '1357924':{fuda:5},
- '2468013':{fuda:3}
+ '2468013':{fuda:3},
+ '4844570':{fuda:30}
 };
 let gaGift=null;// {v:入力中の数字,msg,t} while the window is open
 function gaGiftOpen(){gaGift={v:'',msg:'',t:now}}
