@@ -443,6 +443,7 @@ for(let i=0;i<WPN.length;i++){const c=i%EQL.cols,r=(i/EQL.cols)|0,x=EQL.x0+c*(EQ
  ctx.save();para(x,y,cw,ch,12);ctx.clip();ctx.fillStyle=o?wi.col:'#373c58';ctx.fillRect(x,y,24,ch);ctx.globalAlpha=0.18;ctx.fillStyle=dotPat;ctx.fillRect(x,y+ch*0.55,cw+20,ch);ctx.restore();
  para(x,y,cw,ch,12);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();if(s){para(x-5,y-5,cw+10,ch+10,13);ctx.strokeStyle='#ffd91a';ctx.lineWidth=6;ctx.stroke()}
  fitTxt(o?wi.name:'？？？',x+38,y+32,24,cw-46,o?INK:'#c9cce0');if(!o)txt('未入手',x+40,y+62,15,'#a5a9c4',null,0,'left');
+ if(o&&wi.id!=='gun'&&(WS.up[wi.id]|0)>0&&wpLv(wi.id)<WLV){ctx.beginPath();ctx.arc(x+cw-4,y+4,15,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('!',x+cw-4,y+5,20,'#fff')}
  if(e){ctx.save();ctx.translate(x+cw-40,y+60);ctx.rotate(-0.12);para(-40,-15,80,30,6);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('装備中',3,1,18,'#fff');ctx.restore()}}
  ctx.restore();
 // scroll bar + more-below hint
