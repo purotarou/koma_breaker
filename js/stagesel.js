@@ -17,20 +17,20 @@ SS.id=null;if(SS.mv<14&&SS.lp){SS.v=0;const q=SS.lp.x-SS.X0+SS.x,n=Math.floor(q/
 function ssWheel(e){if(!ssOn())return false;SS.v+=(Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY)*6;return true}
 function ssGo(n){SS.v=(clamp(SS.X0+n*ssP()+SS.CW/2-W/2,0,ssMax())-SS.x)*5}// v/5 = the distance the inertia carries
 function drawStageSel(dt){head('ステージ選択');const fit=STG.length<=5;SS.CW=fit?226:300;SS.GAP=fit?16:24;SS.X0=fit?43:44;// up to five stages all fit on one screen: nothing scrolls
-const m=ssMax(),w=SS.CW,y=SS.Y;
+const m=ssMax(),w=SS.CW,y=SS.Y,EXP=exSel&&exOpen(),PB=EXP?'#1e1030':'#fff',PT=EXP?'#fff':INK;
 if(SS.id===null){SS.x+=SS.v*dt;SS.v*=Math.exp(-5*dt);const c=clamp(SS.x,0,m);if(c!==SS.x){SS.x=lerp(SS.x,c,Math.min(1,dt*12));SS.v=0}}
-for(let n=0;n<STG.length;n++){const x=SS.X0+n*ssP()-SS.x,s=STG[n];if(x>W||x+w<0)continue;panel(x,y,w,SS.CH);stageArt(n,x+12,y+12,w-24,176);
+for(let n=0;n<STG.length;n++){const x=SS.X0+n*ssP()-SS.x,s=STG[n];if(x>W||x+w<0)continue;panel(x,y,w,SS.CH,PB);stageArt(n,x+12,y+12,w-24,176);
  para(x+12,y+198,132,36,10);ctx.fillStyle=s.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(s.sub,x+80,y+217,21,'#fff');
  if(exSel&&exOpen()?SKS.cx[n]:SKS.clr[n]){// 制覇 seal stamped on the corner of the picture (clear of the stage number below it)
   ctx.save();ctx.translate(x+w-58,y+62);ctx.rotate(-0.22);ctx.beginPath();ctx.arc(3,4,41,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(0,0,41,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.stroke();ctx.beginPath();ctx.arc(0,0,33,0,TAU);ctx.lineWidth=2;ctx.stroke();
   txt('制覇',0,2,34,'#d9262c');ctx.restore()}
  if(!stOpen(n)){ctx.fillStyle='rgba(22,18,31,.8)';ctx.fillRect(x,y,w,SS.CH);
   txt('ステージ'+n+'を',x+w/2,y+292,fit?22:24,'#fff');txt('制覇すると解放',x+w/2,y+324,fit?22:24,'#fff');continue}
- txt(s.name,x+w/2,y+268,(s.name.length>4?38:42)*(fit?0.82:1),INK);txt(s.desc[0],x+w/2,y+308,fit?16:18,INK);txt(s.desc[1],x+w/2,y+332,fit?16:18,INK);
- para(x+(fit?10:22),y+350,w-(fit?28:52),28,8);ctx.fillStyle=INK;ctx.fill();txt(fit?s.boss:'ボス　'+s.boss,x+w/2,y+365,fit?15:16,'#fff');if(exSel&&exOpen()){ctx.save();ctx.translate(x+36,y+38);ctx.rotate(-0.15);para(-30,-20,60,40,8);ctx.fillStyle='#ff4a3d';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('極',0,1,28,'#fff',INK,5);ctx.restore()}txt('ハイスコア '+getHi(n),x+w/2,y+393,16,INK)}
+ txt(s.name,x+w/2,y+268,(s.name.length>4?38:42)*(fit?0.82:1),PT);txt(s.desc[0],x+w/2,y+308,fit?16:18,PT);txt(s.desc[1],x+w/2,y+332,fit?16:18,PT);
+ para(x+(fit?10:22),y+350,w-(fit?28:52),28,8);ctx.fillStyle=INK;ctx.fill();txt(fit?s.boss:'ボス　'+s.boss,x+w/2,y+365,fit?15:16,'#fff');if(exSel&&exOpen()){ctx.save();ctx.translate(x+36,y+38);ctx.rotate(-0.15);para(-30,-20,60,40,8);ctx.fillStyle='#ff4a3d';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('極',0,1,28,'#fff',INK,5);ctx.restore()}txt('ハイスコア '+getHi(n),x+w/2,y+393,16,PT)}
 B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26});
 // 難易度 (極 opens once all five stages are cleared)
-if(exOpen()){txt('難易度',800,150,22,'#fff',INK,6);B(850,124,170,52,'普通',()=>{exSet(0);snd('ui')},{sk:0,size:24,col:exSel?'#fff':'#ffd91a'});B(1032,124,190,52,'極',()=>{exSet(1);snd('ui')},{sk:0,size:30,col:exSel?'#ff4a3d':'#a35cff',tc:'#fff'});
+if(exOpen()){txt('難易度',800,150,22,'#fff',INK,6);B(850,124,170,52,'普通',()=>{exSet(0);snd('ui')},{sk:0,size:24,col:exSel?'#fff':'#ffd91a'});B(1032,124,190,52,'極',()=>{exSet(1);snd('ui')},{sk:0,size:30,col:exSel?'#ff4a3d':'#fff',tc:exSel?'#fff':INK});
  if(exSel)txt('敵が大幅に強化・新たな敵・ボスの新技',800,656,20,'#fff',INK,6)}
 else txt('全ステージ制覇で　難易度：極　解放',1010,150,19,'#fff',INK,5);
 if(m<=0)return;
