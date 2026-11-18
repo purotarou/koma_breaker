@@ -13,8 +13,8 @@
 // Wave entries: g:[{twin:1}] / g:[{dmon:1}] (spawnGroup -> MBS).
 // ---- tuning (目安) ----
 const MBT={
- twin:{hp:520,spd:5.4,keep:10,apart:9,range:28,cd:[1.4,2.3],w1:0.7,w2:0.85,w3:0.7,w4:1.0,sv:17,dmg:13,big:18,dash:15,dashT:0.55,dashDmg:16,blind:2.4,rage:1.6},
- dmon:{hp:1500,spd:3.2,keep:[6,12],range:30,cd:[1.3,2.0],w1:0.9,w2:1.0,w3:1.1,w4:0.6,w5:0.85,sv:15,dmg:22,ring:16,burstR:8,burstDmg:14,blind:3.2,pilN:5,
+ twin:{hp:1300,spd:5.4,keep:10,apart:9,range:28,cd:[1.4,2.3],w1:0.7,w2:0.85,w3:0.7,w4:1.0,sv:17,dmg:13,big:18,dash:15,dashT:0.55,dashDmg:16,blind:2.4,rage:1.6},
+ dmon:{hp:4000,spd:3.2,keep:[6,12],range:30,cd:[1.3,2.0],w1:0.9,w2:1.0,w3:1.1,w4:0.6,w5:0.85,sv:15,dmg:22,ring:16,burstR:8,burstDmg:14,blind:3.2,pilN:5,
   charge:18,chargeT:1.0,chargeDmg:22,score:3000}};
 const MB_NAME=['アカツキ','ヨイヤミ'],MB_SHOT={8:1,9:1,10:1.6,11:1.6,12:2.4};// slash shots: k -> size (8 fire / 9 dark / 10,11 big / 12 huge 焔墨)
 Object.assign(C,{fireD:hex(0xb3262a),darkP:hex(0x5a2a8a)});
