@@ -32,6 +32,8 @@ const EXK={hp:1.7,bh:1.6,dmg:1.5,spd:1.15,cd:0.78,more:1.25,xp:1.6};
 function difOf(n){if(G.demoOn||G.mode==='pvp')return{hp:1,bh:1,dmg:1,spd:1};let d;if(n<DIF.length)d=DIF[n];else{const a=DIF[DIF.length-1],k=n-DIF.length+1;d={hp:a.hp+0.45*k,bh:a.bh+0.3*k,dmg:a.dmg+0.2*k,spd:Math.min(1.5,a.spd+0.05*k)}}
  return G.ex?{hp:d.hp*EXK.hp,bh:d.bh*EXK.bh,dmg:d.dmg*EXK.dmg,spd:Math.min(1.6,d.spd*EXK.spd)}:d}
 const SPAWN=[[0,16,0],[-4,18,0],[4,18,0],[0,20,0]],PSPAWN=[[-17,17],[17,-20],[17,17],[-17,-20],[0,17],[0,-13]];
+// title/menu background: a random stage (different from the one shown now)
+function bgRandom(){const N=STG.length;let n=Math.floor(Math.random()*N);if(n===curStage&&N>1)n=(n+1+Math.floor(Math.random()*(N-1)))%N;setStage(n)}
 function setStage(n){if(curStage===n)return;curStage=n;templeDoor.t=templeDoor.target=0;for(const p of prims){p.b[0].n=0;p.b[0].dirty=true}colC.length=0;colB.length=0;idS=0;curLayer=0;mReset();[buildStage1,buildStage2,buildStage3,buildStage4,buildStage5][n]();mReset();curLayer=1;setSun(STG[n].sun);setArena(STG[n].arena)}
 // Stage 2 (castle) is authored in Blender: blender/stage_castle.blend -> assets/stage_castle.glb (loaded by js/glb.js).
 // buildStage2Code() is the original code-built version (fallback, and ?stage2=code for comparisons).

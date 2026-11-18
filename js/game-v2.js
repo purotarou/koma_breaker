@@ -17,7 +17,7 @@ function gameOver(){G.state='over';G.resT=0;musOn=0;skReward(0);if(!net.on){slow
 function rank(){const v=100-G.dmg*0.2-Math.max(0,G.time-200)*0.08+Math.min(6,G.score/5000);return v>=98?'S+':v>=90?'S':v>=76?'A':v>=60?'B':'C'}
 function getHi(s){try{return+(localStorage.getItem('koma_hi'+s)||0)}catch(e){return 0}}
 function saveHi(){if(G.mode==='pvp')return;try{if(G.score>getHi(G.stage))localStorage.setItem('koma_hi'+G.stage,G.score)}catch(e){}}
-function toMenu(){if(net.on)netLeave();resetWorld();G.state='menu';G.menu='main';G.mode='solo'}
+function toMenu(){if(net.on)netLeave();resetWorld();bgRandom();G.state='menu';G.menu='main';G.mode='solo'}
 // ================= INPUT (v2) =================
 const keys={},touch={sid:null,ox:150,oy:560,dx:0,dy:0,lid:null,lx:0,ly:0,fid:null,flx:0,fly:0,hold:{}};let mouseFire=false,hasTouch=('ontouchstart'in window)||navigator.maxTouchPoints>0;
 const BTN={fire:{x:1140,y:570,r:88,l:'撃'},special:{x:1092,y:404,r:54,l:'必殺'},jump:{x:1212,y:420,r:50,l:'跳'},reload:{x:1002,y:498,r:46,l:'装填'},dash:{x:978,y:632,r:56,l:'回避'}};
@@ -183,4 +183,4 @@ if(!boss)G.mood=Math.max(0,G.mood-dt*0.4);
 trauma=Math.max(0,trauma-dt*1.8);flashA=Math.max(0,flashA-dt*5);invA=Math.max(0,invA-dt*9);hurtA=Math.max(pl.hp<30&&G.state==='play'&&!pl.dead?0.3+0.12*Math.sin(now*7):0,hurtA-dt*2.2);lineA=Math.max(0,lineA-dt*3.5);
 ageTexts(dt);hitMark-=dt;cutSp-=dt;cutBoss-=dt;G.bannerT+=dt;G.intro+=dt;G.comboPop-=dt;monoA=lerp(monoA,(G.state==='over'||(G.state==='clear'&&G.resT>0.2))?0.85:0,Math.min(1,dt*3));
 if(G.state==='clear'||G.state==='over')G.resT+=dt;music();setCamera(dt)}
-setStage(0);
+bgRandom();

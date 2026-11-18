@@ -205,7 +205,7 @@ function gaDemoStart(){const id=GA_IDS[gaSel];if(curStage!==0)setStage(0);G.stag
 gaD.view=SET.view;tpsSide=1;resetPlayer(0,12,0);
 for(let i=0;i<6;i++)mkEnemy('imp',rnd(-7,7),rnd(-6,1));// ground enemies only (a floating lantern can sit in front of the camera)
 gaD.ph='demo';gaSeg(0);flash(0.5)}
-function gaDemoEnd(){if(!G.demoOn)return;resetWorld();G.demoOn=false;gaDemoWp=null;if(gaD.view!=null){SET.view=gaD.view;gaD.view=null}tpsSide=1;pl.wp=wpCur();inp.fire=inp.special=false}
+function gaDemoEnd(){if(!G.demoOn)return;resetWorld();bgRandom();G.demoOn=false;gaDemoWp=null;if(gaD.view!=null){SET.view=gaD.view;gaD.view=null}tpsSide=1;pl.wp=wpCur();inp.fire=inp.special=false}
 function gaSpin(){gaDemoEnd();gaD.ph='spin';gaD.t=0}
 // menu branch (turntable, or the demo paused under an overlay)
 function gaUpdate(dt){if(!gaOn())return;if(gaA){gaAnimUpdate(RDT);return}

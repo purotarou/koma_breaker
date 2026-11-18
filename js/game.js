@@ -12,7 +12,7 @@ const DEMO=[
 {cap:'最終決戦！大墨魔王',dur:42,init(){resetPlayer(0,11,0);spawnBoss();D.q=[{t:9,f(){pl.gauge=100}},{t:19,f(){pl.gauge=100}},{t:27,f(){pl.gauge=100;if(boss)boss.hp=Math.min(boss.hp,600)}}]}}];
 function demoNext(){D.seg++;D.t=0;enemies.length=0;shots.length=0;boss=null;G.mood=0;G.endT=-1;const s=DEMO[D.seg];s.init();G.banner={ch:'HIGHLIGHT '+(D.seg+1),name:s.cap};G.bannerT=0}
 function demoStart(){G.stage=(G.demoN++)%2;setStage(G.stage);G.mode='solo';G.np=1;pl.slot=0;resetWorld();G.demoOn=true;D.seg=-1;sndVol=0.3;demoNext()}
-function demoStop(){resetWorld();G.demoOn=false;G.idle=0;sndVol=1}
+function demoStop(){resetWorld();bgRandom();G.demoOn=false;G.idle=0;sndVol=1}
 function demoUpdate(dt){D.t+=dt;while(D.q.length&&D.t>=D.q[0].t)D.q.shift().f();const s=DEMO[D.seg];
 if(D.seg<3){if(D.t>s.dur)startWipe(demoNext)}else if(G.endT>=0){G.endT+=RDT;if(G.endT>3.6)startWipe(demoStop)}else if(D.t>s.dur)startWipe(demoStop)}
 function aiControl(dt){let tgt=null,best=1e9,tp=null;const ox=pl.x,oy=1.62,oz=pl.z;
