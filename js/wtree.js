@@ -141,7 +141,7 @@ const g=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);g.addColorStop(0,'#fff8c8'
 wtOriginPath(cx,cy,R*0.5);ctx.fillStyle='#fff3b0';ctx.fill();ctx.strokeStyle='rgba(140,90,0,.5)';ctx.lineWidth=1.5;ctx.stroke();
 wtOriginPath(cx,cy,R);ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();ctx.restore()}
 // ◆×4 under a weapon's name (equip list): the 3rd node of each arm
-function wtPips(x,y,id,s){const T=(WS.own[id]||DEV)?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++)wtGem(x+i*22*s,y,6.5*s,T[i]>=3?2:0,0,i)}
+function wtPips(x,y,id,s){const T=(WS.own[id]||DEV)?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++){ctx.save();ctx.translate(x+i*22*s,y);ctx.rotate(PI/4);const r=6.5*s;ctx.fillStyle=T[i]>=3?WT_AC[i][2]:INK;ctx.fillRect(-r,-r,r*2,r*2);ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(-r,-r,r*2,r*2);ctx.restore()}}// ガチャの gaPips と同じ単調な菱形
 // wrap s into lines of maxw (by character)
 function wtWrap(s,x,y,size,maxw,lh,col){ctx.font='900 '+size+'px '+FONT;let line='',n=0;const out=l=>{txt(l,x,y+n*lh,size,col,null,0,'left');n++};
 for(const ch of s){if(ctx.measureText(line+ch).width>maxw&&line){out(line);line=ch}else line+=ch}if(line)out(line);return n}
