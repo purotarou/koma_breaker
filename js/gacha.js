@@ -274,7 +274,7 @@ function gaGiftBtn(x,y,w,h){B(x,y,w,h,null,gaGiftOpen);
  const cx=x+w/2+7,cy=y+h/2+4;ctx.save();ctx.translate(cx,cy);ctx.lineJoin='miter';ctx.lineWidth=3.5;ctx.strokeStyle=INK;ctx.fillStyle='#fff';
  ctx.fillRect(-15,-5,30,21);ctx.strokeRect(-15,-5,30,21);ctx.fillRect(-18,-13,36,9);ctx.strokeRect(-18,-13,36,9);
  ctx.fillStyle=INK;ctx.fillRect(-3.5,-13,7,29);
- ctx.beginPath();ctx.ellipse(-7,-19,7,5,-0.45,0,TAU);ctx.ellipse(7,-19,7,5,0.45,0,TAU);ctx.stroke();ctx.restore()}
+ ctx.beginPath();ctx.ellipse(-7,-19,7,5,-0.45,0,TAU);ctx.stroke();ctx.beginPath();ctx.ellipse(7,-19,7,5,0.45,0,TAU);ctx.stroke();ctx.restore()}
 function gaGiftUI(){if(!gaGift||!gaOn()||setOpen||gaA)return;
  const PW=740,PH=410,X=(W-PW)/2,Y=(H-PH)/2;ctx.fillStyle='rgba(22,18,31,.6)';ctx.fillRect(0,0,W,H);btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});
  panel(X,Y,PW,PH);txt('プレゼント',W/2,Y+40,38,INK);txt('7けたの番号を入力してください',W/2,Y+80,20,'#3a3f55');
