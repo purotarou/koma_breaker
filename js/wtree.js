@@ -154,7 +154,7 @@ const cx=X+200,cy=Y+PH/2+12,D=50,pos=(a,i)=>[cx+WT_DIR[a][0]*D*(i+1),cy+WT_DIR[a
 // lines (yellow, no flow)
 for(let a=0;a<4;a++)for(let i=0;i<3;i++){const p0=i?pos(a,i-1):[cx,cy],p1=pos(a,i),on=i<T[a];ctx.lineCap='round';
  ctx.strokeStyle=INK;ctx.lineWidth=on?12:6;ctx.beginPath();ctx.moveTo(p0[0],p0[1]);ctx.lineTo(p1[0],p1[1]);ctx.stroke();
- if(on){ctx.strokeStyle='#ffd91a';ctx.lineWidth=7;ctx.stroke()}ctx.lineCap='butt'}
+ if(on){ctx.strokeStyle=WT_AC[a][1];ctx.lineWidth=7;ctx.stroke()}ctx.lineCap='butt'}
 wtOrigin(cx,cy,30);
 for(let a=0;a<4;a++)for(let i=0;i<3;i++){const[x,y]=pos(a,i),big=i===2,st=i<T[a]?2:i===T[a]&&fr>0?1:0,sel=wtSel.a===a&&wtSel.i===i;let r=big?21:12;
  const P=wtPop;if(P&&P.id===id&&P.a===a&&P.i===i&&now-P.t<0.5){const u=(now-P.t)/0.5;r*=1+0.5*Math.sin(u*PI)*(1-u);if(u<0.6){ctx.save();ctx.globalAlpha=1-u/0.6;ctx.strokeStyle='#ffd91a';ctx.lineWidth=4;wtGemPath(x,y,r*(1+u*1.6));ctx.stroke();ctx.restore()}}
