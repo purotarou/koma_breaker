@@ -17,7 +17,7 @@ SS.id=null;if(SS.mv<14&&SS.lp){SS.v=0;const q=SS.lp.x-SS.X0+SS.x,n=Math.floor(q/
 function ssWheel(e){if(!ssOn())return false;SS.v+=(Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY)*6;return true}
 function ssGo(n){SS.v=(clamp(SS.X0+n*ssP()+SS.CW/2-W/2,0,ssMax())-SS.x)*5}// v/5 = the distance the inertia carries
 function drawStageSel(dt){head('ステージ選択');const fit=STG.length<=5;SS.CW=fit?226:300;SS.GAP=fit?16:24;SS.X0=fit?43:44;// up to five stages all fit on one screen: nothing scrolls
-const m=ssMax(),w=SS.CW,y=SS.Y,EXP=exSel&&exOpen(),PB=EXP?'#1e1030':'#fff',PT=EXP?'#fff':INK;
+const m=ssMax(),w=SS.CW,y=SS.Y,EXP=exSel&&exOpen(),PB=EXP?'#33195a':'#fff',PT=EXP?'#fff':INK;
 if(SS.id===null){SS.x+=SS.v*dt;SS.v*=Math.exp(-5*dt);const c=clamp(SS.x,0,m);if(c!==SS.x){SS.x=lerp(SS.x,c,Math.min(1,dt*12));SS.v=0}}
 for(let n=0;n<STG.length;n++){const x=SS.X0+n*ssP()-SS.x,s=STG[n];if(x>W||x+w<0)continue;panel(x,y,w,SS.CH,PB);stageArt(n,x+12,y+12,w-24,176);
  para(x+12,y+198,132,36,10);ctx.fillStyle=s.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt(s.sub,x+80,y+217,21,'#fff');
