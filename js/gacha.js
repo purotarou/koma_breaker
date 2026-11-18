@@ -286,7 +286,7 @@ function gaGiftUI(){if(!gaGift||!gaOn()||setOpen||gaA)return;
  // number keys: one row (1 2 3 4 5 6 7 8 9 0 ⌫), under the digits and above もらう / とじる
  const kw=58,kh=62,kg=6,kx=(W-(11*kw+10*kg))/2,ky=Y+226,keys=['1','2','3','4','5','6','7','8','9','0','⌫'];
  keys.forEach((k,i)=>{B(kx+i*(kw+kg),ky,kw,kh,k,k==='⌫'?()=>{gaGift.v=gaGift.v.slice(0,-1)}:()=>gaGiftKey(k),{size:30,sk:8,col:'#fff3b0'})});
- B(X+90,Y+PH-84,250,58,'もらう',gaGiftSubmit,{size:30});B(X+PW-340,Y+PH-84,250,58,'とじる',gaGiftClose,{size:30})}
+ B(X+90,Y+PH-84,250,58,'もらう',gaGiftSubmit,{size:30,col:'#ffd91a'});B(X+PW-340,Y+PH-84,250,58,'とじる',gaGiftClose,{size:30})}
 // ================= EQUIP SCREEN:「強化」(必殺 level-ups waiting from gacha duplicates) =================
 let wpUpPop=null;
 // the 強化 button of the equip screen for weapon w (x,y,w,h)
