@@ -329,10 +329,11 @@ function w2ViewExtra(w,s){if(w.kind==='bow'){const ready=pl.hon||pl.cool<=0.05;b
 else if(w.kind==='flail'){const F=WMOD.flail&&WMOD.flail.fl;if(!F)return;const e=[0,0,-F.eye],E=[M[0]*e[0]+M[4]*e[1]+M[8]*e[2]+M[12],M[1]*e[0]+M[5]*e[1]+M[9]*e[2]+M[13],M[2]*e[0]+M[6]*e[1]+M[10]*e[2]+M[14]],sc=Math.hypot(M[0],M[1],M[2]);
  const lay=curLayer;curLayer=1;mPush();M.set(W2I);flChain(E,flBallAt(pl,pl,E,sc),sc);mPop();curLayer=lay}}
 // the bow string drawn back by c (0..1), and the arrow on it (weapon space)
-function bwStr(c,arrow){const md=WMOD.bow;if(!md||!md.bw)return;const b=md.bw,pull=b.z+0.42*c,D=[0,0,pull];w2SegW([0,b.y1,b.z],D,0.007,W2_GLOW,F_UNLIT|F_NOCAST);w2SegW([0,b.y0,b.z],D,0.007,W2_GLOW,F_UNLIT|F_NOCAST);
+function bwStr(c,arrow,dl=0.42){const md=WMOD.bow;if(!md||!md.bw)return;const b=md.bw,pull=b.z+dl*c,D=[0,0,pull];w2SegW([0,b.y1,b.z],D,0.007,W2_GLOW,F_UNLIT|F_NOCAST);w2SegW([0,b.y0,b.z],D,0.007,W2_GLOW,F_UNLIT|F_NOCAST);
 if(arrow){w2Arrow(0,0.012,pull-0.42,0,0,-1,0.84,c>=1);if(c>=1)bill(STAR,0,0.012,pull-0.9,0.08+0.02*Math.sin(now*30),now*20,W2_GLOW,F_UNLIT|F_NOCAST)}}
 // ================= DRAW: hero (model space: up +Y, faces +Z, the hero's right is -X) =================
-const SPH_I=[-0.26,1.05,0.24,-0.08,0.15],SPH_B=[-0.22,1.12,-0.02,-0.06,0.15],SPH_T=[[-0.36,1.45,0.62,0.22,0.32],[-0.14,0.98,0.66,-0.02,-0.22],[0.02,1.22,0.64,-0.32,0.05]],
+const BW_HL=[-0.06,0.0,0.52],BW_HDL=0.24,BW_TW=-0.5,BW_POLE=[-1,0.25,-0.35],// bow: aiming left-hand target (aim frame) and how far the hero's draw hand travels
+SPH_I=[-0.26,1.05,0.24,-0.08,0.15],SPH_B=[-0.22,1.12,-0.02,-0.06,0.15],SPH_T=[[-0.36,1.45,0.62,0.22,0.32],[-0.14,0.98,0.66,-0.02,-0.22],[0.02,1.22,0.64,-0.32,0.05]],
 FLH_I=[-0.28,1.05,0.28,0.1,0.55],FLH_C=[-0.48,1.72,0.22,0,1.45],FLH_T=[-0.2,1.42,0.6,0,0.1],
 SHH_I=[0.34,1.12,0.34,-0.25,0],SHH_G=[0.1,1.32,0.46,0,0.05],SHH_P=[0.1,1.3,0.78,0,0.05],SHH_S=[0.08,1.55,0.5,0,0.25],
 STH_I=[-0.3,1.0,0.22,0,1.25],STH_C=[-0.24,1.38,0.55,0,0.35],STH_U=[-0.28,1.75,0.1,0,1.9],STH_D=[-0.12,1.05,0.55,0,-0.4],STH_S=[-0.12,1.85,0.28,0,1.5];
@@ -341,6 +342,7 @@ if(k==='spear'&&ak>=12&&ak<=14){const g=kf([[0,0],[0.05,-0.3],[0.11,1],[0.24,1],
 else if(k==='flail'&&ak===11)bd=kf([[0,0],[0.1,-0.15],[0.22,0.35],[0.34,0]],at);
 else if(k==='shield'&&ak===20)bd=kf([[0,0],[0.06,0.2],[0.16,0.2],[0.32,0]],at);
 else if(k==='staff'&&ak===23)bd=kf([[0,0],[0.08,-0.15],[0.16,0.35],[0.45,0]],at);
+else if(k==='bow'){const S=wpS(o),ch=S===pl?pl.hon:ak===16&&o.hc>0;if(ch||ak===17&&at<0.4){tw=BW_TW;hRot('head',HY,-BW_TW)}}// archer stance: left shoulder turns towards the target, so the draw arm has room
 if(tw){hRot('spine',HY,tw*0.5);hRot('chest',HY,tw*0.5)}if(bd){hRot('spine',HX,bd*0.6);hRot('chest',HX,bd*0.4)}}
 // arms + weapon frame; returns {show, tip} like wpHeroArms
 function w2HeroArms(o,w,A,pit,at,ak){const k=w.kind,S=wpS(o),Hh=HERO;let P,f,u=[0,1,0],tip=[0,0,-0.6];
@@ -351,15 +353,16 @@ else if(k==='flail'){const ch=S===pl?pl.hon:ak===9&&o.hc>0;if(S.fsp||ak===11&&at
  else pose(ch?FLH_I.map((x,j)=>x+(FLH_C[j]-x)*sat(at/0.15)):S.fb||ak===10&&at<0.3?FLH_T:FLH_I);if(f[1]>0.9)u=[0,0,1];tip=[0,0,-0.2];
  if(ch){P[0]+=Math.sin(now*9)*0.04;P[2]+=Math.cos(now*9)*0.04}heroArm('R',P,[-1,-0.35,-0.1],-1.2);P=Hh.GT[Hh.bi.hand_R].slice();heroArm('L',PL,[1,-0.8,0.2],1.3)}
 else if(k==='bow'){const R=m3axis(HX,-pit),at3=p=>{const r=m3v(R,p);return[A[0]+r[0],A[1]+r[1],A[2]+r[2]]},ch=S===pl?pl.hon:ak===16&&o.hc>0,c=ch?(S===pl?pl.hc:o.hc):0,aim=ch||ak===17&&at<0.4;
- heroArm('L',at3(aim?[0.14,-0.02,0.5]:[0.2,-0.2,0.36]),[1,-0.6,0],1.3);P=Hh.GT[Hh.bi.hand_L].slice();f=m3v(R,aim?[0,0,1]:[0.1,-0.25,0.96]);u=m3v(R,[0,1,0]);
- const pull=0.2+0.42*c+(ak===17&&at<0.25?0.05:0);heroArm('R',[P[0]-f[0]*pull-0.02,P[1]-f[1]*pull+0.02,P[2]-f[2]*pull],[-1,-0.35,-0.1],-1.2);tip=[0,0,-0.4]}
+ heroArm('L',at3(aim?BW_HL:[0.2,-0.2,0.36]),[1,-0.6,0],1.3);P=Hh.GT[Hh.bi.hand_L].slice();f=m3v(R,aim?[0,0,1]:[0.1,-0.25,0.96]);u=m3v(R,[0,1,0]);
+ // draw hand: pulled back along the arrow line, but only to the right cheek (a full 0.42 draw put it behind the head and folded the arm behind the back); elbow out to the right and back
+ const pull=0.2+BW_HDL*c+(ak===17&&at<0.25?0.03:0);heroArm('R',[P[0]-f[0]*pull,P[1]-f[1]*pull,P[2]-f[2]*pull],aim?BW_POLE:[-1,-0.35,-0.1],-1.2);tip=[0,0,-0.4]}
 else if(k==='shield'){const g=S===pl?pl.grd||pl.sp===2:o.gf&1,v=ak===20&&at<0.32?kf([[0,SHH_G],[0.06,SHH_P],[0.16,SHH_P],[0.32,g?SHH_G:SHH_I]],at):(S===pl?pl.sp===2:o.bar)?SHH_S:g?SHH_G:SHH_I;pose(v);
  heroArm('L',P,[1,-0.6,-0.2],0.4);P=Hh.GT[Hh.bi.hand_L].slice();heroArm('R',[-0.3,1.02,0.16],[-1,-0.5,0],-1.2);tip=[0,0,-0.1]}
 else{pose(ak===22?kf([[0,STH_I],[0.08,STH_C],[0.3,STH_C],[0.5,STH_I]],at):ak===23?kf([[0,STH_I],[0.08,STH_U],[0.16,STH_D],[0.45,STH_I]],at):ak===24?kf([[0,STH_I],[0.25,STH_S],[1.2,STH_S],[1.5,STH_I]],at):STH_I);u=[-1,0,0];tip=[0,0,-1.02];
  heroArm('R',P,[-1,-0.35,-0.1],-1.2);P=Hh.GT[Hh.bi.hand_R].slice();heroArm('L',ak===24&&at<1.4?[P[0]+f[0]*0.25+0.06,P[1]+f[1]*0.25,P[2]+f[2]*0.25]:PL,[1,-0.8,0.2],1.3)}
 wpFrame(P,f,u,1);return{show:1,tip}}
 // in the hero's weapon frame (M = hero * WF): bow string / arrow, flail chain + ball (world)
-function w2HeroExtra(o,w){const S=wpS(o);if(w.kind==='bow'){const ch=S===pl?pl.hon:o.ak===16&&o.hc>0,c=ch?(S===pl?pl.hc:o.hc):0;bwStr(c,ch)}
+function w2HeroExtra(o,w){const S=wpS(o);if(w.kind==='bow'){const ch=S===pl?pl.hon:o.ak===16&&o.hc>0,c=ch?(S===pl?pl.hc:o.hc):0;bwStr(c,ch,BW_HDL)}
 else if(w.kind==='flail'){const F=WMOD.flail&&WMOD.flail.fl;if(!F)return;const e=[0,0,-F.eye],E=[M[0]*e[0]+M[4]*e[1]+M[8]*e[2]+M[12],M[1]*e[0]+M[5]*e[1]+M[9]*e[2]+M[13],M[2]*e[0]+M[6]*e[1]+M[10]*e[2]+M[14]],sc=Math.hypot(M[0],M[1],M[2]);
  const g=gId;gId=0;mPush();M.set(W2I);flChain(E,flBallAt(o,S,E,sc),sc);mPop();gId=g}}
 // ?hero=1&wp=N&act=1: a loop of each attack
