@@ -11,7 +11,7 @@
 const GA_IDS=['rifle','shotgun','rail','katana','hammer','bomb','flail','spear','bow','shield','staff'],GA_PIC={rail:'railgun'},GA_PU=0.3,GA_MAXPT=3;// GA_MAXPT: skill points for a pull of a weapon that is already at the top level
 const GA={f:0,paid:[0,0,0,0,0],pick:'rifle',n:0};
 try{const s=JSON.parse(localStorage.getItem('koma_gacha')||'null');if(s)Object.assign(GA,s)}catch(e){}
-if(!GA_IDS.includes(GA.pick))GA.pick='rifle';if(!Array.isArray(GA.paid))GA.paid=[0,0,0,0,0];GA.f=Math.max(0,GA.f|0);
+if(!GA_IDS.includes(GA.pick))GA.pick='rifle';if(!Array.isArray(GA.paid))GA.paid=[0,0,0,0,0];if(!Array.isArray(GA.gift))GA.gift=[];GA.f=Math.max(0,GA.f|0);
 function gaSave(){try{localStorage.setItem('koma_gacha',JSON.stringify(GA))}catch(e){}}
 // pictures load on first use (about 100 KB each)
 const GA_IMG={};
@@ -30,8 +30,8 @@ GA.f-=cost;const res=[];for(let i=0;i<n;i++){const id=gaRoll();if(!id)break;cons
 if(res.some(r=>r.pt))skSave();GA.n+=res.length;gaSave();gaA={res,i:0,ph:0,t:0,multi:n>1};gaCrack();snd('charge')}
 // ---- screen state ----
 let gaSel=0,gaDet=0,gaA=null;
-function openGacha(){G.menu='gacha';gaSel=Math.max(0,GA_IDS.indexOf(GA.pick));gaDet=0;gaA=null;gaMsg=null;gaD.id=null;gaD.ph='spin';gaD.t=0;wpReset();texts.length=0;gaPreload()}
-function closeGacha(){gaDemoEnd();G.menu='main';gaA=null;wpReset();texts.length=0;parts.length=0;decals.length=0;trauma=0}
+function openGacha(){gaGiftClose();G.menu='gacha';gaSel=Math.max(0,GA_IDS.indexOf(GA.pick));gaDet=0;gaA=null;gaMsg=null;gaD.id=null;gaD.ph='spin';gaD.t=0;wpReset();texts.length=0;gaPreload()}
+function closeGacha(){gaGiftClose();gaDemoEnd();G.menu='main';gaA=null;wpReset();texts.length=0;parts.length=0;decals.length=0;trauma=0}
 function gaGo(d){gaSel=(gaSel+d+GA_IDS.length)%GA_IDS.length;snd('ui')}
 const gaCss=c=>'rgb('+(c[0]*255|0)+','+(c[1]*255|0)+','+(c[2]*255|0)+')';
 // ---- icons ----
@@ -73,6 +73,8 @@ if(gaA){drawGaAnim(dt);return}
 // a veil on the left only: the highlight on the right stays clear
 const gr=ctx.createLinearGradient(0,0,W*0.62,0);gr.addColorStop(0,'rgba(22,18,31,.62)');gr.addColorStop(0.75,'rgba(22,18,31,.18)');gr.addColorStop(1,'rgba(22,18,31,0)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
 drawLogo(250,70,0.34);head('武器ガチャ');gearBtn(W-86,24);
+// プレゼント (gift code) next to the wallet
+gaGiftBtn(670,34,170,50);
 // wallet + where the 札 come from
 const wx=W-420,wy=28;para(wx+5,wy+6,300,58,14);ctx.fillStyle=INK;ctx.fill();para(wx,wy,300,58,14);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();gaFuda(wx+44,wy+29,1,-0.15);txt('コマ札',wx+74,wy+30,22,INK,null,0,'left');txt(String(GA.f),wx+272,wy+30,42,'#e5402b',INK,4,'right');
 txt('ステージクリアでもらえる',wx+150,wy+82,15,'#fff',INK,5);for(let i=0;i<5;i++){const cx=wx+8+i*60,cy=wy+110,left=2-(GA.paid[i]|0);para(cx,cy-14,54,28,6);ctx.fillStyle=left>0?'#fff':'#9a9db4';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.stroke();txt((i+1)+'面',cx+18,cy+1,13,INK);txt('＋'+(i+1),cx+42,cy+1,13,left>0?'#e5402b':'#555a70')}
@@ -104,7 +106,7 @@ pb(620,280,1,1,c1,'#ff4a3d');pb(926,314,6,5,c6,'#e5402b');
 ctx.save();ctx.translate(1188,606);ctx.rotate(0.14);const bs=1+0.05*Math.sin(now*7);ctx.scale(bs,bs);burstPath(3,4,72,24,10,1.25,8);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,72,24,10,1.25,8);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('１回おまけ！',0,1,17,'#e5402b');ctx.restore();
 B(60,628,200,56,'もどる',closeGacha,{size:26});
 if(gaMsg&&now-gaMsg.t<2.6){const a=sat((2.6-(now-gaMsg.t))/0.3);ctx.globalAlpha=a;para(560,560,700,40,12);ctx.fillStyle=INK;ctx.fill();fitTxt(gaMsg.s,900,581,20,640,'#fff','center');ctx.globalAlpha=1}
-if(gaDet)gaDetail(w,id)}
+if(gaDet)gaDetail(w,id);gaGiftUI()}
 // details: what the weapon does + 必殺Lv table (right side, over the highlight)
 // 詳細の中身は縦スクロール（ドラッグ・スワイプ・ホイール）。枠の外はクリップする
 const gaDS={y:0,v:0,id:null,py:0,k:'',t:0,ch:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=742;
@@ -245,6 +247,45 @@ para(-170,-bh/2-6,330,bh+12,18);ctx.fillStyle=INK;ctx.fill();para(-164,-bh/2,318
 if(spo){const y0=lb?-22:-8;txt('必殺技　'+w.sp,-4,y0,w.sp.length>6?22:26,INK);fitTxt(la,-150,y0+28,16,300,'#3a3f55');if(lb)fitTxt(lb,-150,y0+50,16,300,'#3a3f55')}
 else{txt(pre?'必殺技 まもなく…':'通常攻撃',-4,-8,pre?26:32,INK);fitTxt(pre?w.sp:w.d[0],-150,20,15,300,'#3a3f55')}
 ctx.restore()}
+// ================= プレゼント (gift codes) =================
+// Codes are in GIFTS (写し間違いを避けるため、大文字・半角に直して比べる)。1つの端末で1回だけ使える（GA.gift に使った印を残す）。
+// 中身: fuda=コマ札の枚数, wpn=武器ID（重なれば凸が1つ増える／最大ならスキルP）, pt=スキルポイント。足すときはここに1行足すだけ。
+const GIFTS={
+ 'KOMABREAKER':{fuda:5,msg:'発売記念のプレゼント'},
+ 'GEKIDAN':{fuda:3,msg:'激弾プレゼント'}
+};
+const gaGiftNorm=s=>String(s||'').normalize('NFKC').toUpperCase().replace(/[\s\-_]/g,'');
+let gaGift=null;// {msg,ok,t} while the window is open
+let gaGiftEl=null;
+function gaGiftInput(){if(gaGiftEl)return gaGiftEl;const el=document.createElement('input');el.type='text';el.maxLength=24;el.autocomplete='off';el.autocapitalize='characters';el.spellcheck=false;el.placeholder='ギフトコード';el.enterKeyHint='done';
+el.style.cssText='position:absolute;left:380px;top:292px;width:520px;height:64px;box-sizing:border-box;padding:0 18px;font:900 30px/64px '+FONT+';letter-spacing:2px;text-align:center;color:#16121f;background:#fff;border:5px solid #16121f;border-radius:0;outline:none;display:none;z-index:5;-webkit-appearance:none;appearance:none;user-select:text;-webkit-user-select:text;touch-action:manipulation';
+// the stage handlers cancel touches (preventDefault), which would stop the keyboard from opening: keep the input's events to itself
+for(const ev of['touchstart','touchmove','touchend','touchcancel','mousedown','mouseup','mousemove','wheel','keydown','keyup','pointerdown'])el.addEventListener(ev,e=>e.stopPropagation(),{passive:true});
+el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();gaGiftSubmit()}else if(e.key==='Escape')gaGiftClose()});
+stageEl.appendChild(el);gaGiftEl=el;return el}
+function gaGiftOpen(){gaGift={msg:'',ok:0,t:now};const el=gaGiftInput();el.value='';el.style.display='block';try{el.focus()}catch(e){}}
+function gaGiftClose(){gaGift=null;if(gaGiftEl){gaGiftEl.style.display='none';try{gaGiftEl.blur()}catch(e){}}}
+function gaGiftSubmit(){if(!gaGift)return;const el=gaGiftInput(),k=gaGiftNorm(el.value);
+ if(!k){gaGift.msg='コードを入力してください';gaGift.ok=0;gaGift.t=now;snd('clank');return}
+ const g=GIFTS[k];if(!g){gaGift.msg='このコードは使えません';gaGift.ok=0;gaGift.t=now;snd('clank');return}
+ if(GA.gift.includes(k)){gaGift.msg='このコードはもう使いました';gaGift.ok=0;gaGift.t=now;snd('clank');return}
+ GA.gift.push(k);const got=[];
+ if(g.fuda){GA.f+=g.fuda;got.push('コマ札 ×'+g.fuda)}
+ if(g.pt){SKS.pt+=g.pt;skSave();got.push('スキルP ＋'+g.pt)}
+ if(g.wpn&&WPN[wpIdx(g.wpn)]){const r=wsGive(g.wpn),nm=WPN[wpIdx(g.wpn)].name;if(r==='max'){SKS.pt+=GA_MAXPT;skSave();got.push(nm+'（最大のためスキルP ＋'+GA_MAXPT+'）')}else got.push(nm+(r==='up'?'（凸が上がる）':''))}
+ gaSave();el.value='';gaGift.msg='もらったもの：'+got.join('、');gaGift.ok=1;gaGift.t=now;snd('item')}
+function gaGiftBtn(x,y,w,h){B(x,y,w,h,null,gaGiftOpen,{col:'#fff3b0',sk:10});
+ // a little present: box + ribbon
+ const cx=x+34,cy=y+h/2+2;ctx.save();ctx.translate(cx,cy);ctx.fillStyle='#e5402b';ctx.fillRect(-14,-6,28,20);ctx.fillStyle='#ff7a63';ctx.fillRect(-16,-12,32,9);ctx.fillStyle='#ffd91a';ctx.fillRect(-3,-12,6,26);
+ ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.strokeRect(-14,-6,28,20);ctx.strokeRect(-16,-12,32,9);ctx.beginPath();ctx.ellipse(-6,-17,6,5,-0.5,0,TAU);ctx.ellipse(6,-17,6,5,0.5,0,TAU);ctx.stroke();ctx.restore();
+ txt('プレゼント',x+w/2+20,y+h/2+2,22,INK)}
+function gaGiftUI(){const el=gaGiftEl;if(!gaGift||!gaOn()){if(el)el.style.display='none';return}
+ if(el)el.style.display=setOpen||gaA?'none':'block';if(setOpen||gaA)return
+ const X=330,Y=170,PW=620,PH=340;ctx.fillStyle='rgba(22,18,31,.6)';ctx.fillRect(0,0,W,H);btns.push({x:0,y:0,w:W,h:H,cb:()=>{}});
+ panel(X,Y,PW,PH);txt('プレゼント',W/2,Y+44,40,INK);txt('ギフトコードを入力してください',W/2,Y+88,20,'#3a3f55');
+ // (the real input sits at 380,292 – 520×64 – above the canvas)
+ B(X+50,Y+250,250,58,'もらう',gaGiftSubmit,{col:'#ffd91a',size:30});B(X+PW-300,Y+250,250,58,'とじる',gaGiftClose,{size:30});
+ if(gaGift.msg){txt(gaGift.msg,W/2,Y+222,20,gaGift.ok?'#1c8a3a':'#e5402b')}}
 // ================= EQUIP SCREEN:「強化」(必殺 level-ups waiting from gacha duplicates) =================
 let wpUpPop=null;
 // the 強化 button of the equip screen for weapon w (x,y,w,h)
