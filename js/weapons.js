@@ -42,7 +42,7 @@ const WPN=[
 {id:'bow',name:'波雲の長弓',type:'弓',kind:'bow',btn:'射',file:'weapon_bow',col:'#2a3f8f',bg:[.86,.92,1],ammo:0,g:1,sp:'波雲・矢時雨',spd:0.5,spMode:'once',
  d:['長押しで溜めて、離して射る（1.5 秒で威力３倍）','溜めるほど貫通する敵が増える（最大５体）'],s:'前方の広い範囲に矢の雨。残った矢の中では溜めが速い'},
 {id:'shield',name:'城壁の大楯',type:'大楯',kind:'shield',btn:'盾',file:'weapon_shield',col:'#c9a227',bg:[.93,.95,1],ammo:0,g:1,sp:'城壁結界',spd:8,spMode:'mode',
- d:['タップで盾で押す。長押しで正面を防御（移動は遅い）','当たる直前に防御すると弾をはね返す'],s:'前に水色のバリアを張り、敵の弾を防ぐ（約８秒）'},
+ d:['タップで盾で押す。長押しで正面を防御（移動は遅い）','当たる直前に防御すると弾をはね返す'],s:'自分を包む大きなドーム型のバリアを張り、外から来る敵の弾を全方向で防ぐ（約８秒）'},
 {id:'staff',name:'護符の錫杖',type:'杖',kind:'staff',btn:'祈',file:'weapon_staff',col:'#2fb38a',bg:[.88,1,.93],ammo:0,g:1,sp:'反魂の祈り',spd:0.3,spMode:'once',
  d:['護符の玉を飛ばす。味方に当たると回復＋短い加護、敵にはダメージ','玉は味方を少し追う。近くの敵は杖で殴る'],s:'味方全員を回復し、ダウンした味方を復活。しばらくダメージ軽減＋攻撃力アップ'},
 // 13: glove.js (W2.gl = numbers)
@@ -123,8 +123,9 @@ function wpDmg(e,dm,x,y,z,o){o=o||{};const q=!!o.quiet;
 if(e.monk){const k=monkK(e,o.fx==null?pl.x:o.fx,o.fz==null?pl.z:o.fz);if(k>=1&&e.bell)monkBellHit(e,dm*0.5,x,y,z,q);else{if(k<0.1&&!q)monkClank(e,x,y,z);if(k>0)damage(e,dm*k,false,x,y,z,q||k<0.1)}}
 else damage(e,dm,!!o.crit,x,y,z,q)}
 // enemy effects: 1 freeze (s), 2 stagger (鎧鬼), 3 slow (boss, s), 4 雷 stun (s, bosses short), 6 shield-bash flinch (s, not bosses). The host runs the enemies, guests send a small message.
-function wpEffect(e,c,v){if(!e||e.dead)return;if(isCli()){if(c===1&&e.type!=='boss')e.frz=Math.max(e.frz||0,1);if((c===4||c===6)&&e.type!=='boss'&&!(e.stn>0)){e.stn=Math.min(v,0.3);e.stnZ=c===4?1:0}if(lim('ef'+e.id+'_'+c,0.4))(net.q.ef||(net.q.ef=[])).push([e.id,c,r1(v||0)]);return}wpEffectHost(e,c,v)}
-function wpEffectHost(e,c,v){if(c===1){if(e.type==='boss')return;if(!(e.frz>0)){fxStar(e.x,(e.y||0)+1,e.z,2.2,C.cyan,0.12);if(lim('frzT',0.3))sfxAt('ピキーン',e.x,(e.y||0)+2.6,e.z,{size:48,st:'cyan',life:0.4})}e.frz=Math.max(e.frz||0,v)}
+function wpEffect(e,c,v){if(!e||e.dead)return;if(isCli()){if(c===1&&e.type!=='boss')e.frz=Math.max(e.frz||0,1);if((c===4||c===6)&&e.type!=='boss'&&!(e.stn>0)){e.stn=Math.min(v,0.3);e.stnZ=c===4?1:0}if(lim('ef'+e.id+'_'+c,c===7?0.25:0.4))(net.q.ef||(net.q.ef=[])).push([e.id,c,r1(v||0)]);return}wpEffectHost(e,c,v,pl)}
+// c: 1 凍結 / 2 鎧鬼ののけぞり / 3 ボスの鈍化 / 4 雷のしびれ / 6 押しの怯み / 7 引き寄せ（p のほうへ。雑魚だけ）
+function wpEffectHost(e,c,v,p){if(c===7){if(e.type==='boss'||!p)return;const dx=p.x-e.x,dz=p.z-e.z,d=Math.hypot(dx,dz);if(d<2.6)return;const k=Math.min(70,(d-2.2)*8)/d;e.kx=dx*k;e.kz=dz*k;return}if(c===1){if(e.type==='boss')return;if(!(e.frz>0)){fxStar(e.x,(e.y||0)+1,e.z,2.2,C.cyan,0.12);if(lim('frzT',0.3))sfxAt('ピキーン',e.x,(e.y||0)+2.6,e.z,{size:48,st:'cyan',life:0.4})}e.frz=Math.max(e.frz||0,v)}
 else if(c===2){if(e.type==='bru'&&!e.ap&&e.st!=='stun'&&e.st!=='spawn'&&now-(e.stunAt||-9)>3.2){e.st='stun';e.stT=0;e.stunAt=now;e.cd=Math.max(e.cd||0,2);ev('txt','グラッ',r1(e.x),4.4,r1(e.z),58,'hit')}}
 else if(c===3){if(e.type==='boss')e.slw=Math.max(e.slw||0,v)}
 else if(c===4||c===6){const B=e.type==='boss';if(B&&c===6)return;if(now-(e.stnAt||-9)<(B?2.5:v+0.45))return;e.stnAt=now;e.stnZ=c===4?1:0;e.stn=Math.max(e.stn||0,B?Math.min(v,W2.sp.bstun):v);
@@ -187,7 +188,10 @@ for(const s of shots)if(!s.dead&&inArc(s.x,s.y,s.z,s.r+0.6)){popShot(s);if(isCli
 if(G.mode==='pvp')for(const o of others)if(!o.dead&&inArc(o.x,o.y+1.1,o.z,0.6))pvHit(o,34*pw,false,o.x,o.y+1.1,o.z);
 if(cut&&wb('kt_parry')){pl.hp=Math.min(SK.hp,pl.hp+3*cut);addGauge(3*cut)}if(cut&&lim('cutT',0.3))addText('カキン！',W/2+rnd(-120,120),H*0.4,{size:56,st:'cyan',life:0.4});if(n){shake(0.12);stopT(0.035)}}
 // 一閃・天断ち: a wall-crossing crescent flying 80 m, 15 m wide, every enemy (and the boss) it passes is cut once
-function katanaWave(){const y=pl.y+1.3;for(const a of wb('kt_sp')?[0,0.32,-0.32]:[0]){const fx=-Math.sin(pl.yaw+a),fz=-Math.cos(pl.yaw+a);wwaves.push({x:pl.x,y,z:pl.z,dx:fx,dz:fz,d:0.5,t:0,own:1,hit:new Set()});wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz)])}
+// 見上げていると斬撃も上へ飛ぶ（ktSy: 上向きの傾きの sin。水平に近いときは 0 = 今まで通り）
+const ktSy=()=>pl.pitch>0.1?Math.sin(Math.min(pl.pitch,1.2)):0;
+function ktWaveMk(x,y,z,dx,dz,sy,own,sm){return{x,y,z,dx,dz,sy,cy:Math.sqrt(1-sy*sy),d:0.5,t:0,own,hit:new Set(),sm}}
+function katanaWave(){const y=pl.y+1.3,sy=ktSy();for(const a of wb('kt_sp')?[0,0.32,-0.32]:[0]){const fx=-Math.sin(pl.yaw+a),fz=-Math.cos(pl.yaw+a);wwaves.push(ktWaveMk(pl.x,y,pl.z,fx,fz,sy,1,0));wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),0,r2(sy)])}
 wpAct(7);pl.cutT=0.55;snd('slash');snd('boom',1.2);flash(0.5);invA=1;shake(0.6);stopT(0.08);addText('ズバァァン！',W/2,H*0.2,{size:96,st:'cyan',life:0.9,rot:-0.12})}
 // ---- 火消しの大槌: slam 2.1 m ahead, radius 2.8 → 6.2 with the charge ----
 function hammerHit(c){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),x=pl.x+fx*2.1,z=pl.z+fz*2.1,r=(2.8+3.4*c)*(c>=1&&wb('hm_fast')?1.3:1);hammerAt(x,z,r,c,1);if(wb('hm_quake'))pl.hq={t:0.4,x,z,r,c}}
@@ -236,11 +240,13 @@ for(let i=wbombs.length-1;i>=0;i--){const b=wbombs[i],px=b.x,py=b.y,pz=b.z;b.t+=
  if(!hit&&lim('bsm'+i,0.06))fxSmoke(b.x,b.y+0.2,b.z,1,b.big?0.8:0.3,C.smokeD,0.5);
  if(hit){wbombs.splice(i,1);bombBoom(b,he)}}
 for(let i=wwaves.length-1;i>=0;i--){const w=wwaves[i],d0=w.d;w.d+=50*dt;w.t+=dt;
- if(w.own){const pw=pl.pow>0?2:1,dm=w.sm?WT_KTW*pw:430*SK.spw*pw,ww=w.sm?1.8:7.5,crossed=(x,z,r,wd)=>{const rx=x-w.x,rz=z-w.z,al=rx*w.dx+rz*w.dz;return al>d0-r&&al<w.d+r&&Math.abs(-rx*w.dz+rz*w.dx)<wd+r};
-  for(const e of enemies){if(e.dead||e.st==='spawn'||w.hit.has(e))continue;for(const s of spheres(e))if(crossed(s[0],s[2],s[3],ww)){w.hit.add(e);wpDmg(e,dm,s[0],s[1],s[2],{fx:w.x,fz:w.z});if(e.type==='bru')wpEffect(e,2);break}}
-  for(const s of shots)if(!s.dead&&crossed(s.x,s.z,1,ww+0.5)){popShot(s);if(isCli())net.q.ps.push(s.id)}
-  if(G.mode==='pvp')for(const o of others)if(!o.dead&&!w.hit.has(o)&&crossed(o.x,o.z,0.6,ww)){w.hit.add(o);pvHit(o,(w.sm?12:70)*pw,false,o.x,o.y+1.1,o.z)}}
- if(w.d>5&&lim('wvs'+i,0.04)){const fx=w.x+w.dx*w.d,fz=w.z+w.dz*w.d;fxSparks(fx,w.y,fz,4,6,C.cyan)}
+ // a wave flying upwards (sy>0) is a tilted sheet: along = distance on its way, side = across (horizontal), up = off the sheet (must be within th)
+ if(w.own){const pw=pl.pow>0?2:1,dm=w.sm?WT_KTW*pw:430*SK.spw*pw,ww=w.sm?1.8:7.5,th=w.sm?2:4,crossed=(x,z,r,wd,y)=>{const rx=x-w.x,rz=z-w.z,h=rx*w.dx+rz*w.dz,ry=(y==null?w.y:y)-w.y,al=w.sy?h*w.cy+ry*w.sy:h;
+   if(w.sy&&Math.abs(ry*w.cy-h*w.sy)>th+r)return false;return al>d0-r&&al<w.d+r&&Math.abs(-rx*w.dz+rz*w.dx)<wd+r};
+  for(const e of enemies){if(e.dead||e.st==='spawn'||w.hit.has(e))continue;for(const s of spheres(e))if(crossed(s[0],s[2],s[3],ww,s[1])){w.hit.add(e);wpDmg(e,dm,s[0],s[1],s[2],{fx:w.x,fz:w.z});if(e.type==='bru')wpEffect(e,2);break}}
+  for(const s of shots)if(!s.dead&&crossed(s.x,s.z,1,ww+0.5,s.y)){popShot(s);if(isCli())net.q.ps.push(s.id)}
+  if(G.mode==='pvp')for(const o of others)if(!o.dead&&!w.hit.has(o)&&crossed(o.x,o.z,0.6,ww,o.y+1.1)){w.hit.add(o);pvHit(o,(w.sm?12:70)*pw,false,o.x,o.y+1.1,o.z)}}
+ if(w.d>5&&lim('wvs'+i,0.04)){const fx=w.x+w.dx*w.cy*w.d,fz=w.z+w.dz*w.cy*w.d;fxSparks(fx,w.y+w.sy*w.d,fz,4,6,C.cyan)}
  if(w.d>(w.sm?WT_KTR:80))wwaves.splice(i,1)}
 for(let i=wfires.length-1;i>=0;i--){const f=wfires[i];f.t-=dt;if(f.e){if(f.e.dead)f.e=null;else if(f.e.monk){f.x=f.e.x+f.ox;f.z=f.e.z+f.oz}}
  if(f.own&&f.t>0){f.tk-=dt;if(f.tk<=0){f.tk=0.3;const pw=pl.pow>0?2:1,dm=60*0.3*SK.spw*pw;if(f.e)damage(f.e,dm*1.5,false,f.x,f.y,f.z,true);
@@ -251,7 +257,7 @@ for(let i=wfires.length-1;i>=0;i--){const f=wfires[i];f.t-=dt;if(f.e){if(f.e.dea
 // others' visual events (net 'p' message .w)
 function wfxPlay(o,a){switch(a[0]){
 case'b':wbombs.push({x:a[1],y:a[2],z:a[3],vx:a[4],vy:a[5],vz:a[6],big:a[7],own:0,t:0,rot:0});break;
-case'k':wwaves.push({x:a[1],y:a[2],z:a[3],dx:a[4],dz:a[5],d:0.5,t:0,own:0,sm:a[6]|0});if(!a[6])snd('slash');break;
+case'k':wwaves.push(ktWaveMk(a[1],a[2],a[3],a[4],a[5],clamp(a[7]||0,0,0.99),0,a[6]|0));if(!a[6])snd('slash');break;
 case'h':hammerFx(a[1],a[2],a[3],a[4]);break;
 case'H':komaFx(a[1],a[2],0);break;
 default:w2Fx(o,a)}}
@@ -319,8 +325,8 @@ let px=a[0],py=a[1],pz=a[2];const k=Math.min(8,Math.ceil(l/3)),jit=ice?0.35:0.22
 bill(BURST,b[0],b[1],b[2],ice?1.4:0.7,now*30,ice?C.white:C.cyan,NF);bill(STAR,a[0],a[1],a[2],ice?0.6:0.3,now*20,C.white,NF)}
 function drawWpWorld(){const NF=F_UNLIT|F_NOCAST;drawW2World();
 for(const s of wslash){const k=0.75+0.25*easeOut(sat(s.t/0.05)),sc=3.8*k;mPush();mT(s.x,s.y,s.z);mRY(s.yaw);mRZ(s.dir*0.55);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mPop()}
-for(const w of wwaves){const sc=(w.sm?4.5:16)*Math.min(1,0.4+w.t*4),fx=w.x+w.dx*w.d,fz=w.z+w.dz*w.d,yaw=Math.atan2(-w.dx,-w.dz);
- mPush();mT(fx-w.dx*sc*0.5,w.y,fz-w.dz*sc*0.5);mRY(yaw);mRZ(-0.45);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mT(0,0.012,0.03);mS(0.9,1,0.9);emit(SLASH,C.cyan,0,0,NF,0);mPop()}
+for(const w of wwaves){const sc=(w.sm?4.5:16)*Math.min(1,0.4+w.t*4),hd=w.cy*(w.d-sc*0.5),yaw=Math.atan2(-w.dx,-w.dz);
+ mPush();mT(w.x+w.dx*hd,w.y+w.sy*(w.d-sc*0.5),w.z+w.dz*hd);mRY(yaw);if(w.sy)mRX(Math.asin(w.sy));mRZ(-0.45);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mT(0,0.012,0.03);mS(0.9,1,0.9);emit(SLASH,C.cyan,0,0,NF,0);mPop()}
 for(const b of wbombs){const s=b.big?4:b.mini?0.8:1.6;mPush();mT(b.x,b.y,b.z);mRY(b.rot);mRX(b.rot*0.7);mS(s,s,s);if(wpReady(6))wpModel(6);else sph(0,0,0,0.2,0.2,0.2,C.red);mPop();
  bill(STAR,b.x,b.y+0.22*s,b.z,0.12*s+0.05*Math.sin(now*40),now*20,C.yellow,NF)}
 for(const f of wfires){const k=Math.min(1,f.t/0.5)*Math.min(1,(6-f.t)/0.25+0.15)*(f.big?3:1),hi=f.y>0.5,n=hi?6:9,rr=hi?1.4*(f.big?3:1):f.r*0.62;

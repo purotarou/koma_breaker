@@ -9,7 +9,7 @@
 //  波雲の長弓 bow  : 長押しで溜め（1.5 秒で威力3倍・貫通5体）、離して射る（warrows）。必殺 = 前方の円に矢の雨（wrains）、
 //                 地面に残った矢の中では溜めが速い。
 //  城壁の大楯 shield: タップ = 盾で押す（ダッシュ中・直後は強い）、長押し = 防御（正面を防ぐ・移動が遅い）。押してから / 離してから
-//                 0.25 秒以内に正面から来た弾ははね返す（ホストが wrefl で動かす）。必殺 = 前に水色のバリア（敵の弾を止める）。
+//                 0.25 秒以内に正面から来た弾ははね返す（ホストが wrefl で動かす）。必殺 = 自分を包む大きな水色のドーム型バリア（半径 W2.sh.barR。外から来る敵の弾を全方向で止める）。
 //  護符の錫杖 staff: 緑の護符の玉（worbs）。味方を少し追い、味方に当たると回復（その人の最大体力の10%）、敵にはダメージ。
 //                 玉に当たった味方は短い間（5 秒）ダメージ軽減＋攻撃力アップの加護も受ける。正面の近くに敵がいるときは杖で殴る。
 //                 必殺 = ダウンした味方をすぐ復活 ＋ 自分と味方全員の回復 ＋ 長めの加護（ダメージ軽減・攻撃力アップ）。ダウンした味方がいなくても使える。
@@ -17,17 +17,17 @@
 // 通信: 自分の動作は pl.ak / pl.an、溜めは pl.hc（既存の 'p'）。見た目だけのイベントは net.q.wx（F f S A R O X hl rv）、
 //       盾の状態は 'p' の旗（32 正面の防御・64 はね返し・128 バリア → o.gf / o.bar）。しびれ・怯みは net.q.ef（4 雷 / 6 押し）。
 const W2={
- fl:{chg:2.4,R:[10,20,40],dm:[60,110,190],spinR:2.8,spinDm:14,spinT:0.3,orbR:1.5,slam:150,slamR:3.2,last:420,lastR:5.5,lastD:40},
+ fl:{chg:2.4,R:[10,20,40],dm:[60,110,190],spinR:2.8,spinDm:14,spinT:0.3,pullR:11,orbR:1.5,slam:150,slamR:3.2,last:420,lastR:5.5,lastD:40},
  sp:{dm:[30,30,46],R:4.2,A:1.05,cool:[0.28,0.28,0.45],wv:14,wvDm:22,zap:10,stun:0.7,bstun:0.3,spR:8,spWv:60,spK:1.6},
  bw:{dm:40,chg:1.5,spd:85,rain:26,rainR:8,rainT:1.6,zoneK:2.5,zoneT:6},
- sh:{bash:14,dash:24,R:1.9,A:0.7,push:4,pushD:8,lunge:4,lungeD:9,jg:0.3,slow:0.5,barR:3.4,barA:1.08,refl:3},
- st:{heal:0.1,dm:45,cool:0.6,spd:13,turn:2.2,bonk:40,life:2.8,bT:5,bA:1.1,bD:0.9,sh:0.4,sT:12,sA:0.3,sD:0.5}};// bT/bA/bD = 玉の加護（秒・攻撃倍率・被ダメ倍率）、sh/sT/sA/sD = 必殺（回復割合・秒・攻撃の上乗せ・軽減の強さ。SK.spw / SK.beam で凸に応じて伸びる）
+ sh:{bash:14,dash:24,R:1.9,A:0.7,push:4,pushD:8,lunge:4,lungeD:9,jg:0.3,slow:0.5,barR:6,refl:3},
+ st:{heal:0.1,dm:45,cool:0.6,twinT:0.2,spd:13,turn:2.2,bonk:40,life:2.8,bT:5,bA:1.1,bD:0.9,sh:0.4,sT:12,sA:0.3,sD:0.5}};// bT/bA/bD = 玉の加護（秒・攻撃倍率・被ダメ倍率）、sh/sT/sA/sD = 必殺（回復割合・秒・攻撃の上乗せ・軽減の強さ。SK.spw / SK.beam で凸に応じて伸びる）
 const W2K={flail:1,spear:1,bow:1,shield:1,staff:1,glove:1};// glove: glove.js
 const wflys=[],wspk=[],warrows=[],wrains=[],wrefl=[],worbs=[];
 const W2I=m4();W2I[0]=W2I[5]=W2I[10]=W2I[15]=1;
 const wpS=o=>o===pl||o.me?pl:o;// whose state: the local player (also the 3rd-person copy tpsHero) or another player
 const w2pw=()=>pl.pow>0?2:1;
-function w2Reset(){glReset();wflys.length=0;wspk.length=0;warrows.length=0;wrains.length=0;wrefl.length=0;worbs.length=0;pl.fb=null;pl.fsp=null;for(const o of others){o.fb=null}}
+function w2Reset(){glReset();pl.stQ=0;wflys.length=0;wspk.length=0;warrows.length=0;wrains.length=0;wrefl.length=0;worbs.length=0;pl.fb=null;pl.fsp=null;for(const o of others){o.fb=null}}
 // first enemy sphere in front of (ox,oz) facing yaw: within R (horizontal), ±A, between heights y0..y1
 function w2Arc(e,ox,oz,yaw,R,A,y0,y1){for(const s of spheres(e)){const dx=s[0]-ox,dz=s[2]-oz,dh=Math.hypot(dx,dz)-s[3];if(dh>R||s[1]-s[3]>y1||s[1]+s[3]<y0)continue;if(dh<0.5||Math.abs(angDiff(Math.atan2(-dx,-dz),yaw))<A)return s}return null}
 // sphere s touches the segment a-b (radius r)
@@ -50,7 +50,11 @@ else if(f&&pl.cool<=0&&!pl.sp){pl.hon=1;pl.hc=0;pl.fsT=0.15;wpAct(9);snd('whoosh
 function flSpin(){const S=W2.fl,sk=wb('fl_spike'),pw=w2pw()*(sk?2:1),R=S.spinR+(sk?1.2:0);let n=0;if(lim('flw',0.4))snd('whoosh');
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(Math.hypot(s[0]-pl.x,s[2]-pl.z)-s[3]<R&&s[1]-s[3]<pl.y+3.4&&s[1]+s[3]>pl.y+0.3){wpDmg(e,S.spinDm*pw,s[0],s[1],s[2],{quiet:n>0});n++;break}}
 for(const s of shots)if(!s.dead&&Math.hypot(s.x-pl.x,s.z-pl.z)<R&&Math.abs(s.y-pl.y-2.4)<1.4){popShot(s);if(isCli())net.q.ps.push(s.id)}
-if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-pl.x,o.z-pl.z)<S.spinR)pvHit(o,6*pw,false,o.x,o.y+1.4,o.z)}
+if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-pl.x,o.z-pl.z)<S.spinR)pvHit(o,6*pw,false,o.x,o.y+1.4,o.z);
+if(sk&&G.mode!=='pvp')flGather()}
+// 棘の嵐 (fl_spike): the whirl pulls the small enemies of a wide circle in towards the player (the host moves them: wpEffect 7)
+function flGather(){const R=W2.fl.pullR;let n=0;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;const d=Math.hypot(e.x-pl.x,e.z-pl.z);if(d<2.6||d>R)continue;wpEffect(e,7,0);n++}
+fxRing(pl.x,0.1,pl.z,R*0.9,C.white,0.25);if(n&&lim('flgT',0.9))addText('グルルルッ！',W*0.5,H*0.32,{size:54,st:'cyan',life:0.4})}
 function flThrow(st){const S=W2.fl,as=touchMode||G.demoOn,d=aimAssist(aimDir(),as?0.08:0.04,as?0.7:0.4),O=flOrigin(pl);let R=S.R[st-1];const tw=rayWorld(O[0],O[1],O[2],d[0],d[1],d[2],R);R=Math.max(1.5,Math.min(R,tw-0.3));
 const fb=flMake(pl,1,d,R,st);wflys.push(fb);pl.fb=fb;pl.cool=0.25;wpAct(10);snd('whoosh');if(st>2)snd('charge');
 addText(st>2?'ドリャァッ！':st>1?'ソリャッ！':'ソイッ',W*0.66,H*0.58,{size:40+10*st,st:st>2?'boom':'cyan',life:0.35});wxPush(['F',r2(d[0]),r2(d[1]),r2(d[2]),r1(R),st])}
@@ -91,9 +95,11 @@ function flSpLaunch(a,dist,big){const yaw=pl.yaw-a,dx=-Math.sin(yaw),dz=-Math.co
 const f=flSlam(pl,1,tx,tz,big);wflys.push(f);pl.fb=f;pl.fsA=a;wpAct(11);snd('whoosh');if(big){snd('charge');addText('ドッセェェイ！',W/2,H*0.2,{size:84,st:'boom',life:0.7,rot:0.05})}
 wxPush(['f',r1(tx),r1(tz),big])}
 // ================= 雷鳴の槍 =================
-function spearUpdate(dt,f){pl.spH=f?(pl.spH||0)+dt:0;if(wb('sp_hold')&&pl.spH>0.45&&!pl.spHT){pl.spHT=1;addText('乱れ突き！',W/2,H*0.34,{size:66,st:'fire',life:0.5})}if(!f)pl.spHT=0;if(f&&pl.cool<=0&&pl.sp!==1){const k=now-(pl.spkT==null?-9:pl.spkT)<0.8?((pl.spk|0)+1)%3:0;pl.spk=k;pl.spkT=now;spearThrust(k)}}
+const spRush=()=>!!pl.spHT&&wpW().kind==='spear';
+// 乱れ突き (sp_hold): keep holding → very fast thrusts; the player stands still meanwhile (players.js), not during the special
+function spearUpdate(dt,f){pl.spH=f&&!pl.sp?(pl.spH||0)+dt:0;if(wb('sp_hold')&&pl.spH>0.45&&!pl.spHT){pl.spHT=1;addText('乱れ突き！',W/2,H*0.34,{size:66,st:'fire',life:0.5})}if(!f||pl.sp)pl.spHT=0;if(f&&pl.cool<=0&&pl.sp!==1){const k=now-(pl.spkT==null?-9:pl.spkT)<0.8?((pl.spk|0)+1)%3:0;pl.spk=k;pl.spkT=now;spearThrust(k)}}
 function spearThrust(k){const S=W2.sp,big=pl.sp===2,pw=w2pw(),R=big?S.spR:S.R,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);
-pl.cool=S.cool[k]*(big?0.9:1)*(pl.spHT?0.4:1);wpAct(12+k);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.07;pl.lgV=pl.frz>0?0:5;pl.lgP=0;snd('slash');
+pl.cool=S.cool[k]*(big?0.9:1)*(pl.spHT?0.4:1);wpAct(12+k);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.07;pl.lgV=pl.frz>0||pl.spHT?0:5;pl.lgP=0;snd('slash');
 let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,R,S.A,pl.y-0.6,pl.y+3.8);if(s){wpDmg(e,S.dm[k]*pw*(big?S.spK:1),s[0],s[1],s[2],{quiet:n>1});spZap(e,s);n++}}
 for(const s of shots)if(!s.dead){const dx=s.x-pl.x,dz=s.z-pl.z,d=Math.hypot(dx,dz);if(d<R&&s.y<pl.y+3.8&&(d<0.8||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A)){popShot(s);if(isCli())net.q.ps.push(s.id)}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z,d=Math.hypot(dx,dz);if(d<R&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A)pvHit(o,(k===2?22:16)*pw*(big?S.spK:1),false,o.x,o.y+1.2,o.z)}
@@ -106,9 +112,11 @@ addText(pick(big?['ズドドッ！','バリバリッ！']:['ズドッ','シュ�
 function spZap(e,s,ch){const S=W2.sp,B=e.type==='boss';wpEffect(e,4,B?S.bstun:S.stun);e.zapT=now;if(!ch&&wb('sp_chain')&&lim('spch'+e.id,0.5))wtChain(e,s);
 if(lim('zap'+e.id,0.7)){wpDmg(e,S.zap*w2pw(),s[0],s[1],s[2],{quiet:1});fxSparks(s[0],s[1],s[2],6,7,C.yellow);if(lim('zapT',0.25))sfxAt('ビリッ！',s[0],s[1]+s[3]+0.6,s[2],{size:46,st:'fire',life:0.35})}}
 // ================= 波雲の長弓 =================
-function bowUpdate(dt,f){const S=W2.bw;if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt*bwZoneK(pl)*SK.chg/S.chg);if(c0<1&&pl.hc>=1){snd('item');addText('キリリッ',W*0.66,H*0.6,{size:50,st:'cyan',life:0.4})}
+// 早引き (bw_quick): inside a rain of arrows the bow is drawn at once (a tap is a full shot)
+const bwInstant=()=>wb('bw_quick')&&bwZoneK(pl)>1;
+function bowUpdate(dt,f){const S=W2.bw;if(pl.hon){const c0=pl.hc;pl.hc=bwInstant()?1:Math.min(1,pl.hc+dt*bwZoneK(pl)*SK.chg/S.chg);if(c0<1&&pl.hc>=1){snd('item');addText('キリリッ',W*0.66,H*0.6,{size:50,st:'cyan',life:0.4})}
  if(pl.sp===1)pl.hon=0;else if(!f){pl.hon=0;bowShoot(pl.hc)}}
-else if(f&&pl.cool<=0&&pl.sp!==1){pl.hon=1;pl.hc=0;wpAct(16)}}
+else if(f&&pl.cool<=0&&pl.sp!==1){pl.hon=1;pl.hc=bwInstant()?1:0;wpAct(16)}}
 // inside a rain of arrows (ours or a friend's) the bow draws faster
 function bwZoneK(o){for(const r of wrains)if(Math.hypot(o.x-r.x,o.z-r.z)<r.r)return W2.bw.zoneK;return 1}
 function bowShoot(c){const S=W2.bw,pw=w2pw(),as=touchMode||G.demoOn,AO=aimOrigin(),d=aimAssist(aimDir(),as?0.08:0.03,as?0.7:0.4),sp=S.spd*(0.75+0.5*c);
@@ -147,27 +155,30 @@ if(g&2){s.dead=true;const v=Math.hypot(s.vx,s.vy,s.vz)||10,k=Math.max(18,v*1.8)/
 else{popShot(s);ev('txt','ガキン！',r1(s.x),r1(s.y+0.8),r1(s.z),48,'cyan');if(p===pl){snd('clank');pl.shHit=now}}
 return true}
 // local: a hit from (x,z) on a guarding player (the shield's front); true = no damage
-function wpGuardHit(d,x,z){const jg=pl.jrT>0&&!pl.grd;if(x==null||wpW().kind!=='shield'||!(pl.grd||pl.sp===2||jg))return false;const dx=x-pl.x,dz=z-pl.z;if(Math.hypot(dx,dz)<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))>1.2)return false;
+function wpGuardHit(d,x,z){const jg=pl.jrT>0&&!pl.grd;if(x==null||wpW().kind!=='shield'||!(pl.grd||pl.sp===2||jg))return false;const dx=x-pl.x,dz=z-pl.z,dd=Math.hypot(dx,dz);
+const dome=pl.sp===2&&dd>W2.sh.barR-1;// the dome stops whatever comes from outside it, from any side
+if(!dome&&(dd<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))>1.2))return false;
 if(jg){addGauge(6);wtJG();pl.inv=Math.max(pl.inv,0.3);shStagger(x,z);addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}
 else{addText('ガキン！',W/2+rnd(-120,120),H*0.45,{size:60,st:'cyan',life:0.35});snd('clank')}
 shake(0.15);pl.shHit=now;return true}
 // ジャストガードで近接の雑魚敵をのけぞらせる（攻撃してきた位置 x,z にいちばん近い敵）
 function shStagger(x,z){let b=null,bd=3.2;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;const d=Math.hypot(e.x-x,e.z-z);if(d<bd){bd=d;b=e}}if(!b)return;wpEffect(b,6,1.2);if(!isCli()){const d=Math.hypot(b.x-pl.x,b.z-pl.z)||1;b.kx=(b.x-pl.x)/d*10;b.kz=(b.z-pl.z)/d*10}fxStar(b.x,(b.y||0)+1,b.z,1.8,C.cyan,0.12)}
-// host: enemy shots stop at a barrier (必殺「城壁結界」) of any player
-function wpBarShot(s){if(s.dead)return false;const S=W2.sh;for(const p of allP()){if(!(p===pl?wpW().kind==='shield'&&pl.sp===2:p.bar))continue;const dx=s.x-p.x,dz=s.z-p.z,d=Math.hypot(dx,dz);
- if(Math.abs(d-S.barR)>0.9||s.y>(p.y||0)+4.2||Math.abs(angDiff(Math.atan2(-dx,-dz),p.yaw))>S.barA)continue;popShot(s);if(lim('barT',0.15))ev('txt','キンッ',r1(s.x),r1(s.y+0.6),r1(s.z),44,'cyan');return true}return false}
+// host: enemy shots stop at a barrier (必殺「城壁結界」, a dome of radius barR around the player) of any player
+function wpBarShot(s){if(s.dead)return false;const S=W2.sh;for(const p of allP()){if(!(p===pl?wpW().kind==='shield'&&pl.sp===2:p.bar))continue;
+ if(Math.hypot(s.x-p.x,s.y-(p.y||0),s.z-p.z)>S.barR+0.4)continue;popShot(s);if(lim('barT',0.15))ev('txt','キンッ',r1(s.x),r1(s.y+0.6),r1(s.z),44,'cyan');return true}return false}
 // host: what a reflected shot hits (the reflecting player gets the kill)
 function w2HostHit(e,dm,by,x,y,z){if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;if(by===pl.slot||!net.on){wpDmg(e,dm,x,y,z,{fx:x-1,fz:z});return}
 e.hp-=dm;e.flash=0.07;fxStar(x,y,z,1.2,C.cyan,0.1);if(e.hp<=0)kill(e,by)}
 // ================= 護符の錫杖 =================
-function staffUpdate(dt,f){if(f&&pl.cool<=0&&pl.sp!==1){pl.cool=W2.st.cool*(wb('st_rapid')?0.5:1);let near=false;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;if(w2Arc(e,pl.x,pl.z,pl.yaw,1.9,0.9,pl.y-0.5,pl.y+3)){near=true;break}}
+function staffUpdate(dt,f){if(pl.stQ>0){pl.stQ-=dt;if(pl.stQ<=0&&!pl.dead&&pl.sp!==1)staffCast(1)}// 双玉: the 2nd orb
+if(f&&pl.cool<=0&&pl.sp!==1){pl.cool=W2.st.cool*(wb('st_rapid')?0.5:1);let near=false;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;if(w2Arc(e,pl.x,pl.z,pl.yaw,1.9,0.9,pl.y-0.5,pl.y+3)){near=true;break}}
  if(near)staffBonk();else staffCast()}}
 function staffBonk(){const S=W2.st,pw=w2pw();wpAct(23);pl.cool=0.45;snd('whoosh');let n=0;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,2.3,0.95,pl.y-0.5,pl.y+3);if(!s)continue;wpDmg(e,S.bonk*pw,s[0],s[1],s[2],{quiet:n>0});n++;if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*9;e.kz=(e.z-pl.z)/d*9}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z;if(Math.hypot(dx,dz)<2.3&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<0.95)pvHit(o,14*pw,false,o.x,o.y+1.1,o.z)}
 if(n)shake(0.1);addText('ポカッ！',W*0.62+rnd(-40,60),H*0.56,{size:52,st:'hit',life:0.3})}
-function staffCast(){const S=W2.st,AO=aimOrigin(),d=aimDir(),near=Math.hypot(muz[0]-pl.x,muz[2]-pl.z)<2.5,x=near?muz[0]:AO[0]+d[0]*0.9,y=near?muz[1]:AO[1]-0.1+d[1]*0.9,z=near?muz[2]:AO[2]+d[2]*0.9;
-for(const t of wb('st_twin')?[0.09,-0.09]:[0]){const cs=Math.cos(t),sn=Math.sin(t),q=[d[0]*cs+d[2]*sn,d[1],-d[0]*sn+d[2]*cs];worbs.push({own:1,x,y,z,vx:q[0]*S.spd,vy:q[1]*S.spd,vz:q[2]*S.spd,t:0,by:pl.slot});wxPush(['O',r2(x),r2(y),r2(z),r2(q[0]),r2(q[1]),r2(q[2])])}wpAct(22);snd('whoosh');
+function staffCast(two){const S=W2.st,AO=aimOrigin(),d=aimDir(),near=Math.hypot(muz[0]-pl.x,muz[2]-pl.z)<2.5,x=near?muz[0]:AO[0]+d[0]*0.9,y=near?muz[1]:AO[1]-0.1+d[1]*0.9,z=near?muz[2]:AO[2]+d[2]*0.9;
+worbs.push({own:1,x,y,z,vx:d[0]*S.spd,vy:d[1]*S.spd,vz:d[2]*S.spd,t:0,by:pl.slot});wxPush(['O',r2(x),r2(y),r2(z),r2(d[0]),r2(d[1]),r2(d[2])]);if(!two&&wb('st_twin'))pl.stQ=W2.st.twinT;wpAct(22);snd('whoosh');
 addText(pick(['シャラン','リン…','シャン！']),W*0.64+rnd(-40,50),H*0.6,{size:44,st:'cyan',life:0.3})}
 // 加護: a blessing on the local player (the stronger one wins, the time is the longer one)
 function w2Bless(dur,atk,def){if(!(dur>0))return;const on=pl.bls>0;pl.blsA=Math.max(on?pl.blsA:1,atk||1);pl.blsD=Math.min(on?pl.blsD:1,def||1);pl.bls=pl.blsT=Math.max(on?pl.bls:0,dur);addText('加護！',W/2,H*0.44,{size:64,st:'cyan',life:0.7})}
@@ -309,12 +320,12 @@ for(const b of worbs){const p=1+0.15*Math.sin(now*20+b.t*7);sph(b.x,b.y,b.z,0.42
  put(BOX,b.x,b.y+0.02,b.z,0,now*4,0.3,0.16,0.26,0.01,[0.97,0.94,0.86],0,0,F_UNLIT)}
 // barriers
 if(!pl.dead&&wpW().kind==='shield'&&pl.sp===2&&G.state==='play')shBarrier(pl);for(const o of others)if(o.bar&&!o.dead)shBarrier(o)}
-function shBarrier(p){const S=W2.sh,R=S.barR,A=S.barA,Hh=3.6,n=10,y0=p.y||0,pul=0.5+0.5*Math.sin(now*6),col=[W2_BAR[0],W2_BAR[1]-0.08*pul,W2_BAR[2]];
-const pt=(a,h)=>{const y=p.yaw+a;return[p.x-Math.sin(y)*R,y0+h,p.z-Math.cos(y)*R]};
-for(let i=0;i<=n;i++){const a=-A+2*A*i/n;w2SegW(pt(a,0),pt(a,Hh),i%5?0.03:0.06,col)}
-for(const h of[0.05,1.2,2.4,Hh])for(let i=0;i<n;i++)w2SegW(pt(-A+2*A*i/n,h),pt(-A+2*A*(i+1)/n,h),0.045,col);
-for(let i=0;i<n;i++)for(let j=0;j<3;j++){const a0=-A+2*A*i/n,a1=-A+2*A*(i+1)/n,h0=j*1.2,h1=h0+1.2;w2SegW(pt(a0,h0),pt(a1,h1),0.02,W2_BARL);w2SegW(pt(a1,h0),pt(a0,h1),0.02,W2_BARL)}
-const k=(now*1.4)%1;for(let i=0;i<n;i++)w2SegW(pt(-A+2*A*i/n,k*Hh),pt(-A+2*A*(i+1)/n,k*Hh),0.03,C.white)}
+// the dome: meridians + rings of a half sphere (radius barR), a white ring sliding up; it grows in over the first 0.25 s
+function shBarrier(p){const S=W2.sh,g=p===pl?easeOut(sat((pl.spT||0)/0.25)):1,R=S.barR*(0.3+0.7*g),y0=p.y||0,pul=0.5+0.5*Math.sin(now*6),col=[W2_BAR[0],W2_BAR[1]-0.08*pul,W2_BAR[2]],NM=14,NR=22,rot=now*0.25;
+const pt=(a,e)=>{const c=Math.cos(e)*R;return[p.x-Math.sin(a)*c,y0+Math.sin(e)*R,p.z-Math.cos(a)*c]};
+for(let i=0;i<NM;i++){const a=rot+i/NM*TAU;for(let j=0;j<5;j++)w2SegW(pt(a,j/5*1.5),pt(a,(j+1)/5*1.5),i%2?0.03:0.055,col)}
+for(const e of[0.03,0.42,0.85,1.2])for(let i=0;i<NR;i++)w2SegW(pt(i/NR*TAU,e),pt((i+1)/NR*TAU,e),e<0.1?0.07:0.04,e<0.1?col:W2_BARL);
+const k=((now*0.7)%1)*1.35;for(let i=0;i<NR;i++)w2SegW(pt(i/NR*TAU,k),pt((i+1)/NR*TAU,k),0.035,C.white)}
 // ================= DRAW: first-person view (wpView) =================
 const SPV_I=[0.28,-0.36,0.02,0.1,0.14,0],SPV_B=[0.29,-0.33,0.12,0.1,0.16,0],SPV_T=[[0.3,-0.12,-0.42,-0.06,0.3,0],[0.14,-0.42,-0.46,0.12,-0.12,0],[0.02,-0.26,-0.44,0.32,0.04,0]],
 FLV_I=[0.24,-0.36,-0.45,0.15,0.7,0],FLV_C=[0.22,0.02,-0.4,0.1,1.35,0],FLV_T=[0.16,-0.18,-0.62,0.05,0.15,0],FLV_D=[0.16,-0.3,-0.6,0.05,-0.2,0],

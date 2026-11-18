@@ -31,7 +31,7 @@ rail:[{b:'rl_chill',n:'凍てつく光',d:'光線を１秒当て続けた敵が�
  {b:'rl_sp',n:'氷牢・砕',d:'必殺が終わる瞬間、凍った敵がすべて砕けて大ダメージ'},
  {b:'rl_wide',n:'太い光線',d:'光線が太くなって当てやすく、威力も 1.3 倍'}],
 katana:[{b:'kt_crit',n:'三の太刀',d:'３回に１回の斬りが会心（威力２倍・範囲が広い）'},
- {b:'kt_wave',n:'飛ぶ斬撃',d:'斬るたびに小さな斬撃が前へ飛ぶ（22 m）'},
+ {b:'kt_wave',n:'飛ぶ斬撃',d:'斬るたびに小さな斬撃が前へ飛ぶ（22 m）。見上げると上へも飛ぶ'},
  {b:'kt_sp',n:'天断ち・三連',d:'必殺の巨大な斬撃が扇の形に３本飛ぶ'},
  {b:'kt_parry',n:'見切り',d:'墨弾を斬るたびに体力とゲージが回復する'}],
 hammer:[{b:'hm_quake',n:'余震',d:'振り下ろした所に 0.4 秒後もう一度衝撃（威力 60%）'},
@@ -42,27 +42,27 @@ bomb:[{b:'bm_cluster',n:'子花火',d:'爆発すると小さな玉が３つ飛�
  {b:'bm_more',n:'玉袋',d:'持てる玉が５個になる'},
  {b:'bm_sp',n:'大玉・三連',d:'必殺の大玉花火を３発投げる'},
  {b:'bm_fire',n:'残り火',d:'ふつうの爆発の跡にも炎が 2.5 秒燃え残る'}],
-flail:[{b:'fl_spike',n:'棘の嵐',d:'頭上の振り回しの威力が２倍・範囲が広がる'},
+flail:[{b:'fl_spike',n:'棘の嵐',d:'頭上の振り回しの威力が２倍・範囲が広がり、まわりの広い範囲（11 m）の雑魚敵を引き寄せる'},
  {b:'fl_quick',n:'怪力',d:'溜めが 1.8 倍速い',s:{chg:1.8}},
  {b:'fl_sp',n:'流星・八連',d:'必殺の叩きつけが８回になる'},
  {b:'fl_burst',n:'爆砕球',d:'２段目以上の溜め投げの先で、鉄球が爆発する'}],
 spear:[{b:'sp_chain',n:'連雷',d:'突いた敵から、近くの敵２体に雷が飛ぶ'},
- {b:'sp_hold',n:'乱れ突き',d:'長押しを続けると、とても速い突きを出し続ける'},
+ {b:'sp_hold',n:'乱れ突き',d:'長押しを続けると、とても速い突きを出し続ける（その間は動けない・必殺中は出ない）'},
  {b:'sp_sp',n:'雷槍・極',d:'必殺中の突きで、前方に落雷が落ちる'},
  {b:'sp_far',n:'遠雷',d:'突きの斬撃が２倍遠くまで飛び、５体まで貫く'}],
 bow:[{b:'bw_split',n:'三つ矢',d:'溜めきりで３本同時に射る'},
- {b:'bw_quick',n:'早引き',d:'溜めが 1.8 倍速い',s:{chg:1.8}},
+ {b:'bw_quick',n:'早引き',d:'溜めが 1.8 倍速い。矢の雨の範囲の中では溜めなしで溜めきりの矢が射てる',s:{chg:1.8}},
  {b:'bw_sp',n:'矢時雨・二重',d:'矢の雨が、さらに先にもう１か所降る'},
  {b:'bw_bomb',n:'爆ぜ矢',d:'溜めきりの矢が当たると爆発する'}],
 shield:[{b:'sh_spike',n:'棘の盾',d:'防御中、正面の近くの敵にダメージを与えて押し返す'},
  {b:'sh_move',n:'軽い大楯',d:'防御中もふつうの速さで動ける'},
  {b:'sh_sp',n:'結界の衝撃',d:'バリアを張る瞬間、前方に衝撃波（大ダメージ・押し返し）'},
  {b:'sh_jg',n:'完全防御',d:'ジャストガードの受付が２倍。成功すると体力とゲージが回復'}],
-staff:[{b:'st_twin',n:'双玉',d:'護符の玉が２つ同時に出る'},
+staff:[{b:'st_twin',n:'双玉',d:'護符の玉が２回続けて出る'},
  {b:'st_rapid',n:'速詠唱',d:'玉を撃つ間隔が半分になる'},
  {b:'st_sp',n:'祈りの波動',d:'必殺のとき、まわりの敵に大ダメージを与えて押し返す'},
  {b:'st_long',n:'長き加護',d:'加護が長く強くなる（玉の加護は２倍・必殺は 1.5 倍の時間）'}],
-glove:[{b:'gl_hook',n:'溜めフック',d:'ガードを長押しして溜め、離すとフック（溜め３段階で威力アップ）。吹き飛んだ敵が後ろの敵を巻き込む'},
+glove:[{b:'gl_hook',n:'フック',d:'通常攻撃の４段目にフックが加わる（ジャブ→ジャブ→ストレート→フック）。吹き飛んだ敵が後ろの敵を巻き込む'},
  {b:'gl_combo',n:'コンボゲージ',d:'当て続けるほど威力が上がる（最大 1.5 倍）。被弾するか、しばらく当てないと途切れる'},
  {b:'gl_sp',n:'ラッシュ延長',d:'ラッシュ中に敵を倒すたび、ラッシュの時間が 0.4 秒のびる'},
  {b:'gl_counter',n:'カウンター',d:'ガードを押してから 0.25 秒以内に攻撃を受けると、受けずに反撃の拳が自動で出る。ゲージも少したまる'}]};
@@ -101,7 +101,7 @@ function wtSpEnd(){glSpEnd();if(wb('rl_sp')){const pw=pl.pow>0?2:1;let n=0;for(c
 // 凍てつく光: 1 s of the normal beam on the same enemy freezes it
 function wtChill(e){e.rlC=(now-(e.rlL||-9)<0.2?e.rlC||0:0)+0.06;e.rlL=now;if(e.rlC>=1){e.rlC=0;const B=e.type==='boss';wpEffect(e,B?3:1,B?0.6:2)}}
 // 飛ぶ斬撃: a small sword wave (wwaves with sm, weapons.js)
-function wtKtWave(){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),y=pl.y+1.15;wwaves.push({x:pl.x,y,z:pl.z,dx:fx,dz:fz,d:0.5,t:0,own:1,hit:new Set(),sm:1});wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),1])}
+function wtKtWave(){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),y=pl.y+1.15,sy=ktSy();wwaves.push(ktWaveMk(pl.x,y,pl.z,fx,fz,sy,1,1));wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),1,r2(sy)])}
 // 子花火 / 残り火 (bombBoom of a normal bomb of this player)
 function wtBombHit(b,x,y,z){if(wb('bm_cluster'))for(let k=0;k<3;k++){const a=k/3*TAU+rnd(0,1);wbombs.push({x,y:y+0.3,z,vx:Math.cos(a)*5,vy:7,vz:Math.sin(a)*5,big:0,mini:1,own:1,t:0,rot:0})}
 if(wb('bm_fire'))wfires.push({x,y:0.1,z,r:2.6,t:2.5,own:1,tk:0})}

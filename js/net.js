@@ -43,7 +43,7 @@ if(wasDead&&!o.dead){o.x=o.nx;o.z=o.nz;fxStar(o.x,1,o.z,3,C.white,0.12)}if(!wasD
 if(m.f)for(const f of m.f){fxTracer(o.gx,o.gy,o.gz,f[0],f[1],f[2],o.pow?C.orange:C.white,0.06);fxStar(f[0],f[1],f[2],0.6,C.white,0.07);o.fireT=0.06;if(lim('rs'+o.slot,0.1)){const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd('shot');sndVol=v}}
 if(m.w)for(const a of m.w)wfxPlay(o,a);
 if(m.pv&&G.mode==='pvp')for(const a of m.pv)if(a[0]===net.slot)hurtPlayer(a[1],o.x,o.z,o.slot);
-if(net.host){if(m.ef)for(const a of m.ef){const e=enemies.find(q=>q.id===a[0]);if(e&&!e.dead)wpEffectHost(e,a[1],a[2])}
+if(net.host){if(m.ef)for(const a of m.ef){const e=enemies.find(q=>q.id===a[0]);if(e&&!e.dead)wpEffectHost(e,a[1],a[2],o)}
  if(m.d)for(const a of m.d){if(a[0]<0){const b=enemies.find(q=>q.id===-a[0]);if(b&&b.monk)monkBell(b,a[1]);continue}const e=enemies.find(q=>q.id===a[0]);if(e&&!e.dead&&!(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))){e.hp-=a[1];e.flash=0.07;if(e.hp<=0)kill(e,o.slot)}}
  if(m.ps)for(const id of m.ps){const s=shots.find(q=>q.id===id);if(s)popShot(s)}if(m.pk)for(const id of m.pk){const i=items.findIndex(q=>q.id===id);if(i>=0)items.splice(i,1)}if(m.kb)for(const k of m.kb)pvTally(k,o.slot)}}
 function updateOthers(dt){const k=Math.min(1,dt*12);for(const o of others){const px=o.x,pz=o.z;o.x+=(o.nx-o.x)*k;o.z+=(o.nz-o.z)*k;o.y+=(o.ny-o.y)*k;o.yaw+=angDiff(o.nyaw,o.yaw)*k;o.pitch+=(o.np-o.pitch)*k;o.mv=lerp(o.mv,Math.min(1,Math.hypot(o.x-px,o.z-pz)/Math.max(dt,0.001)/5),k);o.wt+=dt;o.at=(o.at||0)+dt;o.fireT-=dt;o.flash-=dt}}

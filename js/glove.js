@@ -8,17 +8,16 @@
 //           0.2 秒以上ガードして離すと、1 秒以内の次の一撃が ×1.5（pl.glB）。
 //  必殺「百裂ラッシュ」（spMode 'mode'）= 長押しの間、左右の高速連打（移動 ×0.65、pl.glRH）。１発ごとに拳の斬撃（wfist、貫通しない）が遠くまで飛ぶ。
 //           時間切れの瞬間に押していたら、アッパーカットで縦の大きな斬撃（貫通・壁を越える。glSpEnd ← wtSpEnd）。
-//  大技（wtree.js）: gl_hook 溜めフック（ガードの長押しで溜め、離すとフック。吹き飛んだ敵が後ろの敵を巻き込む）/ gl_combo コンボゲージ
+//  大技（wtree.js）: gl_hook フック（通常攻撃の４段目にフックが加わる。吹き飛んだ敵が後ろの敵を巻き込む）/ gl_combo コンボゲージ
 //           （当て続けると威力が最大 ×1.5、被弾か 1.6 秒当てないと途切れる）/ gl_sp ラッシュ延長（wtKill）/ gl_counter カウンター
 //           （ガードを押してから 0.25 秒以内の被弾は受けずに反撃）。
 // 動作 pl.ak: 25 左ジャブ・26 右ジャブ・27 左ストレート（カウンターも）・28/29 ラッシュの左/右・30 アッパー・31 フック（右）・32 ガード（0.2 秒以上の長押し）。
 // 通信: 拳の斬撃は net.q.wx の 'P'（x,y,z,dx,dy,dz,大,傾き）。ガードは ak=32 で他の人に見える。ダメージ軽減は各自の hurtPlayer なので通信は増やしていない。
 W2.gl={jab:24,str:52,R:2.7,A:0.95,cool:[0.2,0.2,0.42],combo:0.7,lungeR:4.5,stun:0.6,push:7,guard:0.75,slow:0.65,brk:1.5,brkT:1.0,
  rush:0.085,rushDm:14,fist:30,fistR:30,fistSp:55,upper:420,upperR:40,upperSp:45,
- hook:[70,120,190],hookT:[0.45,1.0,1.6],hookPush:[9,14,20],cnt:0.25,cntDm:80,hitT:1.6,hitStep:0.05,hitMax:0.5,ext:0.4};
+ hook:120,hookPush:14,hookCool:0.5,cnt:0.25,cntDm:80,hitT:1.6,hitStep:0.05,hitMax:0.5,ext:0.4};
 const wfist=[],GL_LF=new Float32Array(16);
 function glReset(){wfist.length=0;pl.glN=0;pl.glB=0;pl.glQ=0;pl.glHN=0;pl.glRH=0;pl.glRN=0;pl.glRT=0;pl.glP=null}
-const glHookLv=t=>{const T=W2.gl.hookT;return t>=T[2]?3:t>=T[1]?2:t>=T[0]?1:0};
 const glCK=()=>wb('gl_combo')?1+Math.min(W2.gl.hitMax,(pl.glHN|0)*W2.gl.hitStep):1;
 const glGrd=()=>!!pl.grd;
 // ---- update (w2Update) ----
@@ -27,21 +26,20 @@ if(pl.glHN&&now-pl.glHL>S.hitT)glBreak();
 if(pl.sp===2){pl.grd=0;pl.gp=0;glRush(dt,f);return}
 pl.glRH=0;if(pl.sp===1){pl.grd=0;pl.gp=0;return}
 if(f){if(!pl.gp){pl.gp=1;pl.gdT=0;pl.grd=1}
- else{const t0=pl.gdT;pl.gdT+=dt;if(t0<0.2&&pl.gdT>=0.2)wpAct(32);
-  if(wb('gl_hook')){const a=glHookLv(t0),b=glHookLv(pl.gdT);if(b>a){snd(b>2?'item':'reload');addText(['','ググッ','グググッ','ズオオッ'][b],W*0.66,H*0.6,{size:44+b*6,st:b>2?'boom':'hit',life:0.35})}}}}
+ else{const t0=pl.gdT;pl.gdT+=dt;if(t0<0.2&&pl.gdT>=0.2)wpAct(32)}}
 else if(pl.gp){pl.gp=0;pl.grd=0;
  if(pl.gdT<0.2){if(pl.cool<=0)glPunch();else pl.glQ=0.25}// ちょん押し = 殴る（間に合わなければ少しだけ先行入力）
- else{const lv=wb('gl_hook')?glHookLv(pl.gdT):0;if(lv)glHook(lv);else{pl.glB=now+S.brkT;wpAct(0)}}}
+ else{pl.glB=now+S.brkT;wpAct(0)}}
 if(pl.glQ>0){pl.glQ-=dt;if(pl.cool<=0&&!pl.gp){pl.glQ=0;glPunch()}}}
-// one punch of the jab-jab-straight combo: step in towards the nearest enemy in front, the hit lands at the end of the step (glHit)
-function glPunch(){const S=W2.gl;if(now-(pl.glL||-9)>S.combo+S.cool[2])pl.glN=0;const k=pl.glN|0;pl.glN=(k+1)%3;pl.glL=now;
-pl.cool=S.cool[k];wpAct(25+k);snd('whoosh');
+// one punch of the jab-jab-straight(-hook with gl_hook) combo: step in towards the nearest enemy in front, the hit lands at the end of the step (glHit)
+function glPunch(){const S=W2.gl;if(now-(pl.glL||-9)>S.combo+S.cool[2])pl.glN=0;const k=(pl.glN|0)%(wb('gl_hook')?4:3);pl.glN=(k+1)%(wb('gl_hook')?4:3);pl.glL=now;
+pl.cool=k===3?S.hookCool:S.cool[k];wpAct(k===3?31:25+k);snd('whoosh');
 const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);let best=null,bd=S.lungeR;
 for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk))continue;const dx=e.x-pl.x,dz=e.z-pl.z,d=Math.hypot(dx,dz);if(d<bd&&d>0.01&&(dx*fx+dz*fz)/d>0.8){bd=d;best=e}}
 let lx=fx,lz=fz,dist=0.5;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hypot(dx,dz);lx=dx/d;lz=dz/d;dist=clamp(d-1.2-(best.r||0.5),0,3)}
 const brk=now<pl.glB;pl.glB=0;pl.glP={k,m:brk?S.brk:1};pl.lgx=lx;pl.lgz=lz;pl.lgT=0.06;pl.lgV=pl.frz>0?0:dist/0.06;pl.lgP=2;
 if(brk)addText('ガード明け！',W/2,H*0.36,{size:52,st:'fire',life:0.45})}
-function glHit(){const S=W2.gl,P=pl.glP||{k:0,m:1};pl.glP=null;const big=P.k===2,pw=w2pw()*P.m*glCK(),dm=(big?S.str:S.jab)*pw;let n=0;
+function glHit(){const S=W2.gl,P=pl.glP||{k:0,m:1};pl.glP=null;if(P.k===3){glHook(P.m);return}const big=P.k===2,pw=w2pw()*P.m*glCK(),dm=(big?S.str:S.jab)*pw;let n=0;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,S.R,S.A,pl.y-0.6,pl.y+3.4);if(!s)continue;wpDmg(e,dm,s[0],s[1],s[2],{quiet:n>0});n++;
  if(big&&e.type!=='boss'){wpEffect(e,6,S.stun);if(e.type==='bru')wpEffect(e,2);glPush(e,S.push)}}
 for(const s of shots)if(!s.dead){const dx=s.x-pl.x,dz=s.z-pl.z,d=Math.hypot(dx,dz);if(d<S.R&&s.y<pl.y+3.4&&(d<0.8||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A)){popShot(s);if(isCli())net.q.ps.push(s.id)}}
@@ -53,15 +51,15 @@ function glPush(e,v){if(isCli()||e.type==='boss')return;const d=Math.hypot(e.x-p
 // コンボゲージ (gl_combo): one step per punch that hit something
 function glAddHit(){if(!wb('gl_combo'))return;const a=pl.glHN|0;pl.glHN=a+1;pl.glHL=now;if(Math.floor(pl.glHN/5)>Math.floor(a/5))addText(pl.glHN+'HIT！',W*0.3+rnd(-30,30),H*0.42,{size:64,st:'fire',life:0.6,rot:-0.08})}
 function glBreak(){if(pl.glHN>=5&&wb('gl_combo'))addText('途切れた…',W*0.3,H*0.46,{size:40,st:'hit',life:0.5});pl.glHN=0}
-// 溜めフック (gl_hook): lv 1-3; the enemies it sends flying knock down the ones behind them
-function glHook(lv){const S=W2.gl,pw=w2pw()*glCK(),dm=S.hook[lv-1]*pw,v=S.hookPush[lv-1],fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);pl.cool=0.45;wpAct(31);snd('whoosh');
+// フック (gl_hook): the 4th hit of the combo; the enemies it sends flying knock down the ones behind them
+function glHook(m){const S=W2.gl,lv=2,pw=w2pw()*glCK()*m,dm=S.hook*pw,v=S.hookPush,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);
 const hit=[];for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,S.R+0.4,S.A+0.2,pl.y-0.6,pl.y+3.4);if(!s)continue;wpDmg(e,dm,s[0],s[1],s[2],{quiet:hit.length>0});hit.push(e);
  if(e.type!=='boss'){wpEffect(e,6,0.5+0.3*lv);if(e.type==='bru')wpEffect(e,2);glPush(e,v)}}
 const done=new Set(hit);for(const h of hit){if(h.type==='boss')continue;for(const e of enemies){if(e.dead||e.st==='spawn'||done.has(e)||e.type==='boss')continue;const dx=e.x-h.x,dz=e.z-h.z,al=dx*fx+dz*fz;
  if(al>0&&al<2.5+lv&&Math.abs(-dx*fz+dz*fx)<1.6){done.add(e);const s=spheres(e)[0]||[e.x,1,e.z];wpDmg(e,dm*0.5,s[0],s[1],s[2],{quiet:1});wpEffect(e,6,0.6);glPush(e,v*0.7);fxStar(s[0],s[1],s[2],1.4,C.orange,0.1)}}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z;if(Math.hypot(dx,dz)<S.R+0.4&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A+0.2)pvHit(o,(12+10*lv)*pw,false,o.x,o.y+1.2,o.z)}
 if(hit.length){glAddHit();shake(0.15+0.1*lv);stopT(0.04+0.02*lv)}
-addText(['','ドッ！','ドゴォッ！','バッゴォォン！'][lv],W*0.62,H*0.5,{size:56+lv*10,st:'boom',life:0.45})}
+addText('ドゴォッ！',W*0.62,H*0.5,{size:76,st:'boom',life:0.45})}
 // ---- guard / counter (hurtPlayer): returns the damage that is left (0 = none) ----
 function glGuard(d,x,z){if(wpW().kind!=='glove'||pl.dead)return d;const S=W2.gl;
 if(pl.grd&&wb('gl_counter')&&pl.gdT<=S.cnt){glCounter(x,z);return 0}
@@ -124,15 +122,14 @@ const GLV={RI:[0.21,-0.22,-0.45,0.22,0.05,-0.25],LI:[-0.21,-0.2,-0.48,-0.22,0.05
  RU0:[0.12,-0.42,-0.42,0,-0.4,0],RU1:[0.06,0.05,-0.55,0,1.2,0],RH0:[0.46,-0.16,-0.3,-0.9,0,-1.2],RH1:[-0.12,-0.1,-0.58,0.7,0,-1.4]},
 GLH={RI:[-0.2,-0.12,0.38],LI:[0.2,-0.1,0.42],RG:[-0.14,0.05,0.3],LG:[0.14,0.06,0.3],RJ:[-0.06,-0.05,0.62],LJ:[0.06,-0.05,0.62],LS:[0.03,-0.03,0.7],
  RU0:[-0.16,-0.4,0.34],RU1:[-0.06,0.25,0.42],RH0:[-0.5,-0.05,0.18],RH1:[0.08,-0.05,0.5]};
-function glPose(T,side,ak,at,grd,hook){const base=side?(hook?T.RH0:grd?T.RG:T.RI):grd?T.LG:T.LI,pu=(E,t1,t2,t3)=>kf([[0,base],[t1,E],[t2,E],[t3,base]],at);
+function glPose(T,side,ak,at,grd){const base=side?(grd?T.RG:T.RI):grd?T.LG:T.LI,pu=(E,t1,t2,t3)=>kf([[0,base],[t1,E],[t2,E],[t3,base]],at);
 if(!side){if(ak===25)return pu(T.LJ,0.05,0.1,0.22);if(ak===27)return pu(T.LS,0.07,0.15,0.36);if(ak===28)return pu(T.LJ,0.03,0.05,0.17)}
 else{if(ak===26)return pu(T.RJ,0.05,0.1,0.22);if(ak===29)return pu(T.RJ,0.03,0.05,0.17);if(ak===30)return kf([[0,T.RU0],[0.12,T.RU1],[0.4,T.RU1],[0.7,base]],at);if(ak===31)return kf([[0,T.RH0],[0.1,T.RH1],[0.25,T.RH1],[0.5,base]],at)}
 return base}
-const glHookOn=()=>wb('gl_hook')&&pl.grd&&pl.gdT>=W2.gl.hookT[0];
 const GL_VS=0.55;
-function glView(ak,at){const v=glPose(GLV,1,ak,at,glGrd(),glHookOn());mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);return{s:GL_VS,tip:[0,0,-0.18]}}
+function glView(ak,at){const v=glPose(GLV,1,ak,at,glGrd());mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);return{s:GL_VS,tip:[0,0,-0.18]}}
 function glViewL(s){const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0);
-M.set(CAMW);mT(bx,-by-dip*0.3+Math.sin(now*2)*0.006,0);const v=glPose(GLV,0,pl.ak|0,pl.at,glGrd(),0);mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);mS(s,s,s);glModelL()}
+M.set(CAMW);mT(bx,-by-dip*0.3+Math.sin(now*2)*0.006,0);const v=glPose(GLV,0,pl.ak|0,pl.at,glGrd());mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);mS(s,s,s);glModelL()}
 function glHeroBody(o,at,ak){let tw=0;
 if(ak===25||ak===28)tw=kf([[0,0],[0.05,0.22],[0.1,0.22],[0.22,0]],at);else if(ak===26||ak===29)tw=kf([[0,0],[0.05,-0.22],[0.1,-0.22],[0.22,0]],at);
 else if(ak===27)tw=kf([[0,0],[0.07,0.38],[0.15,0.38],[0.36,0]],at);else if(ak===31)tw=kf([[0,-0.45],[0.1,0.4],[0.25,0.4],[0.5,0]],at);
@@ -141,7 +138,7 @@ if(tw){hRot('spine',HY,tw*0.5);hRot('chest',HY,tw*0.5)}}
 const GL_HS=1.0;
 // both arms (IK) and both glove frames: the right one in WF, the left one in GL_LF (drawn by wpHeroDraw → glModelL)
 function glHeroArms(o,A,pit,at,ak){const S=wpS(o),grd=S===pl?glGrd():ak===32,R=m3axis(HX,-pit),at3=p=>{const r=m3v(R,p);return[A[0]+r[0],A[1]+r[1],A[2]+r[2]]},Hh=HERO;
-heroArm('R',at3(glPose(GLH,1,ak,at,grd,S===pl&&glHookOn())),[-1,-0.6,-0.2],-1.2);heroArm('L',at3(glPose(GLH,0,ak,at,grd,0)),[1,-0.6,-0.2],1.3);
+heroArm('R',at3(glPose(GLH,1,ak,at,grd)),[-1,-0.6,-0.2],-1.2);heroArm('L',at3(glPose(GLH,0,ak,at,grd)),[1,-0.6,-0.2],1.3);
 const F=m3v(R,[0,0,1]),frame=sd=>{const h=Hh.GT[Hh.bi['hand_'+sd]],e=Hh.GT[Hh.bi['forearm_'+sd]],a=v3n([h[0]-e[0],h[1]-e[1],h[2]-e[2]]),f=v3n([a[0]+F[0]*0.9,a[1]+F[1]*0.9,a[2]+F[2]*0.9]),k=sat((f[1]-0.3)/0.5);// the forearm, turned towards the front (knuckles ahead)
  
  wpFrame([h[0]+f[0]*0.07*GL_HS,h[1]+f[1]*0.07*GL_HS,h[2]+f[2]*0.07*GL_HS],f,[0,1-k,k],GL_HS)};
@@ -149,8 +146,7 @@ frame('L');GL_LF.set(WF);frame('R');return{show:1,tip:[0,0,-0.18],L:GL_LF}}
 // ---- HUD ----
 function glHUD(){const S=W2.gl;
 if(pl.sp===2)txt(pl.glRH?'離さずに！ 最後にアッパー':'長押しで連打！',W/2,650,pl.glRH?22:26,pl.glRH?'#fff':'#ffd91a',INK,6);
-else if(pl.grd){const hk=wb('gl_hook')&&pl.gdT>0.2;if(hk){const c=sat(pl.gdT/S.hookT[2]),lv=glHookLv(pl.gdT);gauge(W/2-100,662,230,18,c,lv>=3?(Math.sin(now*16)>0?'#fff':'#ff6a3d'):'#ff6a3d','溜');for(const t of S.hookT.slice(0,2)){ctx.fillStyle=INK;ctx.fillRect(W/2-100+230*t/S.hookT[2],660,3,22)}}
- txt('ガード',W/2,hk?634:650,26,'#59d8ff',INK,6)}
+else if(pl.grd)txt('ガード',W/2,650,26,'#59d8ff',INK,6);
 else if(now<pl.glB)txt('ガード明け ×'+S.brk,W/2,650,24,'#ffd91a',INK,6);
 if(wb('gl_combo')&&pl.glHN>0){txt(pl.glHN+' HIT',W/2+190,600,34,'#ffd91a',INK,7,'left');txt('×'+glCK().toFixed(2),W/2+196,632,20,'#fff',INK,5,'left')}}
 // 詳細 (equip screen)
