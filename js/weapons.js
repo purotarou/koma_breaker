@@ -28,8 +28,8 @@ const WPN=[
  d:['扇状に散弾を撃つ。近いほど強い','鎧鬼をのけぞらせる。必殺ゲージが早くたまる'],s:'超広範囲の散弾。全弾が壁も敵も貫通する'},
 {id:'rail',name:'氷魄砲',type:'レールガン',kind:'rail',btn:'撃',file:'weapon_railgun',col:'#5fd0ff',bg:[.85,.96,1],ammo:0,g:1,sp:'妖光・氷牢',spd:4,spMode:'mode',muz:[0,0.05,-0.87],fore:0.33,
  d:['長押しで、敵をつらぬく光線を連射','熱がたまりきると、しばらく冷却'],s:'４秒間、凍結光線を出しっぱなし。凍った敵は被ダメ1.5倍'},
-{id:'katana',name:'祓い刀',type:'刀',kind:'katana',btn:'斬',file:'weapon_katana',col:'#2f6fd8',bg:[.88,.92,1],ammo:0,g:1,sp:'一閃・天断ち',spd:0.6,spMode:'once',
- d:['弾切れなし。踏み込んで斬る','敵の墨弾も斬って消せる'],s:'画面を横切る巨大な斬撃。ボスにも届く'},
+{id:'katana',name:'祓い刀',type:'刀',kind:'katana',btn:'斬',file:'weapon_katana',col:'#2f6fd8',bg:[.88,.92,1],ammo:0,g:1,sp:'一閃・天断ち',spd:5,spMode:'mode',
+ d:['弾切れなし。踏み込んで斬る','敵の墨弾も斬って消せる'],s:'５秒間、振るたびに画面を横切る巨大な斬撃が飛ぶ。ボスにも届く'},
 {id:'hammer',name:'火消しの大槌',type:'大槌',kind:'hammer',btn:'叩',file:'weapon_hammer',col:'#f4b82e',bg:[1,.95,.82],ammo:0,g:1,sp:'駒砕き',spd:1.0,spMode:'once',
  d:['振り下ろして正面に衝撃波','長押しで溜めると範囲が広がる。鎧鬼を怯ませる'],s:'画面がコマ割りに割れ、広い範囲の敵を打ち砕く'},
 {id:'bomb',name:'焙烙火矢',type:'焙烙玉',kind:'bomb',btn:'投',file:'weapon_bomb',col:'#ff6a3d',bg:[1,.9,.84],ammo:0,g:1.5,sp:'大玉花火',spd:0.6,spMode:'once',
@@ -137,7 +137,7 @@ if(pl.slamT>0){pl.slamT-=dt;if(pl.slamT<=0)hammerHit(pl.slamC)}
 if(pl.kkT>0){pl.kkT-=dt;if(pl.kkT<=0)komaCrush()}
 if(w.kind==='rail'){railUpdate(dt,f);return}
 if(w.kind==='gun'){const buff=pl.sp===2&&w.spMode==='buff';if(f&&pl.cool<=0&&(pl.reload<=0||buff)&&(!pl.sp||buff)){if(pl.ammo>0||buff){if(buff&&pl.reload>0){pl.reload=0;pl.ammo=SK.mag}shoot()}else startReload()}return}
-if(w.kind==='katana'){if(f&&pl.cool<=0&&!pl.sp&&pl.lgT<=0)katanaSlash();return}
+if(w.kind==='katana'){if(f&&pl.cool<=0&&pl.sp!==1&&pl.lgT<=0)katanaSlash();return}
 if(w.kind==='hammer'){if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt*SK.chg/1.1);if(c0<1&&pl.hc>=1){snd('item');addText('ズオオッ',W*0.68,H*0.6,{size:52,st:'boom',life:0.4})}
   if(pl.sp)pl.hon=0;else if(!f){pl.hon=0;pl.slamT=0.12;pl.slamC=pl.hc;pl.cool=0.5;wpAct(4);snd('whoosh')}}
  else if(f&&pl.cool<=0&&!pl.sp){pl.hon=1;pl.hc=0;wpAct(3)}return}
@@ -181,7 +181,7 @@ let lx=fx,lz=fz,dist=1.3;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hyp
 pl.cool=0.42;pl.slN=pl.slN?0:1;wpAct(1+pl.slN);pl.lgx=lx;pl.lgz=lz;pl.lgT=0.12;pl.lgV=pl.frz>0?0:dist/0.12;pl.lgP=1;snd('slash');
 addText(pick(['ザンッ！','ズバッ！','シュバッ']),W*0.62+rnd(-60,80),H*0.58+rnd(-30,30),{size:56,st:'cyan',life:0.3})}
 function wpLunge(dt){if(pl.lgT<=0)return;const s=Math.min(dt,pl.lgT);pl.x+=pl.lgx*pl.lgV*s;pl.z+=pl.lgz*pl.lgV*s;pl.lgT-=dt;if(pl.lgT<=0&&pl.lgP){const p=pl.lgP;pl.lgP=0;if(p===2)glHit();else katanaHit()}}
-function katanaHit(){pl.ktN=(pl.ktN|0)+1;const kc=wb('kt_crit')&&pl.ktN%3===0,R=kc?4.6:3.5,A=kc?1.45:1.22,pw=(pl.pow>0?2:1)*(kc?2:1);let n=0,cut=0;if(kc)addText('会心！',W/2,H*0.34,{size:72,st:'fire',life:0.5});if(wb('kt_wave'))wtKtWave();wslash.push({x:pl.x,y:pl.y+1.15,z:pl.z,yaw:pl.yaw,dir:pl.slN?-1:1,t:0});
+function katanaHit(){pl.ktN=(pl.ktN|0)+1;const kc=wb('kt_crit')&&pl.ktN%3===0,R=kc?4.6:3.5,A=kc?1.45:1.22,pw=(pl.pow>0?2:1)*(kc?2:1);let n=0,cut=0;if(kc)addText('会心！',W/2,H*0.34,{size:72,st:'fire',life:0.5});const ktl=ktTilt(pl.slN?-1:1);if(pl.sp===2)katanaWave(ktl,0);else if(wb('kt_wave'))wtKtWave(ktl);wslash.push({x:pl.x,y:pl.y+1.15,z:pl.z,yaw:pl.yaw,dir:pl.slN?-1:1,t:0});
 const inArc=(x,y,z,r)=>{const dx=x-pl.x,dz=z-pl.z,dh=Math.hypot(dx,dz)-r;if(dh>R||y-r>pl.y+3.4||y+r<pl.y-0.4)return false;return dh<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<A};
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(inArc(s[0],s[1],s[2],s[3])){wpDmg(e,62*pw,s[0],s[1],s[2],{quiet:n>1,crit:kc});n++;break}}
 for(const s of shots)if(!s.dead&&inArc(s.x,s.y,s.z,s.r+0.6)){popShot(s);if(isCli())net.q.ps.push(s.id);fxStar(s.x,s.y,s.z,1.6,C.cyan,0.1);cut++}
@@ -190,9 +190,14 @@ if(cut&&wb('kt_parry')){pl.hp=Math.min(SK.hp,pl.hp+3*cut);addGauge(3*cut)}if(cut
 // 一閃・天断ち: a wall-crossing crescent flying 80 m, 15 m wide, every enemy (and the boss) it passes is cut once
 // 見上げていると斬撃も上へ飛ぶ（ktSy: 上向きの傾きの sin。水平に近いときは 0 = 今まで通り）
 const ktSy=()=>pl.pitch>0.1?Math.sin(Math.min(pl.pitch,1.2)):0;
-function ktWaveMk(x,y,z,dx,dz,sy,own,sm){return{x,y,z,dx,dz,sy,cy:Math.sqrt(1-sy*sy),d:0.5,t:0,own,hit:new Set(),sm}}
-function katanaWave(){const y=pl.y+1.3,sy=ktSy();for(const a of wb('kt_sp')?[0,0.32,-0.32]:[0]){const fx=-Math.sin(pl.yaw+a),fz=-Math.cos(pl.yaw+a);wwaves.push(ktWaveMk(pl.x,y,pl.z,fx,fz,sy,1,0));wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),0,r2(sy)])}
-wpAct(7);pl.cutT=0.55;snd('slash');snd('boom',1.2);flash(0.5);invA=1;shake(0.6);stopT(0.08);addText('ズバァァン！',W/2,H*0.2,{size:96,st:'cyan',life:0.9,rot:-0.12})}
+// tl = the slash's tilt (roll around its flight), the same as the swing's trail (wslash: dir*0.55). dir 1 = the swing ak 1 / 7, -1 = ak 2
+const ktTilt=dir=>dir*0.55;
+function ktWaveMk(x,y,z,dx,dz,sy,own,sm,tl){return{x,y,z,dx,dz,sy,cy:Math.sqrt(1-sy*sy),tl:tl==null?ktTilt(1):tl,d:0.5,t:0,own,hit:new Set(),sm}}
+// 一閃・天断ち: for spDur() every swing sends a giant wave (the first one with the big swing ak 7 and the full show, the rest lighter, ×KT_SPK)
+const KT_SPK=0.6,KT_CUTR=-0.45;// KT_CUTR: the screen-wide cut line's angle for a dir 1 swing (drawUI)
+function katanaWave(tl,first){const y=pl.y+1.3,sy=ktSy(),k=first?1:KT_SPK;if(tl==null)tl=ktTilt(1);for(const a of wb('kt_sp')?[0,0.32,-0.32]:[0]){const fx=-Math.sin(pl.yaw+a),fz=-Math.cos(pl.yaw+a),w=ktWaveMk(pl.x,y,pl.z,fx,fz,sy,1,0,tl);w.k=k;wwaves.push(w);wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),0,r2(sy),r2(tl)])}
+pl.cutT=0.55;pl.cutR=tl;snd('slash');snd('boom',first?1.2:0.7);
+if(first){invA=1;wpAct(7);pl.cool=0.7;flash(0.5);shake(0.6);stopT(0.08);addText('ズバァァン！',W/2,H*0.2,{size:96,st:'cyan',life:0.9,rot:-0.12})}else{shake(0.18);if(lim('ktspT',0.3))addText(pick(['ズバァン！','ザシュゥッ！','ズバッ！']),W/2+rnd(-90,90),H*0.22,{size:80,st:'cyan',life:0.5,rot:rnd(-0.12,0.12)})}}
 // ---- 火消しの大槌: slam 2.1 m ahead, radius 2.8 → 6.2 with the charge ----
 function hammerHit(c){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),x=pl.x+fx*2.1,z=pl.z+fz*2.1,r=(2.8+3.4*c)*(c>=1&&wb('hm_fast')?1.3:1);hammerAt(x,z,r,c,1);if(wb('hm_quake'))pl.hq={t:0.4,x,z,r,c}}
 // one slam at (x,z), radius r, charge c, damage ×k (also the 余震 / 駒砕き・連 of the tree)
@@ -241,7 +246,7 @@ for(let i=wbombs.length-1;i>=0;i--){const b=wbombs[i],px=b.x,py=b.y,pz=b.z;b.t+=
  if(hit){wbombs.splice(i,1);bombBoom(b,he)}}
 for(let i=wwaves.length-1;i>=0;i--){const w=wwaves[i],d0=w.d;w.d+=50*dt;w.t+=dt;
  // a wave flying upwards (sy>0) is a tilted sheet: along = distance on its way, side = across (horizontal), up = off the sheet (must be within th)
- if(w.own){const pw=pl.pow>0?2:1,dm=w.sm?WT_KTW*pw:430*SK.spw*pw,ww=w.sm?1.8:7.5,th=w.sm?2:4,crossed=(x,z,r,wd,y)=>{const rx=x-w.x,rz=z-w.z,h=rx*w.dx+rz*w.dz,ry=(y==null?w.y:y)-w.y,al=w.sy?h*w.cy+ry*w.sy:h;
+ if(w.own){const pw=pl.pow>0?2:1,dm=w.sm?WT_KTW*pw:430*SK.spw*pw*(w.k||1),ww=w.sm?1.8:7.5,th=w.sm?2:4,crossed=(x,z,r,wd,y)=>{const rx=x-w.x,rz=z-w.z,h=rx*w.dx+rz*w.dz,ry=(y==null?w.y:y)-w.y,al=w.sy?h*w.cy+ry*w.sy:h;
    if(w.sy&&Math.abs(ry*w.cy-h*w.sy)>th+r)return false;return al>d0-r&&al<w.d+r&&Math.abs(-rx*w.dz+rz*w.dx)<wd+r};
   for(const e of enemies){if(e.dead||e.st==='spawn'||w.hit.has(e))continue;for(const s of spheres(e))if(crossed(s[0],s[2],s[3],ww,s[1])){w.hit.add(e);wpDmg(e,dm,s[0],s[1],s[2],{fx:w.x,fz:w.z});if(e.type==='bru')wpEffect(e,2);break}}
   for(const s of shots)if(!s.dead&&crossed(s.x,s.z,1,ww+0.5,s.y)){popShot(s);if(isCli())net.q.ps.push(s.id)}
@@ -257,7 +262,7 @@ for(let i=wfires.length-1;i>=0;i--){const f=wfires[i];f.t-=dt;if(f.e){if(f.e.dea
 // others' visual events (net 'p' message .w)
 function wfxPlay(o,a){switch(a[0]){
 case'b':wbombs.push({x:a[1],y:a[2],z:a[3],vx:a[4],vy:a[5],vz:a[6],big:a[7],own:0,t:0,rot:0});break;
-case'k':wwaves.push(ktWaveMk(a[1],a[2],a[3],a[4],a[5],clamp(a[7]||0,0,0.99),0,a[6]|0));if(!a[6])snd('slash');break;
+case'k':wwaves.push(ktWaveMk(a[1],a[2],a[3],a[4],a[5],clamp(a[7]||0,0,0.99),0,a[6]|0,a[8]));if(!a[6])snd('slash');break;
 case'h':hammerFx(a[1],a[2],a[3],a[4]);break;
 case'H':komaFx(a[1],a[2],0);break;
 default:w2Fx(o,a)}}
@@ -270,7 +275,7 @@ case'gun':snd('beam');addText('ズドォォォン！',W/2,H*0.13,{size:84,st:'cy
 case'rifle':snd('charge');addText('ダダダダダッ！',W/2,H*0.15,{size:80,st:'cyan',life:0.9,grow:0.1,rot:-0.08});flash(0.35);pl.ammo=SK.mag;pl.reload=0;break;
 case'shotgun':pl.ammo=SK.mag;pl.reload=0;pl.cool=0.3;pl.flashT=0.08;pl.kick+=0.06;shotgunFire(w,1);if(wb('sg_sp'))pl.sgS=0.55;snd('sgun');snd('boom',1.4);flash(0.6);invA=1;shake(0.35);addText('ズドドドン！',W/2,H*0.15,{size:90,st:'boom',life:0.9,rot:-0.08});break;
 case'rail':snd('freeze');addText('パキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.08});flash(0.5);invA=1;pl.ovh=0;break;
-case'katana':katanaWave();break;
+case'katana':katanaWave(ktTilt(1),1);break;
 case'hammer':pl.vy=Math.max(pl.vy,10);pl.kkT=0.42;wpAct(8);snd('jump');snd('charge');addText('ハァァッ！',W/2,H*0.16,{size:84,st:'boom',life:0.6,rot:-0.06});break;
 case'bomb':throwBomb(1);if(wb('bm_sp'))pl.bmS={n:2,t:0.45};break;
 default:w2SpStart(w)}}
@@ -326,7 +331,7 @@ bill(BURST,b[0],b[1],b[2],ice?1.4:0.7,now*30,ice?C.white:C.cyan,NF);bill(STAR,a[
 function drawWpWorld(){const NF=F_UNLIT|F_NOCAST;drawW2World();
 for(const s of wslash){const k=0.75+0.25*easeOut(sat(s.t/0.05)),sc=3.8*k;mPush();mT(s.x,s.y,s.z);mRY(s.yaw);mRZ(s.dir*0.55);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mPop()}
 for(const w of wwaves){const sc=(w.sm?4.5:16)*Math.min(1,0.4+w.t*4),hd=w.cy*(w.d-sc*0.5),yaw=Math.atan2(-w.dx,-w.dz);
- mPush();mT(w.x+w.dx*hd,w.y+w.sy*(w.d-sc*0.5),w.z+w.dz*hd);mRY(yaw);if(w.sy)mRX(Math.asin(w.sy));mRZ(-0.45);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mT(0,0.012,0.03);mS(0.9,1,0.9);emit(SLASH,C.cyan,0,0,NF,0);mPop()}
+ mPush();mT(w.x+w.dx*hd,w.y+w.sy*(w.d-sc*0.5),w.z+w.dz*hd);mRY(yaw);if(w.sy)mRX(Math.asin(w.sy));mRZ(w.tl);mS(sc,1,sc);emit(SLASH,C.white,0,0,NF,0);mT(0,0.012,0.03);mS(0.9,1,0.9);emit(SLASH,C.cyan,0,0,NF,0);mPop()}
 for(const b of wbombs){const s=b.big?4:b.mini?0.8:1.6;mPush();mT(b.x,b.y,b.z);mRY(b.rot);mRX(b.rot*0.7);mS(s,s,s);if(wpReady(6))wpModel(6);else sph(0,0,0,0.2,0.2,0.2,C.red);mPop();
  bill(STAR,b.x,b.y+0.22*s,b.z,0.12*s+0.05*Math.sin(now*40),now*20,C.yellow,NF)}
 for(const f of wfires){const k=Math.min(1,f.t/0.5)*Math.min(1,(6-f.t)/0.25+0.15)*(f.big?3:1),hi=f.y>0.5,n=hi?6:9,rr=hi?1.4*(f.big?3:1):f.r*0.62;
@@ -401,7 +406,7 @@ else w2HUD(w)}
 // special timer for the timed ones (珠時雨 / 妖光・氷牢)
 function wpSpHUD(w){if(pl.sp!==2||(w.spMode!=='buff'&&w.spMode!=='mode'))return;const r=sat(1-pl.spT/spDur());txt(w.sp,W/2,588,24,'#fff',INK,6);gauge(W/2-90,604,220,14,r,'#35e0ff','')}
 function wpOverlay(){if(G.state!=='play')return;
-if(pl.cutT>0){const t=0.55-pl.cutT,g=easeOut(sat(t/0.08)),a=sat(pl.cutT/0.2);ctx.save();ctx.globalAlpha=a;ctx.translate(W/2,H/2);ctx.rotate(0.45);const L=W*0.75*g,hw=Math.max(3,22*(1-t*1.2));
+if(pl.cutT>0){const t=0.55-pl.cutT,g=easeOut(sat(t/0.08)),a=sat(pl.cutT/0.2);ctx.save();ctx.globalAlpha=a;ctx.translate(W/2,H/2);ctx.rotate(KT_CUTR*(pl.cutR==null?1:Math.sign(pl.cutR)));const L=W*0.75*g,hw=Math.max(3,22*(1-t*1.2));
  ctx.beginPath();ctx.moveTo(-L,0);ctx.quadraticCurveTo(0,-hw*1.6,L,0);ctx.quadraticCurveTo(0,hw*1.6,-L,0);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
  ctx.beginPath();ctx.moveTo(-L*0.9,0);ctx.lineTo(L*0.9,0);ctx.strokeStyle='#59d8ff';ctx.lineWidth=3;ctx.stroke();ctx.restore();
  if(t>0.06){const k=easeBack(sat((t-0.06)/0.15));ctx.save();ctx.globalAlpha=a;ctx.translate(W*0.24,H*0.66);ctx.rotate(-0.12);ctx.scale(k,k);txt('一閃',0,0,110,'#fff',INK,16,'center','#59d8ff',30);ctx.restore()}}
@@ -431,7 +436,7 @@ case'gun':return[...gun(w.dmg,w.cool),['秒間ダメージ','約 '+eqR0(w.dmg/w.
 case'rifle':return[...gun(w.dmg,w.cool),['秒間ダメージ','約 '+eqR0(w.dmg/w.cool)],['反動','なし'],gp,['','必殺 '+w.sp],['時間',w.spd+' 秒間'],['効果','弾が減らない・連射２倍（毎秒 '+eqR0(2/w.cool)+' 発）・弾が敵を追う']];
 case'shotgun':return[...gun(w.dmg,w.cool,w.pel),['距離','3 m 以内 ×1.55 → 15 m 以上 ×0.3'],['１発の最大','約 '+eqR0(w.dmg*w.pel*1.55)],['鎧鬼','近くで３粒当てるとのけぞる'],gp,['','必殺 '+w.sp],['威力','最初に 34 × 36粒・壁も敵も貫通（45 m）'],['時間',w.spd+' 秒間'],['効果','弾が減らない・連射２倍・散弾が敵を追う']];
 case'rail':return[['威力',RAIL_DM+'（0.06 秒ごと）'],['秒間ダメージ','約 '+eqR0(RAIL_DM/0.06)+'・敵をすべて貫通'],['熱','4.7 秒撃ち続けると過熱'],['冷却','過熱したら約 2 秒撃てない'],['射程','120 m（壁まで）'],gp,['','必殺 '+w.sp],['光線',RAIL_ICE+'（0.06 秒ごと）・毎秒 約 '+eqR0(RAIL_ICE/0.06)],['時間',w.spd+' 秒間・熱なし'],['凍結','3 秒・凍った敵は被ダメ ×1.5'],['ボス','凍らない代わりに動きが鈍る']];
-case'katana':return[['威力','62'],['振る間隔','0.42 秒（毎秒 約 2.4 回）'],['秒間ダメージ','約 '+eqR0(62/0.42)],['範囲','前方 3.5 m・左右 70°'],['踏み込み','7.5 m 以内の正面の敵へ最大 5.5 m'],['墨弾','斬って消せる'],gp,['','必殺 '+w.sp],['威力','430・敵ごとに１回'],['範囲','幅 15 m・80 m 先まで・壁を越える']];
+case'katana':return[['威力','62'],['振る間隔','0.42 秒（毎秒 約 2.4 回）'],['秒間ダメージ','約 '+eqR0(62/0.42)],['範囲','前方 3.5 m・左右 70°'],['踏み込み','7.5 m 以内の正面の敵へ最大 5.5 m'],['墨弾','斬って消せる'],gp,['','必殺 '+w.sp],['時間','5 秒間・振るたびに巨大な斬撃'],['威力','最初 430・続けて '+Math.round(430*KT_SPK)+'（敵ごとに１回）'],['範囲','幅 15 m・80 m 先まで・壁を越える']];
 case'hammer':return[['威力','55 〜 160（溜めで上がる）'],['溜め','最大まで 1.1 秒'],['範囲','2.1 m 前・半径 2.8 〜 6.2 m'],['振る間隔','0.5 秒'],['鎧鬼','怯ませる'],['小鬼','はじき飛ばす'],gp,['','必殺 '+w.sp],['威力','380'],['範囲','自分のまわり 半径 16 m']];
 case'flail':{const F=W2.fl;return[['溜め','最大まで '+F.chg+' 秒・３段階'],['投げ','威力 '+F.dm.join(' / ')+'・届く距離 '+F.R.join(' / ')+' m'],['振り回し','溜め中、まわり '+F.spinR+' m に '+F.spinDm+'（'+F.spinT+' 秒ごと）'],['３段目','鎧鬼を怯ませる'],gp,['','必殺 '+w.sp],['叩きつけ','４回 '+F.slam+'（半径 '+F.slamR+' m）'],['最後','向いている方へ '+F.lastD+' m・'+F.last]]}
 case'spear':{const S=W2.sp;return[['威力',S.dm.join(' / ')+'（３連突き）'],['範囲','前方 '+S.R+' m・左右 '+Math.round(S.A*57)+'°'],['斬撃',S.wvDm+'・'+S.wv+' m 先まで・２体まで'],['雷','しびれて '+S.stun+' 秒止まる（ボス '+S.bstun+' 秒）・'+S.zap+' ダメージ'],gp,['','必殺 '+w.sp],['時間',w.spd+' 秒間'],['突き','前方 '+S.spR+' m・威力 ×'+S.spK],['斬撃',S.spWv+' m 先まで・何体でも貫通']]}

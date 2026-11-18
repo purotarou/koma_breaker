@@ -101,7 +101,7 @@ function wtSpEnd(){glSpEnd();if(wb('rl_sp')){const pw=pl.pow>0?2:1;let n=0;for(c
 // 凍てつく光: 1 s of the normal beam on the same enemy freezes it
 function wtChill(e){e.rlC=(now-(e.rlL||-9)<0.2?e.rlC||0:0)+0.06;e.rlL=now;if(e.rlC>=1){e.rlC=0;const B=e.type==='boss';wpEffect(e,B?3:1,B?0.6:2)}}
 // 飛ぶ斬撃: a small sword wave (wwaves with sm, weapons.js)
-function wtKtWave(){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),y=pl.y+1.15,sy=ktSy();wwaves.push(ktWaveMk(pl.x,y,pl.z,fx,fz,sy,1,1));wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),1,r2(sy)])}
+function wtKtWave(tl){const fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),y=pl.y+1.15,sy=ktSy();wwaves.push(ktWaveMk(pl.x,y,pl.z,fx,fz,sy,1,1,tl));wxPush(['k',r2(pl.x),r2(y),r2(pl.z),r2(fx),r2(fz),1,r2(sy),r2(tl)])}
 // 子花火 / 残り火 (bombBoom of a normal bomb of this player)
 function wtBombHit(b,x,y,z){if(wb('bm_cluster'))for(let k=0;k<3;k++){const a=k/3*TAU+rnd(0,1);wbombs.push({x,y:y+0.3,z,vx:Math.cos(a)*5,vy:7,vz:Math.sin(a)*5,big:0,mini:1,own:1,t:0,rot:0})}
 if(wb('bm_fire'))wfires.push({x,y:0.1,z,r:2.6,t:2.5,own:1,tk:0})}
