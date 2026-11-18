@@ -7,7 +7,7 @@
 const SS={x:0,v:0,id:null,px:0,mv:0,lp:null,CW:300,CH:408,GAP:24,Y:196,X0:44};
 const ssP=()=>SS.CW+SS.GAP,ssTot=()=>STG.length*ssP()-SS.GAP+SS.X0*2,ssMax=()=>Math.max(0,ssTot()-W);
 // stages open in order: one is playable once the one before it has been cleared (the developer 超強化 switch opens all)
-const stOpen=n=>n===0||!!DEV||!!SKS.clr[n-1];
+const stOpen=n=>n===0||!!DEV||!!SKS.clr[n-1]||!!SKS.clr[n];// (cleared already = open: 墨の池 moved to 6 behind the new stage 5)
 function ssOn(){return G.state==='menu'&&G.menu==='stage'&&!setOpen&&!wipe.on}
 function ssTouch(ph,p,id){if(!ssOn()){SS.id=null;return false}
 if(ph==='d'){if(p.y<SS.Y-8||p.y>SS.Y+SS.CH+12)return false;SS.id=id;SS.px=p.x;SS.mv=0;SS.v=0;SS.lp=p;return true}
@@ -29,15 +29,17 @@ for(let n=0;n<STG.length;n++){const x=SS.X0+n*ssP()-SS.x,s=STG[n];if(x>W||x+w<0)
  txt(s.name,x+w/2,y+268,(s.name.length>4?38:42)*(fit?0.82:1),PT);txt(s.desc[0],x+w/2,y+308,fit?16:18,PT);txt(s.desc[1],x+w/2,y+332,fit?16:18,PT);
  para(x+(fit?10:22),y+350,w-(fit?28:52),28,8);ctx.fillStyle=INK;ctx.fill();txt(fit?s.boss:'ボス　'+s.boss,x+w/2,y+365,fit?15:16,'#fff');if(exSel&&exOpen()){ctx.save();ctx.translate(x+36,y+38);ctx.rotate(-0.15);para(-30,-20,60,40,8);ctx.fillStyle='#ff4a3d';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('極',0,1,28,'#fff',INK,5);ctx.restore()}txt('ハイスコア '+getHi(n),x+w/2,y+393,16,PT)}
 B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26});
-// 難易度 (極 opens once all five stages are cleared)
+// 難易度 (極 opens once every stage is cleared)
 if(exOpen()){txt('難易度',800,150,22,'#fff',INK,6);B(850,124,170,52,'普通',()=>{exSet(0);snd('ui')},{sk:0,size:24,col:exSel?'#fff':'#ffd91a'});B(1032,124,190,52,'極',()=>{exSet(1);snd('ui')},{sk:0,size:30,col:exSel?'#ff4a3d':'#fff',tc:exSel?'#fff':INK});
- if(exSel)txt('敵が大幅に強化・新たな敵・ボスの新技',800,656,20,'#fff',INK,6)}
-else txt('全ステージ制覇で　難易度：極　解放',1010,150,19,'#fff',INK,5);
+ if(exSel)txt('敵が大幅に強化・新たな敵・ボスの新技',800,618,18,'#fff',INK,6)}
+else txt('全ステージ制覇で　難易度：極　解放',800,618,18,'#fff',INK,6);
 if(m<=0)return;
 // more to the side: blinking arrows over the edge of the strip
 if(Math.sin(now*6)>-0.3){if(SS.x<m-8)txt('▶',W-34,y+SS.CH/2,44,'#ffd91a',INK,8);if(SS.x>8)txt('◀',34,y+SS.CH/2,44,'#ffd91a',INK,8)}
-B(1000,128,74,54,'＜',()=>{SS.v=-ssP()*5},{sk:0,size:30,col:'#ffd91a'});B(1086,128,74,54,'＞',()=>{SS.v=ssP()*5},{sk:0,size:30,col:'#ffd91a'});
-txt('全'+STG.length+'ステージ　ヨコにスワイプで全体を見る',740,157,20,'#fff',INK,6);
+// (with 難易度 on the right the ＜＞ buttons would overlap it: swiping, the ▶◀ arrows and the strip below still scroll)
+if(exOpen())txt('全'+STG.length+'ステージ　ヨコにスワイプ',620,157,20,'#fff',INK,6);
+else{B(1000,128,74,54,'＜',()=>{SS.v=-ssP()*5},{sk:0,size:30,col:'#ffd91a'});B(1086,128,74,54,'＞',()=>{SS.v=ssP()*5},{sk:0,size:30,col:'#ffd91a'});
+ txt('全'+STG.length+'ステージ　ヨコにスワイプで全体を見る',740,157,20,'#fff',INK,6)}
 // overview strip
 const tw=Math.min(176,(W-340)/STG.length),tx0=312,tot=ssTot();
 for(let n=0;n<STG.length;n++){const x=tx0+n*tw,s=STG[n];B(x,638,tw-12,42,null,()=>ssGo(n),{sk:6,col:s.col});txt((n+1)+' '+s.name,x+tw/2-3,660,tw>150?17:14,'#fff',INK,4)}

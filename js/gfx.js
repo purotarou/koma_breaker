@@ -46,7 +46,14 @@ float pf=1.0-smoothstep(28.0,80.0,length(vW-uCam));
 // keeping the texture's shading. A flash (gTint, which also sets the unlit flag) whitens it.
 // mat 12-14: the final boss (js/boss5.js; colour uBT on unit 4, skin mask uBM on unit 5). The UV of his right half carries u+1.
 // 12 = as baked (white), 13 = the skin becomes the instance colour, 14 = his right half red / left half black (the first form).
-if(mat>11.5){float sd=step(1.0,vU.x);vec2 uv=vec2(vU.x-sd,vU.y);vec3 t=texture(uBT,uv).rgb;
+// mat 15: the open sea of stage 5 (js/sea.js). World-space swells, crest lines and ripples that stream south (+z) at the ship's speed (9 m/s),
+// so the ship sailing north reads from the water alone. Kept far past the usual pattern fade so the motion shows out to the horizon.
+if(mat>14.5){vec2 p=vW.xz;float D=length(vW.xz-uCam.xz),fd=1.0-smoothstep(140.0,560.0,D),fz=p.y-uT*9.0;
+ float sw=sin(p.x*0.045+fz*0.06)*1.6+sin(p.x*0.11-fz*0.031)*0.7,band=fract(fz*0.085+sw*0.12);
+ alb*=mix(0.8,1.07,smoothstep(0.05,0.6,band)*(1.0-smoothstep(0.72,0.98,band)));
+ float cr=ln(abs(band-0.64)/0.085,0.13)*step(0.1,sin(p.x*0.33+fz*0.11+sin(fz*0.07)*3.0));alb=mix(alb,vec3(1.0),cr*0.92*fd);
+ float r2=abs(fract(fz*0.42+p.x*0.11+sin(p.x*0.37+fz*0.29)*0.45)-0.5)*2.0;alb=mix(alb,alb*1.22+0.04,ln(r2,0.07)*0.7*(1.0-smoothstep(25.0,110.0,D)));}
+else if(mat>11.5){float sd=step(1.0,vU.x);vec2 uv=vec2(vU.x-sd,vU.y);vec3 t=texture(uBT,uv).rgb;
  if(mat>12.5){float m=texture(uBM,uv).r;vec3 tc=mat>13.5?mix(vec3(0.2,0.2,0.22),vec3(0.86,0.1,0.1),sd):vC.rgb;t=mix(t,tc*clamp((t.r+t.g+t.b)*0.3833,0.3,1.15),m);}
  alb=unlit>0.5?mix(t,vec3(1.0),0.85):t;}
 else if(mat>9.5){vec3 t=texture(uHT,vU).rgb;

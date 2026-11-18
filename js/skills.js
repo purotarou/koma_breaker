@@ -81,7 +81,14 @@ for(let q=0;q<4;q++){const a=(q+1)%4,x=SKXD[q][3];// one 複合 panel per corner
 const SKI={};for(const n of SKN)SKI[n.id]=n;
 for(const n of SKN)if(n.cmp)n.tier=Math.max(...n.par.map(p=>SKI[p].tier));
 for(let b=0;b<4;b++)for(const[x,y]of SKLINK){SKI[b+x].x.push(b+y);SKI[b+y].x.push(b+x)}
-const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0],cx:[0,0,0,0,0]};
+// 2026-11-19: a new stage 5 (荒海の船上) was put before 墨の池, which became stage 6. Saved records indexed by stage (cleared / 極 cleared,
+// コマ札 already paid, high score) move 墨の池's entry from index 4 to 5 once (localStorage koma_stv), so nothing earned is lost.
+(function(){try{if(localStorage.getItem('koma_stv')==='6')return;const sh=a=>Array.isArray(a)?[a[0]|0,a[1]|0,a[2]|0,a[3]|0,0,a[4]|0]:a;
+ const s=JSON.parse(localStorage.getItem('koma_skill')||'null');if(s&&s.clr){s.clr=sh(s.clr);if(s.cx)s.cx=sh(s.cx);localStorage.setItem('koma_skill',JSON.stringify(s))}
+ const g=JSON.parse(localStorage.getItem('koma_gacha')||'null');if(g&&g.paid){g.paid=sh(g.paid);localStorage.setItem('koma_gacha',JSON.stringify(g))}
+ const h=localStorage.getItem('koma_hi4');if(h!=null){localStorage.setItem('koma_hi5',h);localStorage.removeItem('koma_hi4')}
+ localStorage.setItem('koma_stv','6')}catch(e){}})();
+const SKS={v:3,pt:0,lv:1,xp:0,own:{},clr:[0,0,0,0,0,0],cx:[0,0,0,0,0,0]};
 // EXP needed to go from level L to L+1 (grows a little every level)
 const skNeed=L=>Math.round(150+6*L+0.15*L*L),SKLV_HP=1,SKLV_ATK=0.003;
 try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
@@ -90,7 +97,7 @@ try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
   Object.assign(SKS,s);delete SKS.c2;delete SKS.nd;let e=SKS.pt|0;for(const id in SKS.own)if(SKI[id])e+=SKI[id].c0;
   SKS.v=3;SKS.lv=1+e;SKS.xp=0;skSave()}
  else{// first run or the old 4×4 tree: keep the record of cleared stages (old skills are cleared), 3 levels per cleared stage
-  for(let i=0;i<5;i++)SKS.clr[i]=s&&s.clr?(s.clr[i]?1:0):(+(localStorage.getItem('koma_hi'+i)||0)>0?1:0);
+  for(let i=0;i<6;i++)SKS.clr[i]=s&&s.clr?(s.clr[i]?1:0):(+(localStorage.getItem('koma_hi'+i)||0)>0?1:0);
   const n=SKS.clr.filter(v=>v).length;SKS.pt=n*3;SKS.lv=1+n*3;skSave()}}catch(e){}
 // the tree changed shape: panels that no longer exist, or that are cut off from the start, are given back (their points are refunded)
 (function(){let ch=0;const OLD={A7:10,A8:16,B7:10,B8:16,Cl1:4,Cl2:5,Cr1:4,Cr2:5,Xm:11,Xn:12,X3:6,X4:8,X5:10,X6:18,X7:12,X8:22};
@@ -98,6 +105,7 @@ try{const s=JSON.parse(localStorage.getItem('koma_skill')||'null');
  const R=skReach();for(const n of SKN)if(SKS.own[n.id]&&!R[n.id]){SKS.pt+=n.c0;delete SKS.own[n.id];ch=1}
  if(ch)try{localStorage.setItem('koma_skill',JSON.stringify(SKS))}catch(e){}})();
 function skSave(){try{localStorage.setItem('koma_skill',JSON.stringify(SKS))}catch(e){}}
+while(SKS.clr.length<6)SKS.clr.push(0);if(!SKS.cx)SKS.cx=[];while(SKS.cx.length<6)SKS.cx.push(0);
 const skHas=id=>!!DEV||!!SKS.own[id],skOwn=id=>!!SKS.own[id],skClr=()=>SKS.clr.filter(v=>v).length;
 // own | prev (earlier panel missing) | tier (not enough stages cleared) | pt | ok
 const skAvail=n=>n.par.every(skHas)||n.x.some(skHas);// the panels before it are owned, or a panel linked to it is
@@ -162,7 +170,7 @@ function addGauge(v){if(pl.sp&&!SK.gDuring)return;pl.gauge=Math.min(100,pl.gauge
 // damage multiplier from skills that depend on the moment (air time, low HP); crits are separate
 function skAtk(){let m=SK.atk;if(SK.run&&pl.moving>0.3)m*=1+SK.run;if(SK.dB&&pl.dbt>0)m*=1+SK.dB;if(SK.combo)m*=1+SK.combo*Math.min(G.combo|0,30);if(SK.air&&pl.y>0.05)m*=1+SK.air;if(SK.fullAtk&&spReady())m*=1.25;if(SK.low)m*=1+SK.low*(1-sat(pl.hp/SK.hp));return m}
 const spReady=()=>pl.gauge>=(SK.spMin||100)||pl.spX>0;
-function skMsgOf(s,n){return s==='own'?'習得済みです':s==='prev'?(n.cmp?'となり合う2つの系統の同じ段を、どちらも習得しよう':'手前のスキルを先に習得しよう'):s==='tier'?(n.cap?'５つのステージをすべてクリアすると解放':'ステージを'+n.tier+'つクリアすると解放'):'ポイントが足りません（あと'+(n.c0-SKS.pt)+'）'}
+function skMsgOf(s,n){return s==='own'?'習得済みです':s==='prev'?(n.cmp?'となり合う2つの系統の同じ段を、どちらも習得しよう':'手前のスキルを先に習得しよう'):s==='tier'?(n.cap?'ステージを５つクリアすると解放':'ステージを'+n.tier+'つクリアすると解放'):'ポイントが足りません（あと'+(n.c0-SKS.pt)+'）'}
 function skBuy(n){const s=skState(n);if(s!=='ok'){skMsg={s:skMsgOf(s,n),t:now};return}
 SKS.pt-=n.c0;SKS.own[n.id]=1;SKS.last=n.id;skSave();snd('item');skPop={id:n.id,t:now};skMsg=null}
 // take back one panel (only the end of a path); all its points come back
@@ -177,7 +185,7 @@ function skReset(){let r=0,k=0;for(const n of SKN)if(skOwn(n.id)){r+=n.c0-SKRESP
 // EXP at the end of a game (solo / co-op, once per game). Enemies beaten (by anyone in co-op) × stage enemy strength,
 // and on a clear the boss and a clear bonus that grow with the stage. Game over keeps the EXP of the enemies beaten.
 // own table (enemy strength per stage, kept apart from DIF so easing story mode does not cut the EXP); 難易度：極 ×EXK.xp
-const XPK=[[1.25,1.2],[1.5,1.4],[1.8,1.6],[2.15,1.85],[2.6,2.15]];
+const XPK=[[1.25,1.2],[1.5,1.4],[1.8,1.6],[2.15,1.85],[2.4,2.0],[2.6,2.15]];
 function skExp(cl){const i=G.stage,d=XPK[Math.min(i,XPK.length-1)],k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round((k*10*d[0]+(cl?150*d[1]+60*(i+1):0))*(G.ex?EXK.xp:1)*(SK.xpk||1))}
 function skGain(x){SKS.xp+=x;let up=0;while(SKS.xp>=skNeed(SKS.lv)){SKS.xp-=skNeed(SKS.lv);SKS.lv++;SKS.pt++;up++}return up}
 // result screen level bar: the gauge fills from the old EXP, and wraps round at each level-up (one segment per level passed)

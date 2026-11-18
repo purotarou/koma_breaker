@@ -1,6 +1,6 @@
 'use strict';
 // ================= 難易度：極 (extreme) =================
-// Opens once all five stages are cleared (SKS.clr, or the developer 超強化). Chosen on the stage select (solo) or by the host in the
+// Opens once every stage is cleared (SKS.clr, or the developer 超強化). Chosen on the stage select (solo) or by the host in the
 // co-op lobby (net.ex, sent in the lobby / go messages); G.ex is set for one game in beginGame. Never in versus or the demo.
 // What changes (numbers in EXK, players.js): enemy and boss HP, damage to the player, speed, shorter pauses between attacks,
 // more small enemies, a new enemy 墨鴉 (crow) in every group and in boss summons, the stage 1-2 shock waves come back,
@@ -13,7 +13,7 @@
 // The pillars are one hazard list (erupts): a red ring warns, then the pillar bursts once (no jumping over it).
 // The host sends one event per pattern (ev), every peer builds the same pillars and checks only its own player.
 let exSel=0;try{exSel=(+localStorage.getItem('koma_ex'))?1:0}catch(e){}
-const exOpen=()=>!!DEV||skClr()>=5;
+const exOpen=()=>!!DEV||!!SKS.clr[STG.length-1]||skClr()>=STG.length;// the last stage cleared (墨の池 moved from 5 to 6: a save that had all five keeps 極)
 function exSet(v){exSel=v?1:0;try{localStorage.setItem('koma_ex',String(exSel))}catch(e){}}
 // ---- tuning ----
 // erupt kinds: 0 ink / 1 fire / 2 rock / 3 ice. r = radius, dmg = damage (×difOf dmg in hurtPlayer)

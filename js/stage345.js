@@ -1,6 +1,6 @@
 'use strict';
-// ================= STAGES 3-5 =================
-// 3 黄昏の町 / 4 雪の古寺 / 5 墨の池 (STORY.md 1). Play area x ±21.6, z -25.6..21.6 (stage 4: x ±31.6, z -25.6..33.6, STG[].arena); the boss rises at the north end.
+// ================= STAGES 3-6 =================
+// 3 黄昏の町 / 4 雪の古寺 / 5 荒海の船上 (the ship; its moving sea, oars and wake are drawn every frame in js/sea.js) / 6 墨の池 (STORY.md 1). Play area x ±21.6, z -25.6..21.6 (stage 4: x ±31.6, z -25.6..33.6, STG[].arena); the boss rises at the north end.
 // Authored in Blender (blender/stage_*.blend -> assets/*.glb, loaded by js/glb.js). buildStageNCode() is the code-built original:
 // fallback when the GLB can't be loaded, ?stageN=code for comparisons, and the reference for tools/check_stage_parity.js.
 // "//#name" comments mark prop groups for tools/dump_stage.js (they become Blender collections).
@@ -8,10 +8,13 @@ Object.assign(C,{
  deck:hex(0xb98552),deckD:hex(0x6f4329),river:hex(0xf0a060),bank:hex(0xbdb3a2),twall:hex(0xf2dcc0),troof:hex(0x51496a),troofD:hex(0x372f4d),glow:hex(0xffc75a),road:hex(0xd2b98e),
  sun:hex(0xffe08a),cloudP:hex(0xffa88f),cloudV:hex(0xc98bb8),mountP:hex(0x9a6aa0),mountP2:hex(0xc58ea8),hillS:hex(0x9b7f7a),willow:hex(0x86b24c),willowD:hex(0x5f9440),bronze:hex(0xb08a3a),noren:hex(0x2f3f7a),bamboo:hex(0xc9b56a),
  snow:hex(0xf4f7ff),ice:hex(0xbfe9ff),iceP:hex(0x86c9ec),twood:hex(0x6b3f2c),troof4:hex(0x3f4a5e),ochre:hex(0xdcbc7e),bronze4:hex(0x5d6b5c),mountW:hex(0xdfe7f5),mountR:hex(0x8090ae),
+ deckS:hex(0xc9a173),hullD:hex(0x3b2a22),hullR:hex(0x8c1d24),shieldW:hex(0x7a5235),sail:hex(0xf1e6cc),sea:hex(0x1f7088),iron:hex(0x3a3c48),
+ seaRock:hex(0x55606b),seaRockD:hex(0x3a434d),isle:hex(0x4d7d6a),isleD:hex(0x35584c),cloudS:hex(0xdde6e8),cloudG:hex(0xa3b1b8),roofT:hex(0x2f3a4e),
  paperS:hex(0xe9e5da),inkG:hex(0x56545e),inkM:hex(0x8d8c94),inkL:hex(0xb9b8bf),inkP:hex(0x141218),seal:hex(0xd9262c),ropeG:hex(0xbdb8aa)});
 function buildStage3(){if(STAGE_GLB[2])emitGlbStage(STAGE_GLB[2]);else buildStage3Code()}
 function buildStage4(){if(STAGE_GLB[3])emitGlbStage(STAGE_GLB[3]);else buildStage4Code()}
-function buildStage5(){if(STAGE_GLB[4])emitGlbStage(STAGE_GLB[4]);else buildStage5Code()}
+function buildStage5(){if(STAGE_GLB[4])emitGlbStage(STAGE_GLB[4]);else buildStage5Code()}// 荒海の船上 (the ship)
+function buildStage6(){if(STAGE_GLB[5])emitGlbStage(STAGE_GLB[5]);else buildStage6Code()}// 墨の池
 // a straight run along (x0,z0)-(x1,z1): f(len) is called in a local frame (x along the run, origin at its centre)
 function along(x0,z0,x1,z1,f){const len=Math.hypot(x1-x0,z1-z0);mPush();mT((x0+x1)/2,0,(z0+z1)/2);mRY(Math.atan2(-(z1-z0),x1-x0));f(len);mPop()}
 
@@ -252,8 +255,8 @@ for(const[x,z,w,h]of[[-260,-330,300,190],[120,-420,340,230],[380,-160,280,170],[
 for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=200+R()*160,h=40+R()*50,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<3;i++){const w=60+R()*50;sph(cx+(i-1)*44,h+R()*8,cz+R()*20,w,w*0.22,w*0.6,C.white,0,0,F_NOCAST|F_DRIFT)}}
 }
 
-// ---------------- Stage 5: 墨の池 — a pale stone platform in a black ink pond; ink-wash greys, only the seal is red ----------------
-function buildStage5Code(){const R=mulberry(53),NF=F_UNLIT|F_NOCAST;
+// ---------------- Stage 6: 墨の池 — a pale stone platform in a black ink pond; ink-wash greys, only the seal is red ----------------
+function buildStage6Code(){const R=mulberry(53),NF=F_UNLIT|F_NOCAST;
 //#ink_pond
 box(0,-1.2,0,1700,1,1700,C.inkP,0,1);
 //#platform
@@ -287,4 +290,63 @@ for(let i=0;i<14;i++){const a=i/14*TAU+R()*0.3,d=29+R()*16,x=Math.cos(a)*d,z=Mat
 for(let i=0;i<10;i++){const a=i/10*TAU+R()*0.3,d=80+R()*110,h=40+R()*70,w=16+R()*18;put(CONE,Math.cos(a)*d,h/2-0.7,Math.sin(a)*d-2,0,0,0,w,h,w,i%2?C.inkM:C.inkL)}
 for(const[x,z,w,h]of[[-300,-420,380,170],[260,-460,420,210],[460,40,320,140],[-460,120,340,150]])put(CONE,x,h/2-1,z,0,0,0,w,h,w,C.inkL);
 for(let k=0;k<7;k++){const a=k/7*TAU+R()*0.5,d=90+R()*120,h=10+R()*22,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<2;i++){const w=50+R()*40;sph(cx+(i-0.5)*40,h+R()*4,cz+R()*14,w,w*0.08,w*0.3,C.paperS,0,0,NF|F_DRIFT)}}
+}
+
+// ---------------- Stage 5: 荒海の船上 — the deck of a great warship (安宅船) sailing north over a rough sea ----------------
+// Deck at y 0, sea at y -4.6. Play area x ±17, z -29.4..23.6 (STG[4].arena; the bow beyond z -25.6 closes while the kraken is up).
+// The bow points north (-z): the ship sails that way, so the sea pattern (mat 15), wake, oars and passing rocks stream south (js/sea.js).
+function buildStage5Code(){const R=mulberry(67),NF=F_UNLIT|F_NOCAST,SY=-4.6;
+const rope=(x0,y0,z0,x1,y1,z1,r,c)=>{const dx=x1-x0,dy=y1-y0,dz=z1-z0,L=Math.hypot(dx,dy,dz);mPush();mT((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);mRY(Math.atan2(dx,dz));mRX(-Math.asin(clamp(dy/L,-1,1)));mRX(PI/2);mS(r,L,r);emit(CYL,c||C.rope,6,0,0,0);mPop()};
+//#sea
+box(0,SY-0.1,0,1800,0.2,1800,C.sea,15,0,F_NOCAST|F_NOEDGE);
+//#hull
+box(0,-0.6,-3,36,1.2,58,C.deckS,2,.1);
+for(const s of[-1,1]){box(s*18.45,-3.1,-3,1.3,6.2,58.6,C.hullD);for(const y of[-1.15,-3.3])box(s*19.12,y,-3,0.3,0.45,58.8,C.hullR);box(s*19.0,-5.0,-3,0.5,1.2,58.4,C.inkD);
+ for(let i=0;i<15;i++)sph(s*19.3,-1.15,-31+i*4.1,0.24,0.24,0.24,C.gold,0,.8);for(let i=0;i<7;i++)box(s*19.12,-2.25,-27+i*8,0.26,1.7,0.3,C.hullR)}
+put(BOX,0,-2.7,-33.0,-0.42,0,0,37.6,6.4,1.4,C.hullD);put(BOX,0,-1.25,-33.6,-0.42,0,0,37.8,0.45,0.32,C.hullR);put(BOX,0,-3.6,-32.2,-0.42,0,0,37.8,0.4,0.32,C.hullR);
+box(0,-3.1,26.4,37.6,6.2,1.4,C.hullD);box(0,-1.15,27.1,37.8,0.45,0.3,C.hullR);
+//#bow
+put(BOX,0,-0.9,-35.6,-0.8,0,0,1.7,9.2,1.7,C.hullD);put(BOX,0,2.6,-38.2,-0.8,0,0,1.9,1.2,1.9,C.gold,0,.8);for(const s of[-1,1])put(BOX,s*0.95,-1.4,-35.1,-0.8,0,0,0.12,7.4,0.9,C.hullR);
+for(const s of[-1,1]){mPush();mT(s*9.5,-1.6,-33.9);cyl(0,0,0,0.22,3.2,0.22,C.iron);put(CYL,0,1.65,0,0,0,PI/2,0.5,0.14,0.5,C.iron);put(CONE,s*0.7,-1.45,0,0,0,s*2.2,0.36,1.3,0.36,C.iron);put(CONE,-s*0.7,-1.45,0,0,0,-s*2.2,0.36,1.3,0.36,C.iron);put(CYL,0,-1.55,0,0,0,PI/2,0.26,1.6,0.26,C.iron);mPop();
+ for(let i=0;i<5;i++)sph(s*9.5,1.9-i*0.42+0.2,-33.75+i*0.12,0.24,0.32,0.14,C.iron)}
+//#shield_walls
+for(const s of[-1,1]){box(s*17.7,0.52,-3,0.5,1.04,57.2,C.shieldW,3);box(s*17.7,1.12,-3,0.72,0.16,57.4,C.hullR);for(let i=0;i<19;i++)box(s*17.43,0.62,-30+i*3,0.06,0.3,0.3,C.inkD)}
+box(0,0.52,-31.8,35.9,1.04,0.5,C.shieldW,2);box(0,1.12,-31.8,36.1,0.16,0.72,C.hullR);for(let i=0;i<11;i++)box(-15+i*3,0.62,-31.53,0.3,0.3,0.06,C.inkD);
+//#stern_castle
+box(0,2.0,30.3,35.2,4.0,9.4,C.plaster);for(let i=0;i<13;i++)box(-17.1+i*2.85,2.0,25.56,0.34,4.0,0.22,C.woodD);for(const y of[0.15,3.85])box(0,y,25.55,35.3,0.3,0.24,C.woodD);
+for(let i=0;i<12;i++){if(i===5||i===6)continue;const x=-15.68+i*2.85;box(x,2.3,25.5,1.7,1.0,0.1,C.inkD);for(let k=0;k<4;k++)box(x-0.6+k*0.4,2.3,25.44,0.08,1.0,0.06,C.wood)}
+box(0,1.6,25.5,4.2,3.2,0.12,C.inkD);for(const s of[-1,1])box(s*1.05,1.6,25.42,1.9,3.0,0.06,C.wood,2);
+put(PRISM,0,5.15,30.3,0,PI/2,0,10.6,2.3,36.4,C.roofT,5);box(0,4.05,30.3,36.6,0.24,10.8,C.inkD);
+box(0,7.1,31.2,18.6,3.6,6.4,C.plaster);for(let i=0;i<7;i++)box(-9.0+i*3,7.1,27.96,0.3,3.6,0.2,C.woodD);for(let i=0;i<6;i++){const x=-7.5+i*3;box(x,7.4,27.92,1.6,1.2,0.08,C.inkD);box(x,7.4,27.88,1.6,0.1,0.06,C.wood)}
+put(PRISM,0,9.95,31.2,0,PI/2,0,8.2,2.3,20.2,C.roofT,5);box(0,8.9,31.2,20.4,0.22,8.4,C.inkD);box(0,11.1,31.2,20.6,0.3,0.5,C.gold,0,.8);
+for(const s of[-1,1]){put(CONE,s*10.1,11.6,31.2,0,0,-s*0.5,0.7,1.6,0.7,C.gold,0,.8);put(CONE,s*18.1,6.6,30.3,0,0,-s*0.5,0.7,1.6,0.7,C.gold,0,.8)}
+cyl(0,15.0,31.2,0.24,8.2,0.24,C.woodD);box(0,16.3,32.6,0.06,4.6,2.8,C.flag1,0,0,F_CLOTH);box(0,16.3,32.6,0.08,1.2,1.2,C.white,0,0,F_CLOTH);
+//#mast
+box(0,0.5,-6,2.8,1.0,2.8,C.woodD);cyl(0,13.2,-6,1.15,26.4,1.15,C.wood,9);for(const y of[2.4,5.4,8.4,11.4])cyl(0,y,-6,1.3,0.3,1.3,C.iron);cyl(0,26.6,-6,1.6,0.5,1.6,C.woodD);sph(0,27.1,-6,0.7,0.7,0.7,C.gold,0,.8);
+put(CYL,0,24.8,-7.0,0,0,PI/2,0.55,27,0.55,C.woodD);put(CYL,0,12.6,-7.2,0,0,PI/2,0.45,25,0.45,C.woodD);
+//#sail
+{const N=12,pz=x=>-7.4-1.5*(1-(x/12.4)*(x/12.4));for(let i=0;i<N;i++){const x0=-12.4+i*24.8/N,x1=x0+24.8/N;along(x0,pz(x0),x1,pz(x1),len=>{box(0,18.7,0,len+0.06,11.6,0.22,C.sail,2)})}
+ const ez=pz(0)+0.26;box(0,17.8,ez,5.0,4.2,0.1,C.red);put(PRISM,0,21.1,ez,0,0,0,5.0,2.4,0.1,C.red);box(0,18.1,ez+0.04,3.5,3.2,0.1,C.white);put(PRISM,0,20.6,ez+0.04,0,0,0,3.5,1.6,0.1,C.white);
+ for(const[x,y]of[[-0.7,18.8],[0.7,18.8],[0,17.4],[0,19.9]])box(x,y,ez+0.08,0.5,0.5,0.1,C.inkD);
+ for(const x of[-12.4,-6,6,12.4])rope(x,12.7,pz(x),x*0.4,0.1,-1.2,0.07)}
+//#rigging
+for(const s of[-1,1])for(const z of[-15,-11,-1,3])rope(0,25.6,-6,s*17.6,1.19,z,0.1);rope(0,25.6,-6,0,1.19,-31.6,0.12);rope(0,26,-6,0,11.2,30,0.1);
+//#flags
+for(const s of[-1,1])for(let i=0;i<4;i++){const z=-21+i*12;cyl(s*17.7,3.92,z,0.13,5.56,0.13,C.woodD);box(s*17.7,5.0,z+0.78,0.05,3.2,1.4,i%2?C.white:C.flag1,0,0,F_CLOTH);sph(s*17.7,6.8,z,0.24,0.24,0.24,C.gold,0,.8)}
+//#cannons
+for(const s of[-1,1])for(const z of[-17,9]){mPush();mT(s*15.6,0,z);box(0,0.45,0,1.7,0.6,1.5,C.woodD);for(const q of[-0.55,0.55])for(const w of[-0.62,0.62])put(CYL,w,0.32,q,0,0,PI/2,0.62,0.18,0.62,C.inkD);
+ put(CYL,s*0.25,1.1,0,0,0,PI/2,0.62,2.9,0.62,C.iron,0,.5);put(CYL,s*1.6,1.1,0,0,0,PI/2,0.78,0.3,0.78,C.iron,0,.5);sph(-s*1.25,1.1,0,0.45,0.45,0.45,C.iron);put(CYL,s*0.2,1.1,0,0,0,PI/2,0.7,0.16,0.7,C.gold,0,.8);mPop();colC.push({x:s*15.5,z,r:1.15,h:1.7})}
+//#cargo
+for(const[x,z]of[[-12.2,17.6],[-10.7,18.6],[-11.6,16.0],[12.4,-20.4],[13.6,-18.9]]){cyl(x,0.8,z,1.25,1.6,1.25,C.wood,3);for(const y of[0.3,1.3])cyl(x,y,z,1.3,0.14,1.3,C.iron);cyl(x,1.62,z,1.0,0.05,1.0,C.woodD);colC.push({x,z,r:0.72,h:1.7})}
+for(const[x,z,a]of[[11.6,15.4,0.1],[13.3,17.3,-0.2],[-13.4,-17.0,0.25]]){put(BOX,x,0.7,z,0,a,0,1.7,1.4,1.7,C.wood,2);put(BOX,x,0.7,z,0,a,0,1.74,0.14,1.74,C.rope);put(BOX,x,0.7,z,0,a+PI/2,0,0.14,1.44,1.74,C.rope);colC.push({x,z,r:1.0,h:1.4})}
+put(BOX,12.4,1.95,16.3,0,0.4,0,1.3,1.1,1.3,C.wood,2);
+for(const[x,z]of[[-6.5,-24.5],[7.2,20.6],[-14.6,6.5]]){put(CYL,x,0.1,z,0,0,0,1.7,0.2,1.7,C.rope,6);put(CYL,x,0.21,z,0,0,0,0.7,0.05,0.7,C.woodD)}
+//#deck_fittings
+box(0,0.07,9,6.2,0.14,4.2,C.woodD);for(let i=0;i<7;i++)box(-2.7+i*0.9,0.16,9,0.16,0.06,4.0,C.wood);for(let i=0;i<5;i++)box(0,0.17,7.4+i*0.8,6.0,0.06,0.16,C.wood);
+{mPush();mT(0,0,-24.2);cyl(0,0.7,0,1.4,1.4,1.4,C.woodD);cyl(0,1.45,0,1.7,0.14,1.7,C.iron);for(let i=0;i<4;i++)put(CYL,0,1.2,0,0,i*PI/4,PI/2,0.18,3.6,0.18,C.wood);mPop();colC.push({x:0,z:-24.2,r:1.1,h:1.6})}
+{mPush();mT(-9,0,21);box(0,0.5,0,2.4,1.0,1.2,C.woodD);put(CYL,0,1.8,0,PI/2,0,0,2.0,1.4,2.0,C.hullR);put(CYL,0,1.8,0,PI/2,0,0,1.7,1.46,1.7,C.paper);for(const s of[-1,1])put(CYL,0,1.8,s*0.72,PI/2,0,0,2.06,0.08,2.06,C.gold,0,.8);mPop();colC.push({x:-9,z:21,r:1.3,h:2.8})}
+for(const[x,z]of[[-15.6,-27.6],[15.6,-27.6],[-15.6,22.2],[15.6,22.2]]){cyl(x,1.4,z,0.2,2.8,0.2,C.woodD);box(x,2.9,z,0.7,0.12,0.7,C.woodD);sph(x,3.5,z,0.8,1.0,0.8,C.lant,6,0,F_UNLIT);cyl(x,4.05,z,0.52,0.12,0.52,C.black);cyl(x,2.98,z,0.52,0.12,0.52,C.black);colC.push({x,z,r:0.42,h:3})}
+//#background
+for(const[x,z,w,h]of[[-420,-520,300,70],[300,-560,360,90],[560,-120,260,60],[-560,80,280,55],[120,520,300,50]]){put(CONE,x,h/2+SY-2,z,0,0,0,w,h,w,C.isle);put(CONE,x+w*0.12,h*0.7+SY-2,z-w*0.05,0,0,0,w*0.45,h*0.6,w*0.45,C.isleD)}
+for(let k=0;k<9;k++){const a=k/9*TAU+R()*0.4,d=230+R()*200,h=70+R()*60,cx=Math.cos(a)*d,cz=Math.sin(a)*d;for(let i=0;i<3;i++){const w=70+R()*60;sph(cx+(i-1)*50+R()*14,h+R()*10,cz+R()*20,w,w*0.26,w*0.55,i%2?C.cloudS:C.cloudG,0,0,F_NOCAST|F_DRIFT)}}
 }

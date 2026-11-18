@@ -23,7 +23,8 @@ const BT={
   p1:['sweep','pound','lantern','sweep','pound'],p2:['sweep2','rubble','pound','lantern','sweep2','rubble'],
   x1:['sweep','pound','ripple','lantern','sweep','pound'],x2:['sweep2','rubble','ripple','pound','lantern','sweep2','rubble','ripple']}};
 // p1/p2 = story (普通): no shock wave on stage 1-2 (no 墨の波, no fire cross from the palm). x1/x2 = 難易度：極 (new attacks pillar / chase / ripple: js/extreme.js)
-function updBoss2(b,dt,hands){const K=BT[b.bk],p2=b.phase>1,pi=p2?1:0;let P=bossT(b);if(b.bk==='shiro'&&shPre(b,dt,hands))return;// 5面 (boss5.js)
+function updBoss2(b,dt,hands){const K=BT[b.bk],p2=b.phase>1,pi=p2?1:0;let P=bossT(b);if(b.bk==='shiro'&&shPre(b,dt,hands))return;// 6面 (boss5.js)
+if(b.bk==='kraken'&&krPre(b,dt,hands))return;// 5面 (kraken.js)
 if(b.phase===1&&!K.pats&&b.hp<b.mhp*0.5&&(b.st==='idle'||b.st==='hold')){b.phase=2;b.st='stag';b.stT=0;b.ah=-1;ev('roar',1);ev('say',K.say2[0],K.say2[1],1);ev('bphase',b.bk)}
 for(let i=0;i<2;i++){if(b.ah===i||b.ah===2)continue;const r=restH(i?1:-1,0),h=hands[i],k=Math.min(1,dt*4);h.x+=(r.x-h.x)*k;h.y+=(r.y-h.y)*k;h.z+=(r.z-h.z)*k}
 const idle=cd=>{b.st='idle';b.stT=0;b.cdT=cd;b.ah=-1},st=b.st;
@@ -40,6 +41,7 @@ else if(st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*K.c
   else if(m==='sweep'||m==='sweep2'){b.st='sweep';b.n=m==='sweep2'?2:1;b.p0=Math.random()<0.5?1:-1;b.ah=b.p0>0?0:1}
   else if(m==='lantern')b.st='lantern';
   else if(m==='pillar'||m==='chase'||m==='ripple'){b.st=m;b.ah=2}
+  else if(m==='side'||m==='inkjet'||m==='whirl')b.st=m;// 5面 クラーケン (kraken.js krPre)
   else if(m==='suck'||m==='koma'||m==='slash'||m==='rows'||m==='firerain'||m==='inkrain'||m==='darkring'||m==='flines')b.st=m;// 5面 (boss5.js shPre)
   else{b.st='rubble';b.ah=P.x<0?0:1;const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}}}
 else if(st==='pillar'||st==='chase'||st==='ripple'){if(exBoss(b,dt,hands,p2))idle(0.6)}
@@ -49,10 +51,10 @@ else if(st==='hold'){if(b.stT>K.hold[pi])idle(p2?0.5:1.0)}
 else if(st==='up2'){const u=Math.min(1,b.stT/K.up2),e=easeOut(u),tg=[[b.tx,b.tz],[b.p0,b.p1]];for(let i=0;i<2;i++){const h=hands[i],s=b.s0[i];h.x=lerp(s.x,tg[i][0],e);h.z=lerp(s.z,tg[i][1],e);h.y=lerp(s.y,11,e)+Math.sin(u*PI)*3}if(u>=1){b.st='down2';b.stT=0}}
 else if(st==='down2'){b.hL.y=b.hR.y=lerp(11,1.1,Math.min(1,b.stT/0.13));if(b.stT>=0.13){b.st='hold';b.stT=0;for(let i=0;i<2;i++){const h=hands[i];ev('slam',r1(h.x),r1(h.z));if(b.bk==='shiro')ev('shBoom',r1(h.x),r1(h.z),i?0:1,p2||G.ex?3:2);areaHurt(h.x,h.z,4.3,K.slamDmg)}}}
 else if(st==='volley'){b.mouth=1;const fb=b.bk==='aka'||b.bk==='shiro'&&b.n===1,n=(fb?K.ballN:K.volN)[pi],want=Math.floor((b.stT-0.4)/0.17);
- const mo=b.bk==='shiro'?shMouth(b,fb):null;while(b.vn<=want&&b.vn<n){b.vn++;P=pickR();const ox=mo?mo[0]:b.hx*2.7,oy=mo?mo[1]:23.4,oz=mo?mo[2]:-19.6,tx=clamp(P.x+rnd(-5,5),-20,20),tz=clamp(P.z+rnd(-5,5),-12,20),ft=1.5;
+ const mo=b.bk==='shiro'?shMouth(b,fb):b.bk==='kraken'?krMouth(b):null;while(b.vn<=want&&b.vn<n){b.vn++;P=pickR();const ox=mo?mo[0]:b.hx*2.7,oy=mo?mo[1]:23.4,oz=mo?mo[2]:-19.6,tx=clamp(P.x+rnd(-5,5),-20,20),tz=clamp(P.z+rnd(-5,5),-12,20),ft=1.5;
   shots.push({id:++eidN,k:fb?4:1,x:ox,y:oy,z:oz,vx:(tx-ox)/ft,vy:-oy/ft+8*ft,vz:(tz-oz)/ft,r:0.55,dmg:fb?K.ballDmg:16,g:16,life:9,tx,tz});fxStar(ox,oy,oz,3,fb?C.orange:C.white,0.08);if(lim('bo',0.3))sfxAt('ボッ',ox,oy+2,oz,{size:70,st:fb?'boom':'ink',life:0.4});snd('spawn')}
  if(b.stT>0.4+n*0.17+0.4)idle(p2?0.6:1.1)}
-else if(st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);const n=K.sumN[pi]+G.np-1;for(let i=0;i<n;i++)spawnNear(b.bk==='aka'?(i%2?'gun':'bom'):b.bk==='shiro'?(i%2&&b.phase>1?'shadeR':i%2?'shade':'imp'):'imp');if(p2&&b.bk==='beta')spawnNear('lan');if(G.ex)spawnNear('crow')}if(b.stT>1.3)idle(1)}
+else if(st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);const n=K.sumN[pi]+G.np-1;for(let i=0;i<n;i++)spawnNear(b.bk==='kraken'?['octo','hishaku','wani'][(i+b.phase)%3]:b.bk==='aka'?(i%2?'gun':'bom'):b.bk==='shiro'?(i%2&&b.phase>1?'shadeR':i%2?'shade':'imp'):'imp');if(p2&&b.bk==='beta')spawnNear('lan');if(G.ex)spawnNear('crow')}if(b.stT>1.3)idle(1)}
 else if(st==='wave'){const tel=K.waveTel,u=b.stT,n=K.waveN[pi];b.mouth=u<tel?0.6:1;const sx=b.bk==='shiro'?5.5:6.5,sz=b.bk==='shiro'?SN_Z+9:-14.5;for(let i=0;i<2;i++){const h=hands[i],k=Math.min(1,dt*(u<tel?5:30));h.x+=((i?sx:-sx)-h.x)*k;h.y+=((u<tel?15:1.1)-h.y)*k;h.z+=(sz-h.z)*k}
  if(!b.k&&u>=tel+0.1){b.k=1;ev('smash',-sx,sz);ev('smash',sx,sz);for(let i=0;i<n;i++)ev('lwave',r2(i*0.95))}if(u>tel+0.1+n*0.95+0.3)idle(0.6)}
 else if(st==='breath'){b.mouth=1;if(!b.k&&b.stT>=K.brTel){b.k=1;ev('breath',r2(b.p0),K.brN[pi],b.p1||0,b.bk==='shiro'?r1(shBrO(b)[1]):-17)}if(b.stT>K.brTel+1.3)idle(p2?0.5:0.9)}

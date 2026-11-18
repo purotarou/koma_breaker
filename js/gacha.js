@@ -1,7 +1,7 @@
 'use strict';
 // ================= GACHA ガチャ (G.menu 'gacha') =================
 // Currency: コマ札 (localStorage koma_gacha {f: count, paid: [times paid per stage], pick: pickup weapon id, n: total pulls}).
-// A stage clear (solo / co-op) gives stage number × 1 (stage 1 = 1 … stage 5 = 5), only for the first two clears of each stage.
+// A stage clear (solo / co-op) gives stage number × 1 (stage 1 = 1 … stage 6 = 6), only for the first two clears of each stage.
 // Weapon gacha: the six weapons of weapons.js. 1 札 = 1 pull, 5 札 = 6 pulls. The pickup (one, chosen by the player) comes out
 // at GA_PU, every other weapon has the same share of the rest. A duplicate adds 凸 (wsGive → WS.tp), one point of the weapon's own skill tree
 // (wtree.js, 「強化」 next to 「詳細」 on the equip screen). A weapon at 凸12 (WT_MAX) leaves the pool; once every weapon is at 凸12 all of them are in the pool again,
@@ -9,16 +9,16 @@
 // The screen: the weapon card (picture assets/gacha/cut_*.webp) on the left; on the right / behind it,
 // background: the weapon turning, then a demo play of stage 1 with that weapon (gaD, gaDemoStart / gaDemoUpdate).
 const GA_IDS=['gun','rifle','shotgun','rail','katana','hammer','bomb','flail','spear','bow','shield','staff','glove'],GA_PIC={rail:'railgun',gun:'pistol'},GA_PU=0.3,GA_MAXPT=3;// GA_MAXPT: skill points for a pull of a weapon that is already at the top level
-const GA={f:0,paid:[0,0,0,0,0],pick:'rifle',n:0};
+const GA={f:0,paid:[0,0,0,0,0,0],pick:'rifle',n:0};
 try{const s=JSON.parse(localStorage.getItem('koma_gacha')||'null');if(s)Object.assign(GA,s)}catch(e){}
-if(!GA_IDS.includes(GA.pick))GA.pick='rifle';if(!Array.isArray(GA.paid))GA.paid=[0,0,0,0,0];if(!Array.isArray(GA.gift))GA.gift=[];GA.f=Math.max(0,GA.f|0);
+if(!GA_IDS.includes(GA.pick))GA.pick='rifle';if(!Array.isArray(GA.paid))GA.paid=[0,0,0,0,0,0];while(GA.paid.length<6)GA.paid.push(0);if(!Array.isArray(GA.gift))GA.gift=[];GA.f=Math.max(0,GA.f|0);
 function gaSave(){try{localStorage.setItem('koma_gacha',JSON.stringify(GA))}catch(e){}}
 // pictures load on first use (about 100 KB each)
 const GA_IMG={};
 function gaImg(id){let m=GA_IMG[id];if(!m){m=GA_IMG[id]=new Image();m.src='assets/gacha/cut_'+(GA_PIC[id]||id)+'.webp'}return m.complete&&m.naturalWidth>0?m:null}
 function gaPreload(){for(const id of GA_IDS)gaImg(id)}
 // ---- reward (called once per game from skReward) ----
-function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>4)return;if((GA.paid[i]|0)>=2){G.fuda=0;return}
+function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>5)return;if((GA.paid[i]|0)>=2){G.fuda=0;return}
 GA.paid[i]=(GA.paid[i]|0)+1;GA.f+=i+1;G.fuda=i+1;gaSave()}
 // ---- draw logic ----
 const gaFull=id=>!!WS.own[id]&&wtTp(id)>=WT_MAX,gaPool=()=>{const P=GA_IDS.filter(id=>!gaFull(id));return P.length?P:GA_IDS.slice()};// 全部が最大なら全部が出る（重なるとスキルP）
@@ -77,7 +77,7 @@ drawLogo(250,70,0.34);head('武器ガチャ');gearBtn(W-86,24);
 gaGiftBtn(790,28,58,58);
 // wallet + where the 札 come from
 const wx=W-420,wy=28;para(wx+5,wy+6,300,58,14);ctx.fillStyle=INK;ctx.fill();para(wx,wy,300,58,14);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();gaFuda(wx+44,wy+29,1,-0.15);txt('コマ札',wx+74,wy+30,22,INK,null,0,'left');txt(String(GA.f),wx+272,wy+30,42,'#e5402b',INK,4,'right');
-txt('ステージクリアでもらえる',wx+150,wy+82,15,'#fff',INK,5);for(let i=0;i<5;i++){const cx=wx+8+i*60,cy=wy+110,left=2-(GA.paid[i]|0);para(cx,cy-14,54,28,6);ctx.fillStyle=left>0?'#fff':'#9a9db4';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.stroke();txt((i+1)+'面',cx+18,cy+1,13,INK);txt('＋'+(i+1),cx+42,cy+1,13,left>0?'#e5402b':'#555a70')}
+txt('ステージクリアでもらえる',wx+150,wy+82,15,'#fff',INK,5);for(let i=0;i<6;i++){const cx=wx+2+i*50,cy=wy+110,left=2-(GA.paid[i]|0);para(cx,cy-14,47,28,6);ctx.fillStyle=left>0?'#fff':'#9a9db4';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.stroke();txt((i+1)+'面',cx+16,cy+1,12,INK);txt('＋'+(i+1),cx+37,cy+1,12,left>0?'#e5402b':'#555a70')}
 txt('各ステージ2回まで（のこり：白）',wx+150,wy+140,13,'#fff',INK,4);
 // highlight caption (right side)
 gaBackUI(w);

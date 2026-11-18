@@ -69,8 +69,8 @@ function loadGlbBuf(path){return fetch(path,{cache:'no-cache'}).then(r=>{if(!r.o
  .catch(e=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=path+'.js';s.onerror=()=>rej(e);
   s.onload=()=>{const b=KB_GLB[path];if(!b)return rej(e);delete KB_GLB[path];const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);res(u.buffer)};
   document.head.appendChild(s)}))}
-// ---- stages authored in Blender. ?stage1=code ... ?stage5=code force the code-built version (comparison / fallback). ----
-const STAGE_FILES=['assets/stage_shrine.glb','assets/stage_castle.glb','assets/stage_town.glb','assets/stage_temple.glb','assets/stage_inkpond.glb'],STAGE_GLB=STAGE_FILES.map(()=>null);
-const stageReady=Promise.all(STAGE_FILES.map((f,i)=>new URLSearchParams(location.search).get('stage'+(i+1))==='code'?null:
+// ---- stages authored in Blender. ?stage1=code ... ?stage6=code force the code-built version (comparison / fallback). ----
+const STAGE_FILES=['assets/stage_shrine.glb','assets/stage_castle.glb','assets/stage_town.glb','assets/stage_temple.glb',null/* 荒海の船上: code only for now (assets/stage_sea.glb once it is made in Blender) */,'assets/stage_inkpond.glb'],STAGE_GLB=STAGE_FILES.map(()=>null);
+const stageReady=Promise.all(STAGE_FILES.map((f,i)=>!f||new URLSearchParams(location.search).get('stage'+(i+1))==='code'?null:
  loadGlbBuf(f).then(b=>{STAGE_GLB[i]=glbStage(b)})
  .catch(e=>console.warn('[stage] '+f+' failed to load, using the code-built stage:',e))));

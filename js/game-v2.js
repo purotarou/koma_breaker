@@ -57,6 +57,16 @@ else if(n===3){ctx.fillStyle='#c8daf0';ctx.fillRect(x,y,w,h);ctx.fillStyle=dotPa
  for(const[mx,mw,mh]of[[60,200,140],[300,240,120],[440,180,150]]){ctx.fillStyle='#8090ae';ctx.beginPath();ctx.moveTo(x+mx-mw/2,y+h);ctx.lineTo(x+mx,y+h-mh);ctx.lineTo(x+mx+mw/2,y+h);ctx.fill();ctx.fillStyle='#f4f7ff';ctx.beginPath();ctx.moveTo(x+mx-mw*0.2,y+h-mh*0.6);ctx.lineTo(x+mx,y+h-mh);ctx.lineTo(x+mx+mw*0.2,y+h-mh*0.6);ctx.fill()}
  const cx=x+w*0.5,by=y+h-30;ctx.fillStyle='#6b3f2c';for(const dx of[-46,38])ctx.fillRect(cx+dx,by-86,10,86);ctx.fillStyle='#3f4a5e';ctx.beginPath();ctx.moveTo(cx-80,by-80);ctx.lineTo(cx-30,by-120);ctx.lineTo(cx+30,by-120);ctx.lineTo(cx+80,by-80);ctx.fill();ctx.stroke();ctx.fillStyle='#f4f7ff';ctx.beginPath();ctx.moveTo(cx-56,by-98);ctx.lineTo(cx-30,by-122);ctx.lineTo(cx+30,by-122);ctx.lineTo(cx+56,by-98);ctx.fill();ctx.stroke();
  ctx.fillStyle='#f4f7ff';ctx.fillRect(x,y+h-30,w,30);for(let i=0;i<34;i++){ctx.beginPath();ctx.arc(x+(i*97)%w,y+(i*53)%(h-30),2.5+(i%3),0,TAU);ctx.fill()}}
+else if(n===4){const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#1f4d5c');g.addColorStop(0.6,'#6fa9a8');g.addColorStop(1,'#cfe5df');ctx.fillStyle=g;ctx.fillRect(x,y,w,h);ctx.fillStyle=dotPat;ctx.globalAlpha=0.22;ctx.fillRect(x,y,w,h*0.55);ctx.globalAlpha=1;
+ ctx.fillStyle='#9fb0b8';for(const[cx,cy,r]of[[60,30,44],[120,22,38],[330,34,50],[400,24,40]]){ctx.beginPath();ctx.ellipse(x+cx,y+cy,r,r*0.4,0,0,TAU);ctx.fill()}
+ ctx.strokeStyle=INK;ctx.lineWidth=4;
+ for(const[tx,s]of[[w*0.84,1],[w*0.62,-1]]){ctx.fillStyle='#a3283f';ctx.beginPath();ctx.moveTo(x+tx-14,y+h-40);ctx.quadraticCurveTo(x+tx+s*40,y+h-120,x+tx+s*10,y+40);ctx.quadraticCurveTo(x+tx+s*58,y+h-118,x+tx+20,y+h-40);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#f5dccb';for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(x+tx+s*(22-i*4)+3,y+h-62-i*22,4.5-i*0.5,0,TAU);ctx.fill()}}
+ ctx.fillStyle='#1f7088';ctx.fillRect(x,y+h-46,w,46);ctx.strokeStyle='#fff';ctx.lineWidth=3;for(let i=0;i<9;i++){ctx.beginPath();ctx.moveTo(x+i*56-10,y+h-30+(i%2)*10);ctx.quadraticCurveTo(x+i*56+10,y+h-42+(i%2)*10,x+i*56+30,y+h-30+(i%2)*10);ctx.stroke()}
+ const sx=x+w*0.3,sy=y+h-40;ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.fillStyle='#3b2a22';ctx.beginPath();ctx.moveTo(sx-110,sy-30);ctx.lineTo(sx+110,sy-30);ctx.lineTo(sx+92,sy+4);ctx.lineTo(sx-96,sy+4);ctx.fill();ctx.stroke();ctx.fillStyle='#8c1d24';ctx.fillRect(sx-104,sy-22,208,6);
+ ctx.fillStyle='#f5f0e4';ctx.fillRect(sx+52,sy-62,56,32);ctx.strokeRect(sx+52,sy-62,56,32);ctx.fillStyle='#2f3a4e';ctx.beginPath();ctx.moveTo(sx+44,sy-60);ctx.lineTo(sx+80,sy-80);ctx.lineTo(sx+116,sy-60);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#6d4630';ctx.fillRect(sx-6,y+18,9,h-88);ctx.fillStyle='#f1e6cc';ctx.beginPath();ctx.moveTo(sx-62,y+30);ctx.quadraticCurveTo(sx-2,y+22,sx+58,y+30);ctx.lineTo(sx+56,y+112);ctx.quadraticCurveTo(sx-2,y+104,sx-60,y+112);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#e5402b';ctx.beginPath();ctx.moveTo(sx-1,y+44);ctx.lineTo(sx+19,y+56);ctx.lineTo(sx+16,y+94);ctx.lineTo(sx-18,y+94);ctx.lineTo(sx-21,y+56);ctx.closePath();ctx.fill();ctx.stroke()}
 else{ctx.fillStyle='#ecebe6';ctx.fillRect(x,y,w,h);ctx.strokeStyle=INK;ctx.lineWidth=4;for(const[mx,mw,mh,c]of[[70,160,150,'#b9b8bf'],[380,200,160,'#b9b8bf'],[150,110,110,'#8d8c94'],[320,120,96,'#8d8c94']]){ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x+mx-mw/2,y+h-30);ctx.quadraticCurveTo(x+mx-mw*0.12,y+h-mh,x+mx,y+h-30-mh);ctx.quadraticCurveTo(x+mx+mw*0.12,y+h-mh,x+mx+mw/2,y+h-30);ctx.fill()}
  ctx.fillStyle='#141218';ctx.fillRect(x,y+h-34,w,34);const cx=x+w/2;ctx.fillStyle='#d9262c';for(const r of[[cx-60,y+50,15,h-80],[cx+45,y+50,15,h-80],[cx-84,y+40,168,14],[cx-70,y+70,140,10]]){ctx.fillRect(r[0],r[1],r[2],r[3]);ctx.strokeRect(r[0],r[1],r[2],r[3])}ctx.fillStyle=INK;ctx.fillRect(cx-94,y+28,188,12);
  ctx.strokeStyle='#d9262c';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(cx,y+h-17,110,9,0,0,TAU);ctx.stroke()}
@@ -123,7 +133,7 @@ if(setOpen)drawSettings();else drawMenuPop();if(wipe.on)drawWipe();ctx.strokeSty
 // ================= MAIN (v2) =================
 let GDT=0;
 // boss defeat camera: cut away from the player, start a little above the boss and drift in while circling
-function killCam(dt){if(boss&&(boss.monk||boss.mob))G.kcP=[boss.x,boss.y,boss.z,boss.yaw];/* moving bosses (鐘の僧, シロヌキ第3形態): follow him */const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
+function killCam(dt){if(boss&&(boss.monk||boss.mob))G.kcP=[boss.x,boss.y,boss.z,boss.yaw];/* moving bosses (鐘の僧, シロヌキ第3形態): follow him */const K=G.kcP,t=G.kcT,u0=sat(t/3.4),u=u0*u0*(3-2*u0),tx=K?K[0]:0,ty=K?K[1]+3.6:17,tz=K?K[2]:boss&&boss.bk==='kraken'?-34:-21.5,a=(K?K[3]:0)+lerp(-0.62,-0.18,u)+t*0.015,d=K?lerp(17,10,u):lerp(38,22,u),h=K?lerp(7,1.2,u):lerp(17,4,u),s=trauma*trauma;
 cam.x=tx+Math.sin(a)*d;cam.z=tz+Math.cos(a)*d;cam.y=ty+h;const dx=tx-cam.x,dy=ty-cam.y,dz=tz-cam.z;cam.yaw=Math.atan2(-dx,-dz)+rnd(-1,1)*s*0.03;cam.pitch=Math.atan2(dy,Math.hypot(dx,dz))+rnd(-1,1)*s*0.03;cam.roll=lerp(-0.06,0.02,u)+rnd(-1,1)*s*0.03;cam.fov=lerp(64,54,u)*PI/180}
 // ---- third / second-person camera (SET.view 1 / 2, toggled in the settings / the small HUD button / V key) ----
 // Over the right shoulder. Walls pull the camera in at once and it eases back out; looking up from below,
@@ -162,7 +172,7 @@ function orbitCam(){const a=now*0.12;cam.x=Math.sin(a)*19;cam.z=3+Math.cos(a)*17
 function setCamera(dt){vpR=gaFrame()||VPR_FULL;if((G.state==='menu'&&!gaDemo())||(G.state==='title'&&!G.demoOn)){orbitCam()}
 else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
-cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2&&spLock()?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}camUpdate()}
+cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2&&spLock()?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}seaCam();camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
 const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}

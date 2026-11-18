@@ -12,7 +12,7 @@ function spheres(e){const fx=Math.sin(e.yaw),fz=Math.cos(e.yaw);{const F=FOE[e.t
 if(e.type==='imp')return[[e.x,e.y+0.62*e.sc,e.z,0.68*e.sc,1]];
 if(e.type==='lan')return[[e.x,e.y,e.z,0.75,1],[e.x+fx*0.4,e.y+0.08,e.z+fz*0.4,0.3,2]];
 if(e.type==='bru')return[[e.x,1.0,e.z,0.95,1],[e.x,2.0,e.z,1.1,1],[e.x+fx*0.2,3.0,e.z+fz*0.2,0.55,2]];
-if(e.monk)return monkSph(e);if(e.bk==='shiro')return shSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
+if(e.monk)return monkSph(e);if(e.bk==='shiro')return shSph(e);if(e.bk==='kraken')return krSph(e);const yo=e.yo;return[[e.hx*2.7,28.2+yo,-19.4,2.2,2.5],[e.hx*2.7,26+yo,-25.3,5.6,1],[0,13+yo,-27,10,0.6],[e.hL.x,e.hL.y,e.hL.z,2.2,1],[e.hR.x,e.hR.y,e.hR.z,2.2,1]]}
 function updateEnemies(dt){for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.dead){enemies.splice(i,1);if(e===boss)boss=null;continue}
 if(e.monk){if(e.stn>0){e.stn-=dt;e.flash-=dt;continue}const sl=e.slw>0;if(sl)e.slw-=dt;updMonk(e,sl?dt*0.5:dt);if(G.ex)exMonk(e,sl?dt*0.5:dt);continue}
 if(e.frz>0&&e.type!=='boss'){e.frz-=dt;e.flash-=dt;continue}if(e.stn>0&&e.type!=='boss'){e.stn-=dt;e.flash-=dt;continue}// 雷 / 盾で押された (weapons2.js)// frozen by 妖光・氷牢 (weapons.js): no moves, no attacks
@@ -43,7 +43,7 @@ else{if(e.ap&&e.hp<=e.bh){e.ap=0;e.st='stun';e.stT=0;e.cd=2;ev('icebrk',r1(e.x),
 if(e.type!=='lan'){collide(e,e.r);if(boss&&e.type!=='crow'){const mk=boss.monk||boss.mob,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=boss.mob?1.6:mk?MK_R+0.8:8,bx=e.x-cx,bz=e.z-cz,bd=Math.hypot(bx,bz)||1;if(bd<R&&!(mk&&boss.y>2)){e.x=cx+bx/bd*R;e.z=cz+bz/bd*R}}}}
 for(let i=0;i<enemies.length;i++){const a=enemies[i];if(a.type==='lan'||a.type==='boss'||a.type==='crow')continue;for(let j=i+1;j<enemies.length;j++){const b=enemies[j];if(b.type==='lan'||b.type==='boss'||b.type==='crow')continue;const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz)||0.01,rr=a.r+b.r+0.25;if(d<rr){const p=(rr-d)/2/d;a.x-=dx*p;a.z-=dz*p;b.x+=dx*p;b.z+=dz*p}}}}
 // ---- boss ----
-const restH=(s,yo)=>boss&&boss.bk==='shiro'?shRestH(s,yo):({x:s*5.3,y:9.35+yo,z:-16.6});
+const restH=(s,yo)=>boss&&boss.bk==='shiro'?shRestH(s,yo):boss&&boss.bk==='kraken'?krRestH(s,yo):({x:s*5.3,y:9.35+yo,z:-16.6});
 function updBoss(b,dt){b.hx=Math.sin(b.t*0.9)*0.3;G.mood=Math.min(1,G.mood+dt*0.5);const hands=[b.hL,b.hR];T=bossT(b);
 if(b.st==='rise'){b.yo=Math.min(0,-38+b.stT/2.6*38);trauma=Math.max(trauma,0.3);for(const s of[-1,1]){const h=s<0?b.hL:b.hR,r=restH(s,b.yo);h.x=r.x;h.y=r.y;h.z=r.z}
  if(lim('gogo',0.45))addText('ゴゴゴゴ',rnd(220,W-220),rnd(110,300),{size:84,st:'ink',life:0.9,grow:0.12});if(lim('risefx',0.12)){fxBlobs(rnd(-7,7),0.3,-18.5,3,9,C.ink,0.3);fxSmoke(rnd(-8,8),0.5,-18,1,1.6,C.smokeD,2)}
@@ -96,7 +96,7 @@ box(0,-0.3,0.4,0.5,0.08,0.1,C.inkD);mPop();if(ic){C.skin=s0;C.skinD=s1;if(e.ap){
 function drawBossArm(b,s){const h=s<0?b.hL:b.hR,sx=s*9.2+b.hx*2,sy=20.6+b.yo,sz=-26.5,mx=(sx+h.x)/2+s*2,my=Math.max(sy,h.y)+3,mz=(sz+h.z)/2,len=Math.hypot(h.x-sx,h.y-sy,h.z-sz),n=clamp(Math.ceil(len/1.7),5,26);gId=nid();
 for(let i=0;i<=n;i++){const u=i/n,a=(1-u)*(1-u),bb=2*u*(1-u),c=u*u,d=lerp(5.8,2.8,u);sph(a*sx+bb*mx+c*h.x,a*sy+bb*my+c*h.y,a*sz+bb*mz+c*h.z,d,d,d,b.bk==='nyudo'&&u<0.42?C.kim:BI,0,.6,0,1)}gId=0;
 mPush();mT(h.x,h.y,h.z);mRY(Math.atan2(h.x-sx,h.z-sz));if(b.bk){bkHand(b,s);mPop();return}sph(0,0,0,3.6,2.3,3.8,BI,0,.8,0,1);for(let i=0;i<4;i++)put(CONE,-1.2+i*0.8,-0.3,1.9,1.9,0,0,0.7,1.8,0.7,C.paper);put(CONE,-s*1.9,-0.2,0.6,1.6,-s*1.2,0,0.7,1.5,0.7,C.paper);mPop()}
-function drawBoss(b){if(b.bk==='nyudo'){drawNyudo(b);return}if(b.bk==='shiro'){drawShiro(b);return}const yo=b.yo,t=b.t,p2=b.phase>1,eye=p2?C.red:C.yellow;gTint=b.flash>0?0.45:0;
+function drawBoss(b){if(b.bk==='nyudo'){drawNyudo(b);return}if(b.bk==='shiro'){drawShiro(b);return}if(b.bk==='kraken'){drawKraken(b);return}const yo=b.yo,t=b.t,p2=b.phase>1,eye=p2?C.red:C.yellow;gTint=b.flash>0?0.45:0;
 put(CYL,0,0.1,-21.5,0,0,0,27,0.1,13,C.inkD,0,0,F_NOCAST);for(let i=0;i<6;i++){const a=i*1.05+t*0.3;sph(Math.cos(a)*11.5,0.1,-21.5+Math.sin(a)*5.5,2.2+Math.sin(t*2+i)*0.6,0.9,2.2,C.inkD)}
 mPush();mT(0,yo,-27);mS(2.1,2.1,2.1);gId=nid();sph(0,4.2,0,11,10,8,BI,0,.6,0,1);sph(b.hx,8.6,0.2,9.5,6.5,6.5,BI,0,.6,0,1);sph(-4.4+b.hx,9.8,0.3,4.2,3.6,4,BI,0,.6,0,1);sph(4.4+b.hx,9.8,0.3,4.2,3.6,4,BI,0,.6,0,1);gId=0;
 for(let i=0;i<7;i++){const a=(i-3)*0.42;put(CONE,Math.sin(a)*3.4+b.hx,10.2-Math.abs(i-3)*0.12,Math.cos(a)*3.2,1.9,a,0,0.9,1.9,0.9,C.gold,0,.6)}
@@ -131,6 +131,6 @@ for(let i=0;i<9;i++){const tt=((now*3+i/9)%1)*80+2;mPush();mT(ox+d[0]*tt,oy+d[1]
 bill(BURST,ox+d[0]*2.6,oy+d[1]*2.6,oz+d[2]*2.6,2.6*u,now*25,C.cyan,NF);bill(STAR,ox+d[0]*2.4,oy+d[1]*2.4,oz+d[2]*2.4,1.3*u,-now*25,C.white,NF)}}
 const petals=[];for(let i=0;i<70;i++)petals.push({x:rnd(-18,18),y:rnd(0,11),z:rnd(-18,18),p:rnd(0,TAU),s:rnd(0.07,0.13),k:i});
 // ambient particles per stage (STG[].pfx): v = fall speed (negative rises), w = wind, c = colours, sz = size scale
-const PFX=[{v:1,w:1,c:['sakura']},{v:-1.2,w:1,c:['orange']},{v:0.55,w:0.7,c:['inkD','inkD','ink']},{v:1.7,w:2.4,c:['white'],sz:0.8},{v:-0.6,w:0.5,c:['inkD','inkD','inkD','inkD','red'],sz:1.2}];
+const PFX=[{v:1,w:1,c:['sakura']},{v:-1.2,w:1,c:['orange']},{v:0.55,w:0.7,c:['inkD','inkD','ink']},{v:1.7,w:2.4,c:['white'],sz:0.8},{v:-0.6,w:0.5,c:['inkD','inkD','inkD','inkD','red'],sz:1.2},{v:0.25,w:4.2,c:['white','white','cyan'],sz:0.7}];
 function drawPetals(dt){const f=PFX[STG[G.stage].pfx],sz=f.sz||1;for(const p of petals){p.y-=dt*f.v*(0.7+Math.sin(p.p)*0.2);p.p+=dt*2.2;p.x+=dt*(0.9+Math.sin(p.p*0.7)*0.8)*f.w;if(p.y<0)p.y+=11;else if(p.y>11)p.y-=11;let dx=p.x-cam.x,dz=p.z-cam.z;if(dx>18)p.x-=36;else if(dx<-18)p.x+=36;if(dz>18)p.z-=36;else if(dz<-18)p.z+=36;
 put(QUAD,p.x,p.y,p.z,p.p,p.p*1.3,p.p*0.7,p.s*sz,p.s*0.7*sz,1,C[f.c[p.k%f.c.length]],0,0,F_UNLIT|F_NOEDGE|F_NOCAST)}}
