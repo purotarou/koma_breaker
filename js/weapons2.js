@@ -22,12 +22,12 @@ const W2={
  bw:{dm:40,chg:1.5,spd:85,rain:26,rainR:8,rainT:1.6,zoneK:2.5,zoneT:6},
  sh:{bash:14,dash:24,R:1.9,A:0.7,push:4,pushD:8,lunge:4,lungeD:9,jg:0.3,slow:0.5,barR:3.4,barA:1.08,refl:3},
  st:{heal:0.1,dm:45,cool:0.6,spd:13,turn:2.2,bonk:40,life:2.8,bT:5,bA:1.1,bD:0.9,sh:0.4,sT:12,sA:0.3,sD:0.5}};// bT/bA/bD = 玉の加護（秒・攻撃倍率・被ダメ倍率）、sh/sT/sA/sD = 必殺（回復割合・秒・攻撃の上乗せ・軽減の強さ。SK.spw / SK.beam で凸に応じて伸びる）
-const W2K={flail:1,spear:1,bow:1,shield:1,staff:1};
+const W2K={flail:1,spear:1,bow:1,shield:1,staff:1,glove:1};// glove: glove.js
 const wflys=[],wspk=[],warrows=[],wrains=[],wrefl=[],worbs=[];
 const W2I=m4();W2I[0]=W2I[5]=W2I[10]=W2I[15]=1;
 const wpS=o=>o===pl||o.me?pl:o;// whose state: the local player (also the 3rd-person copy tpsHero) or another player
 const w2pw=()=>pl.pow>0?2:1;
-function w2Reset(){wflys.length=0;wspk.length=0;warrows.length=0;wrains.length=0;wrefl.length=0;worbs.length=0;pl.fb=null;pl.fsp=null;for(const o of others){o.fb=null}}
+function w2Reset(){glReset();wflys.length=0;wspk.length=0;warrows.length=0;wrains.length=0;wrefl.length=0;worbs.length=0;pl.fb=null;pl.fsp=null;for(const o of others){o.fb=null}}
 // first enemy sphere in front of (ox,oz) facing yaw: within R (horizontal), ±A, between heights y0..y1
 function w2Arc(e,ox,oz,yaw,R,A,y0,y1){for(const s of spheres(e)){const dx=s[0]-ox,dz=s[2]-oz,dh=Math.hypot(dx,dz)-s[3];if(dh>R||s[1]-s[3]>y1||s[1]+s[3]<y0)continue;if(dh<0.5||Math.abs(angDiff(Math.atan2(-dx,-dz),yaw))<A)return s}return null}
 // sphere s touches the segment a-b (radius r)
@@ -37,7 +37,7 @@ function w2PopNear(x,y,z,r){for(const s of shots)if(!s.dead&&Math.hypot(s.x-x,s.
 const w2P=slot=>slot===pl.slot?pl:others.find(o=>o.slot===slot);
 // ---- update (from wpUpdate) ----
 function w2Update(w,dt,f){
-switch(w.kind){case'flail':flailUpdate(dt,f);break;case'spear':spearUpdate(dt,f);break;case'bow':bowUpdate(dt,f);break;case'shield':shieldUpdate(dt,f);break;case'staff':staffUpdate(dt,f);break}}
+switch(w.kind){case'flail':flailUpdate(dt,f);break;case'spear':spearUpdate(dt,f);break;case'bow':bowUpdate(dt,f);break;case'shield':shieldUpdate(dt,f);break;case'staff':staffUpdate(dt,f);break;case'glove':gloveUpdate(dt,f);break}}
 // ================= 鬼棘の流星鎚 =================
 const flSt=c=>c>=1?3:c>=0.45?2:1;
 const flOrigin=o=>[o.x,(o.y||0)+1.4,o.z];
@@ -184,7 +184,8 @@ case'flail':flSpStart();break;
 case'spear':snd('charge');snd('zap');flash(0.4);lines(0.6,'#ffe680');addText('バリバリバリッ！',W/2,H*0.15,{size:84,st:'fire',life:0.9,rot:-0.08});break;
 case'bow':bowRain();break;
 case'shield':pl.hon=0;if(wb('sh_sp'))wtShWave();snd('freeze');flash(0.4);addText('ガキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.06});break;
-case'staff':staffRevive();break}}
+case'staff':staffRevive();break;
+case'glove':glSpStart();break}}
 // ================= WORLD (everyone's; only the owner's deal damage) =================
 function w2World(dt){
 if(isCli())for(const e of enemies)if(e.stn>0)e.stn-=dt;
@@ -192,6 +193,7 @@ for(let i=wflys.length-1;i>=0;i--){const f=wflys[i];if(f.o!==pl&&!others.include
  if(f.own&&f.m==='t')flHitSeg(f,a,p);
  if(!f.bang&&f.t>=f.To){f.bang=1;flBang(f,p)}
  if(f.t>=f.To+f.Tb){wflys.splice(i,1);if(f.o.fb===f)f.o.fb=null}}
+glWorld(dt);
 for(let i=wspk.length-1;i>=0;i--){const s=wspk[i],d0=s.d;s.d+=(s.big?70:48)*dt;s.t+=dt;const a=[s.x+s.dx*d0,s.y+s.dy*d0,s.z+s.dz*d0],b=[s.x+s.dx*s.d,s.y+s.dy*s.d,s.z+s.dz*s.d],rr=s.big?1.6:0.9;
  if(s.own){const S=W2.sp,pw=w2pw();for(const e of enemies){if(e.dead||e.st==='spawn'||s.hit.has(e)||s.n<=0)continue;for(const q of spheres(e))if(w2Seg3(a,b,q,rr)){s.hit.add(e);s.n--;wpDmg(e,S.wvDm*pw*(s.big?2.4:1),q[0],q[1],q[2],{quiet:1});spZap(e,q);if(lim('wvh',0.08))fxSparks(q[0],q[1],q[2],4,6,C.yellow);break}}
   for(const q of shots)if(!q.dead&&w2Seg3(a,b,[q.x,q.y,q.z,q.r],rr)){popShot(q);if(isCli())net.q.ps.push(q.id)}
@@ -237,13 +239,14 @@ case'f':{const f=flSlam(o,0,a[1],a[2],a[3]);wflys.push(f);o.fb=f;o.fsA=angDiff(o
 case'S':wspk.push({own:0,x:a[1],y:a[2],z:a[3],dx:a[4],dy:a[5],dz:a[6],k:a[7],big:a[8],t:0,d:0,R:a[9]||14,hit:new Set(),n:a[8]?999:2});break;
 case'A':warrows.push({own:0,x:a[1],y:a[2],z:a[3],dx:a[4],dy:a[5],dz:a[6],sp:W2.bw.spd*(0.75+0.5*a[7]),t:0,c:a[7],dm:0,n:1+Math.floor(a[7]*4+1e-6),hit:new Set(),stk:0});break;
 case'R':wrains.push(bwRainMk(0,a[1],a[2],a[3]));break;
+case'P':glFistFx(a);break;
 case'O':worbs.push({own:0,x:a[1],y:a[2],z:a[3],vx:a[4]*W2.st.spd,vy:a[5]*W2.st.spd,vz:a[6]*W2.st.spd,t:0,by:o.slot});break;
 case'X':wrefl.push({own:0,x:a[1],y:a[2],z:a[3],vx:a[4],vy:a[5],vz:a[6],t:0});break;
 case'hl':{const p=w2P(a[1]);if(p)w2HealFx(p);if(a[1]===net.slot&&!pl.dead&&G.mode!=='pvp'){pl.hp=Math.min(SK.hp,pl.hp+SK.hp*a[2]);snd('item');addText('回復！',W/2,H*0.4,{size:70,st:'cyan',life:0.6});if(a[3])w2Bless(a[3],a[4],a[5])}break}
 case'rv':for(const q of others)if(q.dead){fxRing(q.x,0.1,q.z,5,W2_GREEN,0.4);fxStar(q.x,1.2,q.z,3,C.white,0.15)}else if(G.mode!=='pvp')w2HealFx(q);fxRing(o.x,0.1,o.z,9,W2_GREEN,0.5);
  if(G.mode!=='pvp'){if(pl.dead){pl.dead=false;pl.hp=Math.round(SK.hp*Math.max(0.6,a[1]||0));pl.inv=2.5;pl.revT=0;snd('item');flash(0.4);addText('フッカツ！',W/2,H*0.4,{size:96,st:'cyan',life:0.9})}
   else{pl.hp=Math.min(SK.hp,pl.hp+SK.hp*(a[1]||0));snd('item');w2HealFx(pl);addText('回復！',W/2,H*0.4,{size:70,st:'cyan',life:0.6})}w2Bless(a[2],a[3],a[4])}break}}
-function w2OtherAct(o,ak){if(ak>=12&&ak<=14||ak===20||ak===23||ak===10||ak===17){const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd(ak<=14?'slash':'whoosh');sndVol=v}}
+function w2OtherAct(o,ak){if(ak>=25&&ak<=31){glOtherAct(o,ak);return}if(ak>=12&&ak<=14||ak===20||ak===23||ak===10||ak===17){const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd(ak<=14?'slash':'whoosh');sndVol=v}}
 // ================= DRAW: world =================
 function w2SegW(a,b,w,col,fl){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2];mPush();mT((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);const l=orient(dx,dy,dz);mS(w,w,l);emit(BOX,col,0,0,fl==null?F_UNLIT|F_NOCAST:fl,0);mPop()}
 const W2_SHAFT=[0.93,0.88,0.76],W2_GLOW=[0.45,0.95,1],W2_BAR=[0.55,0.92,1],W2_BARL=[0.85,0.98,1];
@@ -261,7 +264,7 @@ wpFrame(B,[ux,uy,uz],Math.abs(uy)>0.9?[1,0,0]:[0,1,0],sc);mPush();M.set(W2I);mAp
 function flBallAt(o,S,E,sc){if(S.fb)return S.fb.b;const chg=S===pl?pl.hon:o.ak===9&&o.hc>0;
 if(chg){const a=now*9+(o.slot|0),r=W2.fl.orbR;return[o.x+Math.cos(a)*r,(o.y||0)+2.45+0.15*Math.sin(2*a),o.z+Math.sin(a)*r]}
 const F=WMOD.flail.fl;return[E[0]+0.05*Math.sin(now*2.1+(o.slot|0)),Math.max(0.2,E[1]-(F.len+F.bc)*sc*0.97),E[2]+0.05*Math.cos(now*1.7)]}
-function drawW2World(){const NF=F_UNLIT|F_NOCAST;
+function drawW2World(){const NF=F_UNLIT|F_NOCAST;glDraw();
 // stunned enemies: lightning (雷) / stars (盾で押された)
 for(const e of enemies){if(e.dead||!(e.stn>0))continue;const c=eCenter(e),r=Math.min(c[3],3);
  if(e.zapT>now-1||e.stnZ){for(let k=0;k<3;k++){let p=[c[0]+rnd(-r,r),c[1]+r*0.9,c[2]+rnd(-r,r)];for(let j=0;j<3;j++){const q=[p[0]+rnd(-0.5,0.5),p[1]-rnd(0.3,0.7)*r,p[2]+rnd(-0.5,0.5)];w2SegW(p,q,0.07,j%2?C.white:C.yellow);p=q}}bill(STAR,c[0]+rnd(-r,r)*0.6,c[1]+rnd(-r,r)*0.6,c[2],0.5*r,now*20,C.yellow,NF)}
@@ -327,10 +330,11 @@ case'flail':{const ch=pl.hon,c0=sat(at/0.15);v=pl.fsp?kf([[0,FLV_I],[0.1,FLV_C],
  if(ch){v=v.slice();v[0]+=Math.sin(now*9)*0.02;v[1]+=Math.cos(now*9)*0.02}s=0.75;tip=[0,0,-WMOD.flail.fl.eye];break}
 case'bow':{const rel=ak===17&&at<0.4;v=pl.hon||rel?BWV_A:BWV_I;if(rel){v=v.slice();v[2]+=0.03*Math.sin(at*40)*(1-at/0.4)}s=0.55;tip=[0,0,-0.15];break}
 case'shield':{const g=pl.grd||pl.sp===2,hit=now-(pl.shHit||-9)<0.2;v=ak===20&&at<0.32?kf([[0,SHV_G],[0.06,SHV_P],[0.16,SHV_P],[0.32,g?SHV_G:SHV_I]],at):pl.sp===2?SHV_S:g?SHV_G:SHV_I;if(hit){v=v.slice();v[2]+=0.06*(1-(now-pl.shHit)/0.2)}s=0.6;tip=[0,0,-0.05];break}
+case'glove':return glView(ak,at);
 case'staff':v=ak===22?kf([[0,STV_I],[0.08,STV_C],[0.3,STV_C],[0.5,STV_I]],at):ak===23?kf([[0,STV_I],[0.08,STV_U],[0.16,STV_D],[0.45,STV_I]],at):ak===24?kf([[0,STV_I],[0.25,STV_S],[1.2,STV_S],[1.5,STV_I]],at):STV_I;s=0.6;tip=[0,0,-1.02];break}
 mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);return{s,tip}}
 // extras in the weapon's own (scaled) space: the bow string + arrow; the flail chain + ball (world, layer 1)
-function w2ViewExtra(w,s){if(w.kind==='bow'){const ready=pl.hon||pl.cool<=0.05;bwStr(pl.hon?pl.hc:0,ready&&pl.sp!==1)}
+function w2ViewExtra(w,s){if(w.kind==='glove')glViewL(s);else if(w.kind==='bow'){const ready=pl.hon||pl.cool<=0.05;bwStr(pl.hon?pl.hc:0,ready&&pl.sp!==1)}
 else if(w.kind==='flail'){const F=WMOD.flail&&WMOD.flail.fl;if(!F)return;const e=[0,0,-F.eye],E=[M[0]*e[0]+M[4]*e[1]+M[8]*e[2]+M[12],M[1]*e[0]+M[5]*e[1]+M[9]*e[2]+M[13],M[2]*e[0]+M[6]*e[1]+M[10]*e[2]+M[14]],sc=Math.hypot(M[0],M[1],M[2]);
  const lay=curLayer;curLayer=1;mPush();M.set(W2I);flChain(E,flBallAt(pl,pl,E,sc),sc);mPop();curLayer=lay}}
 // the bow string drawn back by c (0..1), and the arrow on it (weapon space)
@@ -347,10 +351,11 @@ if(k==='spear'&&ak>=12&&ak<=14){const g=kf([[0,0],[0.05,-0.3],[0.11,1],[0.24,1],
 else if(k==='flail'&&ak===11)bd=kf([[0,0],[0.1,-0.15],[0.22,0.35],[0.34,0]],at);
 else if(k==='shield'&&ak===20)bd=kf([[0,0],[0.06,0.2],[0.16,0.2],[0.32,0]],at);
 else if(k==='staff'&&ak===23)bd=kf([[0,0],[0.08,-0.15],[0.16,0.35],[0.45,0]],at);
+else if(k==='glove')glHeroBody(o,at,ak);
 else if(k==='bow'){const S=wpS(o),ch=S===pl?pl.hon:ak===16&&o.hc>0;if(ch||ak===17&&at<0.4){tw=BW_TW;hRot('head',HY,-BW_TW)}}// archer stance: left shoulder turns towards the target, so the draw arm has room
 if(tw){hRot('spine',HY,tw*0.5);hRot('chest',HY,tw*0.5)}if(bd){hRot('spine',HX,bd*0.6);hRot('chest',HX,bd*0.4)}}
 // arms + weapon frame; returns {show, tip} like wpHeroArms
-function w2HeroArms(o,w,A,pit,at,ak){const k=w.kind,S=wpS(o),Hh=HERO;let P,f,u=[0,1,0],tip=[0,0,-0.6];
+function w2HeroArms(o,w,A,pit,at,ak){if(w.kind==='glove')return glHeroArms(o,A,pit,at,ak);const k=w.kind,S=wpS(o),Hh=HERO;let P,f,u=[0,1,0],tip=[0,0,-0.6];
 const PL=[0.3,1.0,0.12],pose=v=>{P=[v[0],v[1],v[2]];f=dirYE(v[3],v[4])};
 if(k==='spear'){pose(ak>=12&&ak<=14?kf([[0,SPH_I],[0.05,SPH_B],[0.11,SPH_T[ak-12]],[0.24,SPH_T[ak-12]],[0.42,SPH_I]],at):SPH_I);tip=[0,0,-1.45];
  heroArm('R',P,[-1,-0.5,0],-1.2);P=Hh.GT[Hh.bi.hand_R].slice();heroArm('L',[P[0]+f[0]*0.38,P[1]+f[1]*0.38,P[2]+f[2]*0.38],[1,-0.6,0],1.3)}
@@ -376,12 +381,14 @@ if(k==='flail'){if(c<1.1){o.ak=9;o.at=c;o.hc=c/1.1}else{o.ak=10;o.at=c-1.1}}
 else if(k==='spear'){o.ak=12+(((now+i*0.35)/0.45|0)%3);o.at=(now+i*0.35)%0.45}
 else if(k==='bow'){if(c<1.1){o.ak=16;o.at=c;o.hc=c/1.1}else{o.ak=17;o.at=c-1.1}}
 else if(k==='shield'){if(c<0.9){o.ak=19;o.gf=1;o.at=c}else{o.ak=20;o.at=c-0.9}}
-else if(k==='staff'){o.ak=c<0.8?22:23;o.at=c%0.8}}
+else if(k==='staff'){o.ak=c<0.8?22:23;o.at=c%0.8}
+else if(k==='glove'){const q=(now+i*0.35)%2.4;if(q<1.2){o.ak=25+((q/0.4)|0);o.at=q%0.4}else if(q<1.8){o.ak=32;o.at=q-1.2}else{o.ak=31;o.at=q-1.8}}}
 // ================= HUD =================
 function w2HUD(w){if((w.kind==='flail'||w.kind==='bow')&&pl.hon){const c=pl.hc,full=c>=1,col=full?(Math.sin(now*16)>0?'#fff':'#ffc21a'):'#ffc21a';gauge(W/2-100,662,230,18,c,col,w.kind==='bow'?'引':'溜');
  if(w.kind==='flail'){const st=flSt(c);txt(['','１段','２段','３段'][st],W/2+150,672,22,st>2?'#e5402b':'#fff',INK,6,'left');ctx.fillStyle=INK;ctx.fillRect(W/2-100+230*0.45,660,3,22)}else if(bwZoneK(pl)>1)txt('矢の中：溜めが速い',W/2+15,634,20,'#59d8ff',INK,6)}
 else if(w.kind==='shield'&&(pl.grd||pl.sp===2||pl.jrT>0))txt(pl.jrT>0&&!pl.grd?'ジャスト！':'防御中',W/2,650,26,pl.jrT>0&&!pl.grd?'#ffd91a':'#59d8ff',INK,6);
+else if(w.kind==='glove')glHUD();
 else if(w.kind==='spear'&&now-(pl.spkT||-9)<0.8)for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(W/2-30+i*30,668,9,0,TAU);ctx.fillStyle=i<=pl.spk?'#ffd91a':'rgba(255,255,255,.5)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke()}}
 // AI (title demo / gacha demo): hold to charge, let go; the shield taps
 let w2aiT=0;
-function w2Ai(dt){const k=wpW().kind;w2aiT+=dt;if(k==='flail'||k==='bow'){if(pl.hon)inp.fire=pl.hc<(k==='bow'?0.75:1)}else if(k==='shield'&&inp.fire)inp.fire=(w2aiT%0.5)<0.1}
+function w2Ai(dt){const k=wpW().kind;w2aiT+=dt;if(k==='flail'||k==='bow'){if(pl.hon)inp.fire=pl.hc<(k==='bow'?0.75:1)}else if(k==='shield'&&inp.fire)inp.fire=(w2aiT%0.5)<0.1;else if(k==='glove'&&inp.fire&&pl.sp!==2)inp.fire=(w2aiT%0.32)<0.08}

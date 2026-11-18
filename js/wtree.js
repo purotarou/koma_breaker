@@ -14,6 +14,10 @@ const WT_S0=[[{atk:1.06},{atk:1.1}],[{aspd:1.06},{aspd:1.1}],[{spw:1.08},{spw:1.
 const WT_CHG=[{chg:1.12},{chg:1.18}];
 // 大技: [上, 右, 下, 左] = {b: key, n: 名前, d: 説明, s: 一緒に付く数値}
 const WT_B={
+gun:[{b:'gn_six',n:'六発目',d:'６発ごとに会心弾（威力 2.5 倍・敵を１体つらぬく）'},
+ {b:'gn_fan',n:'早撃ち',d:'装填が半分の時間で終わり、連射も少し速くなる',s:{rel:0.5,aspd:1.08}},
+ {b:'gn_sp',n:'墨龍砲・極',d:'必殺の光線が太くなり、威力が 1.3 倍'},
+ {b:'gn_gem',n:'妖珠還し',d:'敵を倒すと弾が２発もどり、必殺ゲージも少したまる'}],
 rifle:[{b:'rf_pierce',n:'貫く珠',d:'弾が敵を１体つらぬき、後ろの敵にも当たる（ボスを除く）。威力＋4%',s:{atk:1.04}},
  {b:'rf_ramp',n:'加速連射',d:'撃ち続けるほど連射が速くなる（最大 1.3 倍）'},
  {b:'rf_sp',n:'珠時雨・極',d:'必殺中に敵を倒すたび、必殺の時間が 0.2 秒のびる'},
@@ -57,9 +61,13 @@ shield:[{b:'sh_spike',n:'棘の盾',d:'防御中、正面の近くの敵にダ�
 staff:[{b:'st_twin',n:'双玉',d:'護符の玉が２つ同時に出る'},
  {b:'st_rapid',n:'速詠唱',d:'玉を撃つ間隔が半分になる'},
  {b:'st_sp',n:'祈りの波動',d:'必殺のとき、まわりの敵に大ダメージを与えて押し返す'},
- {b:'st_long',n:'長き加護',d:'加護が長く強くなる（玉の加護は２倍・必殺は 1.5 倍の時間）'}]};
+ {b:'st_long',n:'長き加護',d:'加護が長く強くなる（玉の加護は２倍・必殺は 1.5 倍の時間）'}],
+glove:[{b:'gl_hook',n:'溜めフック',d:'ガードを長押しして溜め、離すとフック（溜め３段階で威力アップ）。吹き飛んだ敵が後ろの敵を巻き込む'},
+ {b:'gl_combo',n:'コンボゲージ',d:'当て続けるほど威力が上がる（最大 1.5 倍）。被弾するか、しばらく当てないと途切れる'},
+ {b:'gl_sp',n:'ラッシュ延長',d:'ラッシュ中に敵を倒すたび、ラッシュの時間が 0.4 秒のびる'},
+ {b:'gl_counter',n:'カウンター',d:'ガードを押してから 0.25 秒以内に攻撃を受けると、受けずに反撃の拳が自動で出る。ゲージも少したまる'}]};
 // 武器ごとの1・2個目（WT_S0 との違いだけ）
-const WT_SX={rifle:{0:[{atk:1.03},{atk:1.05}],1:[{aspd:1.03},{aspd:1.05}],2:[{spw:1.04},{spw:1.04,beam:1.03}],3:[{mag:1.08},{rel:0.93}]},shotgun:{3:[{mag:1.2},{rel:0.85}]},rail:{1:[{heat:0.9},{heat:0.85}]},hammer:{1:WT_CHG},flail:{1:WT_CHG},bow:{1:WT_CHG}};
+const WT_SX={gun:{3:[{mag:1.12},{rel:0.9}]},rifle:{0:[{atk:1.03},{atk:1.05}],1:[{aspd:1.03},{aspd:1.05}],2:[{spw:1.04},{spw:1.04,beam:1.03}],3:[{mag:1.08},{rel:0.93}]},shotgun:{3:[{mag:1.2},{rel:0.85}]},rail:{1:[{heat:0.9},{heat:0.85}]},hammer:{1:WT_CHG},flail:{1:WT_CHG},bow:{1:WT_CHG}};
 const WTREE={};
 for(const id in WT_B){WTREE[id]=[0,1,2,3].map(a=>{const S=(WT_SX[id]||{})[a]||WT_S0[a];return[0,1].map(i=>{const s=S[i],k=Object.keys(s)[0];return{s,n:WT_NM[k]+(i?' II':' I')}}).concat([WT_B[id][a]])})}
 const wtPct=(k,v)=>WT_SN[k]+' '+(v>=1?'＋':'－')+Math.round(Math.abs(v-1)*100)+'%';
@@ -70,9 +78,9 @@ const wb=k=>!!WTB[k];
 function wtApply(s,w){WTB={};if(G.demoOn||!w||!WTREE[w.id]||!(WS.own[w.id]||DEV))return;const T=wtTr(w.id);
 for(let a=0;a<4;a++)for(let i=0;i<Math.min(3,T[a]);i++){const n=WTREE[w.id][a][i];if(n.b)WTB[n.b]=1;
  for(const k in n.s||{}){const v=n.s[k];if(k==='mag')s.mag=Math.max(2,Math.round(s.mag*v));else s[k]*=v}}
-if(WTB.rf_pierce)s.pierce=1;if(WTB.rf_ammo)s.aKill+=2;if(WTB.sg_boom)s.boom=1}
-function wtReset(){pl.sgD=0;pl.sgS=0;pl.hq=null;pl.kq=null;pl.bmS=null;pl.rfR=0}
-const wtBombMax=()=>wb('bm_more')?5:3,shSlow=()=>wb('sh_move')?1:W2.sh.slow,WT_KTW=50,WT_KTR=22;
+if(WTB.rf_pierce)s.pierce=1;if(WTB.rf_ammo)s.aKill+=2;if(WTB.gn_gem){s.aKill+=2;s.gKill+=2}if(WTB.sg_boom)s.boom=1}
+function wtReset(){pl.gnN=0;pl.gnC=0;pl.sgD=0;pl.sgS=0;pl.hq=null;pl.kq=null;pl.bmS=null;pl.rfR=0}
+const wtBombMax=()=>wb('bm_more')?5:3,shSlow=()=>wpW().kind==='glove'?W2.gl.slow:wb('sh_move')?1:W2.sh.slow,WT_KTW=50,WT_KTR=22;
 // timers of the delayed big moves (from wpUpdate)
 function wtTimers(dt,w){
 if(pl.sgD>0){pl.sgD-=dt;if(pl.sgD<=0&&w.pel){shotgunFire(w,0);snd(w.snd);pl.flashT=0.05;pl.kick+=w.kick}}
@@ -81,12 +89,13 @@ if(pl.hq){pl.hq.t-=dt;if(pl.hq.t<=0){const q=pl.hq;pl.hq=null;hammerAt(q.x,q.z,q
 if(pl.kq){const q=pl.kq;q.t-=dt;if(q.t<=0){q.t=0.3;hammerAt(q.x,q.z,7+q.n*3,1,1.6*SK.spw);if(++q.n>=3)pl.kq=null}}
 if(pl.bmS){const q=pl.bmS;q.t-=dt;if(q.t<=0){q.t=0.45;throwBomb(1);if(--q.n<=0)pl.bmS=null}}}
 // a shot of a gun (shoot, players.js)
-function wtShoot(w){if(w.id==='rifle'&&wb('rf_ramp')){pl.rfR=Math.min(1,(now-(pl.rfL||-9)<0.35?pl.rfR||0:0)+0.05);pl.rfL=now;pl.cool/=1+0.3*pl.rfR}
+function wtShoot(w){pl.gnC=0;if(w.id==='gun'&&wb('gn_six')){pl.gnN=(pl.gnN|0)+1;if(pl.gnN%6===0){pl.gnC=1;addText('会心！',W*0.62,H*0.5,{size:56,st:'fire',life:0.35})}}
+if(w.id==='rifle'&&wb('rf_ramp')){pl.rfR=Math.min(1,(now-(pl.rfL||-9)<0.35?pl.rfR||0:0)+0.05);pl.rfL=now;pl.cool/=1+0.3*pl.rfR}
 if(w.pel&&wb('sg_double'))pl.sgD=0.14}
 // an enemy this player killed (killFx)
-function wtKill(e){if(wb('rf_sp')&&pl.sp===2)pl.spT=Math.max(0,pl.spT-0.2)}
+function wtKill(e){if(wb('gl_sp')&&pl.sp===2&&wpW().kind==='glove'){pl.spT=Math.max(0,pl.spT-W2.gl.ext);if(lim('glext',0.3))addText('＋'+W2.gl.ext+'秒',W/2,H*0.26,{size:48,st:'fire',life:0.5})}if(wb('rf_sp')&&pl.sp===2)pl.spT=Math.max(0,pl.spT-0.2)}
 // the special just ended
-function wtSpEnd(){if(wb('rl_sp')){const pw=pl.pow>0?2:1;let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const B=e.type==='boss';if(!(B?e.slw>0:e.frz>0))continue;const s=spheres(e)[0]||[e.x,1,e.z];
+function wtSpEnd(){glSpEnd();if(wb('rl_sp')){const pw=pl.pow>0?2:1;let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const B=e.type==='boss';if(!(B?e.slw>0:e.frz>0))continue;const s=spheres(e)[0]||[e.x,1,e.z];
   wpDmg(e,(B?260:200)*SK.spw*pw,s[0],s[1],s[2],{quiet:n>0});fxStar(s[0],s[1],s[2],2.6,C.white,0.14);fxSparks(s[0],s[1],s[2],12,9,C.cyan);n++}
  if(n){snd('freeze');snd('boom',0.8);shake(0.4);addText('パリィィン！',W/2,H*0.22,{size:80,st:'cyan',life:0.7})}}}
 // 凍てつく光: 1 s of the normal beam on the same enemy freezes it
@@ -173,6 +182,6 @@ else{const a=wtSel.a,i=wtSel.i,n=WTREE[id][a][i],d=T[a];
  B(ix,Y+PH-74,iw,54,lab,can?()=>{T[a]++;wsSave();snd('item');wtPop={id,a,i,t:now};if(i===2)addText('大技 開放！',X+200,Y+60,{size:52,st:'boom',life:0.8});skApply()}:rm?()=>{T[a]--;wsSave();snd('clank');skApply()}:null,{col:can?'#ff4a3d':rm?'#fff':'#d8d8e0',tc:can?'#fff':INK,size:i===d-1||can?26:20,sk:10})}
 para(X+16,Y-22,Math.min(PW-40,170+w.name.length*26),44,12);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の強化',X+40,Y+1,24,'#fff',INK,6,'left')}
 // 「強化」 button of the equip screen: opens / closes the tree on the right
-function wtBtn(w,x,y,bw,bh,ok){const id=w.id,own=ok&&id!=='gun'&&!!(WS.own[id]||DEV),fr=own?wtFree(id):0,on=own&&eqTree;
+function wtBtn(w,x,y,bw,bh,ok){const id=w.id,own=ok&&!!(WS.own[id]||DEV),fr=own?wtFree(id):0,on=own&&eqTree;
 B(x,y,bw,bh,on?'閉じる':'強化',own?()=>{eqTree=eqTree?0:1;eqDet=0;wtSel=null}:null,{col:!own?'#d8d8e0':on?'#59d8ff':'#ff4a3d',tc:own&&!on?'#fff':INK,size:28});
 if(fr&&!on){ctx.beginPath();ctx.arc(x+bw+8,y+4,16,0,TAU);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('+'+fr,x+bw+8,y+5,16,INK)}}

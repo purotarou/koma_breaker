@@ -8,7 +8,7 @@
 // and a duplicate of a 凸12 weapon turns into GA_MAXPT skill points (SKS.pt) — the draw never gets blocked.
 // The screen: the weapon card (picture assets/gacha/cut_*.webp) on the left; on the right / behind it,
 // background: the weapon turning, then a demo play of stage 1 with that weapon (gaD, gaDemoStart / gaDemoUpdate).
-const GA_IDS=['rifle','shotgun','rail','katana','hammer','bomb','flail','spear','bow','shield','staff'],GA_PIC={rail:'railgun'},GA_PU=0.3,GA_MAXPT=3;// GA_MAXPT: skill points for a pull of a weapon that is already at the top level
+const GA_IDS=['gun','rifle','shotgun','rail','katana','hammer','bomb','flail','spear','bow','shield','staff','glove'],GA_PIC={rail:'railgun',gun:'pistol'},GA_PU=0.3,GA_MAXPT=3;// GA_MAXPT: skill points for a pull of a weapon that is already at the top level
 const GA={f:0,paid:[0,0,0,0,0],pick:'rifle',n:0};
 try{const s=JSON.parse(localStorage.getItem('koma_gacha')||'null');if(s)Object.assign(GA,s)}catch(e){}
 if(!GA_IDS.includes(GA.pick))GA.pick='rifle';if(!Array.isArray(GA.paid))GA.paid=[0,0,0,0,0];if(!Array.isArray(GA.gift))GA.gift=[];GA.f=Math.max(0,GA.f|0);

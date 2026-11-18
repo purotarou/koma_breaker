@@ -76,11 +76,11 @@ hRot('thigh_L',HX,tL-air*0.2);hRot('shin_L',HX,kL+air*0.6);hRot('foot_L',HX,-(tL
 // hips sway with the stride, body leans in a little when running, chest turns back against the hips and follows part of the aim pitch
 hRot('hips',HY,0.16*s*mv);hRot('hips',HX,0.07*mv);hRot('spine',HY,-0.1*s*mv);hRot('chest',HY,-0.08*s*mv);
 hRot('chest',HX,-pit*0.3+0.018*Math.sin(now*2.3));hRot('head',HX,-pit*0.45);
-const bob=-0.035*mv+0.06*mv*Math.abs(c)*(1-air),wp=typeof wpReady==='function'&&wpReady(o.wp|0)?o.wp|0:0;if(wp)wpHeroBody(o,wp);// weapon swings twist / bend the body (weapons.js)
+const bob=-0.035*mv+0.06*mv*Math.abs(c)*(1-air),wp=typeof wpReady==='function'&&wpReady(o.wp|0)?o.wp|0:-1;if(wp>=0)wpHeroBody(o,wp);// weapon swings twist / bend the body (weapons.js)
 heroGlobals(bob);
 // arms: both hands on the gun, solved in the aim frame (pitch about the pivot); elbows drop down and out
 const R=m3axis(HX,-pit),A=[HERO_AIM[0],HERO_AIM[1]+bob,HERO_AIM[2]],at=p=>{const r=m3v(R,p);return[A[0]+r[0],A[1]+r[1],A[2]+r[2]]};
-let wfr=null;if(wp)wfr=wpHeroArms(o,wp,A,pit);// equipped weapon: its own arm pose (weapons.js)
+let wfr=null;if(wp>=0)wfr=wpHeroArms(o,wp,A,pit);// equipped weapon: its own arm pose (weapons.js)
 else{heroArm('R',at([HERO_GUN_X+0.02,-0.14,0.06]),[-1,-0.35,-0.1],-1.2);
 heroArm('L',at([HERO_GUN_X+0.08,-0.11,0.24]),[0.6,-0.8,0.0],1.3)}
 const pi=heroSkin();

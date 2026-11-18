@@ -29,7 +29,7 @@ def drop_white(img, hole=1500, thr=252):
     m = Image.fromarray((~clear * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.8))
     img = img.copy(); img.putalpha(m); return img
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'gacha')
-NAMES = ['rifle', 'shotgun', 'railgun', 'katana', 'hammer', 'bomb', 'flail', 'spear', 'bow', 'shield', 'staff']
+NAMES = ['rifle', 'shotgun', 'railgun', 'katana', 'hammer', 'bomb', 'flail', 'spear', 'bow', 'shield', 'staff', 'pistol', 'glove']
 MAXW = 640
 for name in (sys.argv[1:] or NAMES):
     img = Image.open(os.path.join(ROOT, 'weapon_%s.webp' % name)).convert('RGBA')

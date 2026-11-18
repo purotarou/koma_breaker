@@ -1,4 +1,4 @@
-# 妖弾銃: revolver from assets/gacha/weapon_pistol.webp (side view, muzzle to the right of the picture).
+# 妖弾銃: revolver from the concept art blender/src/concept_pistol.webp (pixel coordinates below are in that picture) (side view, muzzle to the right of the picture).
 # Picture plane = model (y,z) with the muzzle toward +Y, thickness along X. Origin = top of the grip (hand).
 c, root = weapon_scene('Pistol')
 s = 0.0003; OX, OY = 360, 500

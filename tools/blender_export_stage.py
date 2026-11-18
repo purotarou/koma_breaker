@@ -9,7 +9,7 @@ import bpy, os
 out = globals().get('OUT')
 bpy.ops.export_scene.gltf(
     filepath=out, export_format='GLB', use_selection=False, use_visible=False, use_active_scene=True,
-    export_yup=True, export_apply=False, export_extras=True,
+    export_yup=True, export_apply=bool(globals().get('APPLY', False)), export_extras=True,  # APPLY=True: apply modifiers (the glove's Decimate)
     export_texcoords=False, export_normals=True, export_tangents=False,
     export_materials='EXPORT', export_image_format='NONE',
     export_cameras=False, export_lights=False, export_animations=False, export_skins=False, export_morph=False,

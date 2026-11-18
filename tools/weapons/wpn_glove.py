@@ -1,4 +1,4 @@
-# グローブ（左右一組） from assets/gacha/weapon_glove.webp (the picture shows the right glove from its thumb side,
+# グローブ（左右一組） from the concept art blender/src/concept_glove.webp (the picture shows the right glove from its thumb side,
 # front to the left). Shape after real boxing gloves: a long padded mitt whose back rises from the cuff to the
 # knuckles, fingers curled round the front into the palm, a fat thumb on the inner lower side next to the cuff.
 # Right glove: fist toward +Y, back of the hand up (+Z), thumb side = -X, cuff opening toward -Y.

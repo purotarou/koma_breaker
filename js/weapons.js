@@ -1,6 +1,7 @@
 'use strict';
 // ================= WEAPONS 武器 (STORY.md「武器と必殺技」) =================
-// Seven weapons: 妖弾銃 (the standard, box-built gun of old) + six models (blender/weapons.blend -> assets/weapon_*.glb).
+// Thirteen weapons, all models (blender/weapons.blend -> assets/weapon_*.glb): 妖弾銃 (the standard; the old box-built gun drawYoGun is only the fallback
+// while its GLB loads) + six here + five in weapons2.js + the glove (glove.js).
 // One weapon is equipped (装備画面: main menu / lobby →「装備」, saved in localStorage koma_wpn) and used for the whole stage, versus too.
 // The six come only from the weapon gacha (gacha.js → wsGive(id), WS.own = {weaponId:1}), or all at once while the developer 超強化 switch (DEV) is on.
 // Gacha duplicates add 凸 (0-12, WS.tp): one point each for the weapon's own skill tree (wtree.js, opened with 「強化」 on the equip screen).
@@ -19,7 +20,7 @@
 // + kind (others replay the swing / throw pose and slash trails), the hammer charge and rail-beam bits. Small visual-only events
 // (net.q.wx: bombs, the sword wave, hammer slams) are replayed by the others; freeze / stun / slow go to the host (net.q.ef), which runs the enemies.
 const WPN=[
-{id:'gun',name:'妖弾銃',type:'ピストル',kind:'gun',btn:'撃',file:null,col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:25,cool:0.1875,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.045,-0.63],
+{id:'gun',name:'妖弾銃',type:'ピストル',kind:'gun',btn:'撃',file:'weapon_pistol',sc:1.35,fore:0.05,vo:[0.23,-0.16,-0.56,0.3],col:'#59d8ff',bg:[.86,.95,1],ammo:1,mag:16,dmg:25,cool:0.1875,rel:1,kick:0.03,shk:0.07,snd:'shot',g:1,sp:'墨龍砲',spd:0.8,spMode:'beam',muz:[0,0.055,-0.375],
  d:['16発の連射銃。撃ち切ったら装填','いちばん扱いやすい標準の武器'],s:'正面に太い光線を一直線に放つ'},
 {id:'rifle',name:'連珠銃',type:'アサルト',kind:'gun',btn:'撃',file:'weapon_rifle',col:'#3f6fd8',bg:[.84,.88,1],ammo:1,mag:32,dmg:24,cool:1/7,rel:0.8,kick:0.006,shk:0.03,snd:'rshot',g:1,sp:'珠時雨',spd:5,spMode:'buff',muz:[0,0.03,-0.6],fore:0.27,
  d:['32発・威力24の速射銃','妖弾銃の上位版。反動がなく装填も速い'],s:'数秒間、弾が減らずに連射２倍。弾が敵を追う'},
@@ -43,7 +44,10 @@ const WPN=[
 {id:'shield',name:'城壁の大楯',type:'大楯',kind:'shield',btn:'盾',file:'weapon_shield',col:'#c9a227',bg:[.93,.95,1],ammo:0,g:1,sp:'城壁結界',spd:8,spMode:'mode',
  d:['タップで盾で押す。長押しで正面を防御（移動は遅い）','当たる直前に防御すると弾をはね返す'],s:'前に水色のバリアを張り、敵の弾を防ぐ（約８秒）'},
 {id:'staff',name:'護符の錫杖',type:'杖',kind:'staff',btn:'祈',file:'weapon_staff',col:'#2fb38a',bg:[.88,1,.93],ammo:0,g:1,sp:'反魂の祈り',spd:0.3,spMode:'once',
- d:['護符の玉を飛ばす。味方に当たると回復＋短い加護、敵にはダメージ','玉は味方を少し追う。近くの敵は杖で殴る'],s:'味方全員を回復し、ダウンした味方を復活。しばらくダメージ軽減＋攻撃力アップ'}];
+ d:['護符の玉を飛ばす。味方に当たると回復＋短い加護、敵にはダメージ','玉は味方を少し追う。近くの敵は杖で殴る'],s:'味方全員を回復し、ダウンした味方を復活。しばらくダメージ軽減＋攻撃力アップ'},
+// 13: glove.js (W2.gl = numbers)
+{id:'glove',name:'撃砕の紅拳',type:'グローブ',kind:'glove',btn:'拳',file:'weapon_glove',col:'#e5402b',bg:[1,.9,.88],ammo:0,g:1,sp:'百裂ラッシュ',spd:6,spMode:'mode',
+ d:['タップでジャブ→ジャブ→ストレートの３連打','長押しでガード（被ダメ×0.75）。ガード明けの一撃は×1.5'],s:'しばらく長押しで高速連打。拳の斬撃が遠くまで飛び、最後はアッパー'}];
 const WB_RF=4,RAIL_DM=9,RAIL_ICE=20;// bomb: seconds from its own throw until that bomb is back / 氷魄砲 damage per 0.06 s tick (normal, 氷牢)
 // ---- ownership / equip (localStorage koma_wpn: {eq: weapon id, got: 1 once the six were obtained}) ----
 const WS={eq:'gun',own:{}};
@@ -52,12 +56,13 @@ function wsSave(){try{localStorage.setItem('koma_wpn',JSON.stringify(WS))}catch(
 // 凸 0-12（WT_MAX）: WS.tp[id] = 凸の数（同じ武器が出た回数）= その武器のスキルツリーで使えるポイント、WS.tr[id] = [上,右,下,左] の取った深さ（0-3）。
 // ツリーの中身・効果は wtree.js（WT、wtApply）。古い必殺レベル（WS.lv / WS.up）は読み込み時に凸に換算する。
 const WT_MAX=12;
+if(!WS.own||typeof WS.own!=='object')WS.own={};WS.own.gun=1;// 妖弾銃は最初から持っている（ガチャで凸が上がる）
 if(!WS.tp||typeof WS.tp!=='object')WS.tp={};if(!WS.tr||typeof WS.tr!=='object')WS.tr={};
 if(WS.lv||WS.up){const L=WS.lv||{},U=WS.up||{};for(const id in WS.own)if(WS.own[id])WS.tp[id]=Math.min(WT_MAX,Math.max(WS.tp[id]|0,((L[id]|0)||1)-1+(U[id]|0)));delete WS.lv;delete WS.up;wsSave()}
 const wtTp=id=>WS.own[id]?clamp(WS.tp[id]|0,0,WT_MAX):0,wtTr=id=>{if(DEV)return[3,3,3,3];let a=WS.tr[id];if(!Array.isArray(a)||a.length!==4)a=WS.tr[id]=[0,0,0,0];return a},
 wtUsed=id=>wtTr(id).reduce((p,q)=>p+q,0),wtFree=id=>WS.own[id]?Math.max(0,wtTp(id)-wtUsed(id)):0,wtBigN=id=>WS.own[id]?wtTr(id).filter(v=>v>=3).length:0;
 // the gacha (gacha.js) hands out a weapon with wsGive(id): 'new' (first one), 'up' (duplicate → 凸+1 = one more tree point), 'max' (already 凸12 → the gacha gives skill points instead)
-function wsGive(id){if(id==='gun')return'';if(!WS.own[id]){WS.own[id]=1;WS.tp[id]=0;wsSave();return'new'}if(wtTp(id)>=WT_MAX)return'max';WS.tp[id]=wtTp(id)+1;wsSave();return'up'}
+function wsGive(id){if(!WS.own[id]){WS.own[id]=1;WS.tp[id]=0;wsSave();return'new'}if(wtTp(id)>=WT_MAX)return'max';WS.tp[id]=wtTp(id)+1;wsSave();return'up'}
 const wpIdx=id=>Math.max(0,WPN.findIndex(w=>w.id===id)),wpOwn=i=>i===0||!!DEV||!!WS.own[WPN[i].id],wpW=()=>WPN[pl.wp|0]||WPN[0];
 function wpCur(){if(G.demoOn)return gaDemoWp!=null?gaDemoWp:0;const i=wpIdx(WS.eq);return wpOwn(i)?i:0}
 // weapon numbers on top of the skills (called at the end of skApply, pl.wp is set first in resetPlayer)
@@ -86,7 +91,9 @@ if(w.id==='flail'){const ex=(J.nodes.find(q=>q.extras&&q.extras.kb_pitch)||{}).e
  md.fl={eye,pitch:+ex.kb_pitch||0.0376,bc:0.1,len:bz-eye-0.1,lk,ball:items.filter(it=>it.pn==='Flail_BallRoot').map(it=>Object.assign({},it,{bm:loc(it,bz)}))};
  md.hand=items.filter(it=>!/^Flail_Link/.test(it.nm)&&it.pn!=='Flail_BallRoot')}
 // 長弓: the string is drawn by code (pulled back); its ends come from the string's bounds
-if(w.id==='bow'){const st=items.find(it=>it.nm==='Bow_String');md.hand=items.filter(it=>it!==st);if(st)md.bw={y0:st.amn[1],y1:st.amx[1],z:(st.amn[2]+st.amx[2])/2}}}
+if(w.id==='bow'){const st=items.find(it=>it.nm==='Bow_String');md.hand=items.filter(it=>it!==st);if(st)md.bw={y0:st.amn[1],y1:st.amx[1],z:(st.amn[2]+st.amx[2])/2}}
+// グローブ: Glove_R / Glove_L (each at x ±0.16) → each glove around its own origin (inside the fist); the right one is the hand set, the left one md.gl (glove.js)
+if(w.id==='glove'){const loc=(pn,dx)=>items.filter(it=>it.pn===pn).map(it=>{const q=Float32Array.from(it.m);q[12]+=dx;return Object.assign({},it,{m:q})});md.hand=loc('Glove_R',-0.16);md.gl=loc('Glove_L',0.16)}}
 const wpReady=i=>!!(WPN[i]&&WPN[i].file&&WMOD[WPN[i].id]);
 function mApply(A){M.set(m4mul(WTMP,M,A))}
 // emit weapon i under the current matrix (each part its own outline ID); col = flat silhouette colour (locked weapons)
@@ -172,7 +179,7 @@ for(const e of enemies){if(e.dead||e.st==='spawn'||(e.type==='boss'&&!e.monk))co
 let lx=fx,lz=fz,dist=1.3;if(best){const dx=best.x-pl.x,dz=best.z-pl.z,d=Math.hypot(dx,dz);lx=dx/d;lz=dz/d;dist=clamp(d-1.5-(best.r||0.5),0,5.5)}
 pl.cool=0.42;pl.slN=pl.slN?0:1;wpAct(1+pl.slN);pl.lgx=lx;pl.lgz=lz;pl.lgT=0.12;pl.lgV=pl.frz>0?0:dist/0.12;pl.lgP=1;snd('slash');
 addText(pick(['ザンッ！','ズバッ！','シュバッ']),W*0.62+rnd(-60,80),H*0.58+rnd(-30,30),{size:56,st:'cyan',life:0.3})}
-function wpLunge(dt){if(pl.lgT<=0)return;const s=Math.min(dt,pl.lgT);pl.x+=pl.lgx*pl.lgV*s;pl.z+=pl.lgz*pl.lgV*s;pl.lgT-=dt;if(pl.lgT<=0&&pl.lgP){pl.lgP=0;katanaHit()}}
+function wpLunge(dt){if(pl.lgT<=0)return;const s=Math.min(dt,pl.lgT);pl.x+=pl.lgx*pl.lgV*s;pl.z+=pl.lgz*pl.lgV*s;pl.lgT-=dt;if(pl.lgT<=0&&pl.lgP){const p=pl.lgP;pl.lgP=0;if(p===2)glHit();else katanaHit()}}
 function katanaHit(){pl.ktN=(pl.ktN|0)+1;const kc=wb('kt_crit')&&pl.ktN%3===0,R=kc?4.6:3.5,A=kc?1.45:1.22,pw=(pl.pow>0?2:1)*(kc?2:1);let n=0,cut=0;if(kc)addText('会心！',W/2,H*0.34,{size:72,st:'fire',life:0.5});if(wb('kt_wave'))wtKtWave();wslash.push({x:pl.x,y:pl.y+1.15,z:pl.z,yaw:pl.yaw,dir:pl.slN?-1:1,t:0});
 const inArc=(x,y,z,r)=>{const dx=x-pl.x,dz=z-pl.z,dh=Math.hypot(dx,dz)-r;if(dh>R||y-r>pl.y+3.4||y+r<pl.y-0.4)return false;return dh<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<A};
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(inArc(s[0],s[1],s[2],s[3])){wpDmg(e,62*pw,s[0],s[1],s[2],{quiet:n>1,crit:kc});n++;break}}
@@ -269,7 +276,7 @@ shotgun:{bg:'#ff5c93',rot:-0.1,iris:'#ffd91a',fx:'petals'},rail:{bg:'#c9f2ff',ro
 katana:{bg:'#16121f',rot:-0.12,iris:'#e5402b',fx:'slash'},hammer:{bg:'#ffc21a',rot:0.08,iris:'#e5402b',fx:'crack',mir:1,tc:'#e5402b'},
 bomb:{bg:'#1c1440',rot:-0.06,iris:'#ff6a3d',fx:'fire'},
 flail:{bg:'#23306e',rot:0.07,iris:'#ff3b30',fx:'crack',mir:1},spear:{bg:'#ffd91a',rot:-0.08,iris:'#2f6fd8',fx:'speed',tc:'#2f6fd8'},
-bow:{bg:'#2a3f8f',rot:0.06,iris:'#59d8ff',fx:'beads',mir:1},shield:{bg:'#c9f2ff',rot:-0.05,iris:'#c9a227',fx:'ice',tc:'#2f6fd8'},staff:{bg:'#2fb38a',rot:0.05,iris:'#ffd91a',fx:'petals',mir:1}};
+bow:{bg:'#2a3f8f',rot:0.06,iris:'#59d8ff',fx:'beads',mir:1},shield:{bg:'#c9f2ff',rot:-0.05,iris:'#c9a227',fx:'ice',tc:'#2f6fd8'},staff:{bg:'#2fb38a',rot:0.05,iris:'#ffd91a',fx:'petals',mir:1},glove:{bg:'#e5402b',rot:-0.09,iris:'#ffd91a',fx:'speed'}};
 function cutEye(iris){ctx.fillStyle='#ffe2c6';ctx.beginPath();ctx.ellipse(0,10,330,210,0,0,TAU);ctx.fill();
 const lid=()=>{ctx.beginPath();ctx.moveTo(-150,10);ctx.quadraticCurveTo(-10,-70,150,-20);ctx.quadraticCurveTo(40,70,-120,50)};
 ctx.fillStyle='#fff';lid();ctx.fill();ctx.save();lid();ctx.clip();ctx.fillStyle=iris;ctx.beginPath();ctx.ellipse(12,-2,60,64,0,0,TAU);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.stroke();
@@ -331,10 +338,11 @@ KV_S=[[0,KV_I],[0.2,[0.5,-0.2,-0.35,-1.6,0.15,1.4]],[0.32,[-0.5,-0.25,-0.5,1.6,0
 HV_I=[0.42,-0.52,-0.55,-0.15,1.15,-0.2],HV_R=[0.3,-0.22,-0.38,-0.1,2.15,-0.1],HV_D=[0.1,-0.36,-0.72,0,-0.3,0],
 HV_S=[[0,HV_R],[0.11,HV_D],[0.45,HV_D],[0.8,HV_I]],HV_SP=[[0,HV_I],[0.3,HV_R],[0.4,[0.25,-0.1,-0.3,-0.05,2.5,0]],[0.47,HV_D],[0.95,HV_D],[1.3,HV_I]],
 BV_I=[0.3,-0.34,-0.62],BV_T=[[0,BV_I],[0.12,[0.38,-0.06,-0.38]],[0.22,[0.12,-0.08,-0.95]],[0.4,[0.16,-0.6,-0.8]],[0.75,BV_I]];
+const WV_GUN=[0.21,-0.25,-0.5,0.05];// first-person place of a gun [x,y,z,turn]; a weapon may set its own (vo)
 function wpView(){const i=pl.wp|0,w=WPN[i];if(!wpReady(i))return false;curLayer=2;mPush();M.set(CAMW);
 const bx=Math.sin(pl.bob)*0.012*pl.moving,by=Math.abs(Math.cos(pl.bob))*0.014*pl.moving,dip=pl.gunDip+(pl.dead?Math.min(1,pl.deadT*2):0),at=pl.at,ak=pl.ak|0,br=Math.sin(now*2)*0.006;let tip=[0,0,-0.6],s=0.8,show=1,fl=0;
 mT(bx,-by-dip*0.3+br,0);
-if(w.kind==='gun'||w.kind==='rail'){mT(0.21,-0.25,-0.5+pl.rec*(w.kind==='rail'?0.01:0.05));mRY(0.05);mRX((w.kind==='rail'?pl.rec*0.01:pl.rec*(w.kick||0.01)*3)-dip*0.8);mRZ(-dip*0.5);s=0.62;tip=w.muz;fl=1;}
+if(w.kind==='gun'||w.kind==='rail'){const vo=w.vo||WV_GUN;mT(vo[0],vo[1],vo[2]+pl.rec*(w.kind==='rail'?0.01:0.05));mRY(vo[3]);mRX((w.kind==='rail'?pl.rec*0.01:pl.rec*(w.kick||0.01)*3)-dip*0.8);mRZ(-dip*0.5);s=0.62*(w.sc||1);tip=w.muz;fl=1;}
 else if(w.kind==='katana'){const v=kf(ak===1?KV_A:ak===2?KV_B:ak===7?KV_S:[[0,KV_I]],at);mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]);tip=[0,0,-0.76]}
 else if(w.kind==='hammer'){let v;if(ak===3&&pl.hon){v=HV_I.map((a,j)=>a+(HV_R[j]-a)*sat(at/0.18));v[0]+=rnd(-1,1)*0.006*pl.hc;v[1]+=rnd(-1,1)*0.006*pl.hc}else v=kf(ak===4?HV_S:ak===8?HV_SP:[[0,HV_I]],at);
  mT(v[0],v[1],v[2]);mRY(v[3]);mRX(v[4]);mRZ(v[5]+PI);s=0.72;tip=[0,0,-0.84]}
@@ -362,7 +370,7 @@ else if(k==='bomb'&&(ak===5||ak===6))tw=kf([[0,0],[0.16,-0.45],[0.27,0.4],[0.5,0
 if(tw){hRot('spine',HY,tw*0.5);hRot('chest',HY,tw*0.5)}if(bd){hRot('spine',HX,bd*0.6);hRot('chest',HX,bd*0.4)}}
 // arms (IK) and the weapon frame WF; the weapon hangs on the right wrist the IK actually reached
 function wpHeroArms(o,wp,A,pit){const w=WPN[wp],k=w.kind,at=o.at==null?9:o.at,ak=o.ak|0,Hh=HERO;let P,f,u,s=1,show=1,tip=[0,0,-0.6],pr=[-1,-0.35,-0.1],tr=-1.2,lp=[0.6,-0.8,0],tl=1.3,L=null;
-if(k==='gun'||k==='rail'){const R=m3axis(HX,-pit),r=m3v(R,[HERO_GUN_X+0.02,-0.12,0.13-(o.fireT>0?0.03:0)]);P=[A[0]+r[0],A[1]+r[1],A[2]+r[2]];f=m3v(R,[0,0,1]);u=m3v(R,[0,1,0]);tip=w.muz}
+if(k==='gun'||k==='rail'){const R=m3axis(HX,-pit),r=m3v(R,[HERO_GUN_X+0.02,-0.12,0.13-(o.fireT>0?0.03:0)]);P=[A[0]+r[0],A[1]+r[1],A[2]+r[2]];f=m3v(R,[0,0,1]);u=m3v(R,[0,1,0]);tip=w.muz;s=w.sc||1}
 else if(k==='katana'){const K=ak===1?KH_A:ak===2?KH_B:ak===7?KH_S:[[0,KH_I]],v=kf(K,at),v2=kf(K,at+0.03);P=[v[0],v[1]+Math.sin(now*2)*0.01,v[2]];f=dirYE(v[3],v[4]);const f2=dirYE(v2[3],v2[4]),m=[f2[0]-f[0],f2[1]-f[1],f2[2]-f[2]];
  u=Math.hypot(m[0],m[1],m[2])>0.02?[-m[0],-m[1],-m[2]]:[0,0.3,-1];pr=[-1,-0.6,0];lp=[1,-0.6,0];tr=-0.5;tl=0.5;tip=[0,0,-0.76]}
 else if(k==='hammer'){let v;if(ak===3&&o.hc!=null){v=HH_I.map((a,j)=>a+(HH_R[j]-a)*sat(at/0.2));v[1]+=Math.sin(now*40)*0.008*(o.hc||0)}else v=kf(ak===4?HH_S:ak===8?HH_SP:[[0,HH_I]],at);
@@ -377,7 +385,7 @@ if(L)heroArm('L',L,lp,tl);if(k==='bomb')P=[P[0],P[1]+0.07*s,P[2]+0.04];
 wpFrame(P,f,u,s);return{show,tip}}
 // inside the hero's model matrix: the weapon, and the muzzle / tip point o.gx/gy/gz
 function wpHeroDraw(o,wp,fr){const g=gId;gId=0;mPush();mApply(WF);if(fr.show)wpModel(wp,null,1);const t=fr.tip;
-o.gx=M[0]*t[0]+M[4]*t[1]+M[8]*t[2]+M[12];o.gy=M[1]*t[0]+M[5]*t[1]+M[9]*t[2]+M[13];o.gz=M[2]*t[0]+M[6]*t[1]+M[10]*t[2]+M[14];if(W2K[WPN[wp].kind])w2HeroExtra(o,WPN[wp]);mPop();gId=g}
+o.gx=M[0]*t[0]+M[4]*t[1]+M[8]*t[2]+M[12];o.gy=M[1]*t[0]+M[5]*t[1]+M[9]*t[2]+M[13];o.gz=M[2]*t[0]+M[6]*t[1]+M[10]*t[2]+M[14];if(W2K[WPN[wp].kind])w2HeroExtra(o,WPN[wp]);mPop();if(fr.L){mPush();mApply(fr.L);glModelL();mPop()}gId=g}
 // ================= HUD / overlays =================
 function wpHUD(w){if(w.kind==='rail'){const v=pl.heat||0;gauge(W/2-110,662,250,18,v,pl.ovh?(Math.sin(now*16)>0?'#ff3b30':'#ffd91a'):v>0.75?'#ff8a2b':'#59d8ff','熱');if(pl.ovh)txt('冷却中…',W/2+15,634,24,'#fff',INK,6)}
 else if(w.kind==='bomb'){for(let i=0,nb=wtBombMax();i<nb;i++){const x=W/2-(nb-1)*30+i*60,y=672,on=i<pl.bombs;ctx.beginPath();ctx.arc(x+3,y+4,19,0,TAU);ctx.fillStyle=INK;ctx.fill();ctx.beginPath();ctx.arc(x,y,19,0,TAU);ctx.fillStyle=on?'#e5402b':'rgba(255,255,255,.55)';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();
@@ -424,6 +432,7 @@ case'spear':{const S=W2.sp;return[['威力',S.dm.join(' / ')+'（３連突き）
 case'bow':{const S=W2.bw;return[['威力',S.dm+' 〜 '+S.dm*3+'（溜めで上がる）'],['溜め','最大まで '+S.chg+' 秒'],['貫通','１体 〜 ５体（溜めで増える）'],['射る間隔','0.22 秒'],gp,['','必殺 '+w.sp],['矢の雨',S.rain+'（0.12 秒ごと・'+S.rainT+' 秒間）・半径 '+S.rainR+' m'],['残った矢','約 '+S.zoneT+' 秒・中では溜めが ×'+S.zoneK+' 速い']]}
 case'shield':{const S=W2.sh;return[['押す',S.bash+'（ダッシュ中・直後は '+S.dash+'）・前方 '+S.R+' m・少し押し出す'],['防御','正面の攻撃を防ぐ・移動 ×'+S.slow],['ジャストガード','防御を離した瞬間から '+S.jg+' 秒以内の攻撃：弾ははね返し、雑魚敵はのけぞる'],['返した弾','元の威力 ×'+S.refl+' ＋20'],gp,['','必殺 '+w.sp],['時間',w.spd+' 秒間'],['バリア','前方 '+S.barR+' m・敵の弾を止める']]}
 case'staff':{const S=W2.st;return[['玉','敵に '+S.dm+'・味方は '+Math.round(S.heal*100)+'% 回復＋'+S.bT+'秒の加護'],['間隔',S.cool+' 秒'],['追尾','味方を少し追う'],['殴り','近くの敵に '+S.bonk],gp,['','必殺 '+w.sp],['効果','全員を回復・ダウンした味方を復活（いつでも使える）'],['加護',Math.round(S.sT)+'秒 ダメージ軽減＋攻撃力アップ（凸で強まる）']]}
+case'glove':return glStats(w,gp);
 case'bomb':return[['威力','130（爆風の端では 65）'],['爆風','半径 4.3 m・ボスにも当たる'],['所持','3 個'],['補充','投げた玉それぞれ '+WB_RF+' 秒で１個戻る'],['投げる間隔','0.5 秒'],['味方・自分','巻き込まない'],gp,['','必殺 '+w.sp],['威力','520（端では 260）・半径 9 m'],['炎','6 秒・毎秒 60（ボスに付くと ×1.5）']]}
 return[]}
 function drawEqDet(w,X,Y,PW,PH,big){panel(X,Y,PW,PH);const rows=wpStats(w),n=rows.length,lh=big?46:Math.min(36,(PH-70)/n);
@@ -446,8 +455,8 @@ for(let i=0;i<WPN.length;i++){const c=i%EQL.cols,r=(i/EQL.cols)|0,x=EQL.x0+c*(EQ
  ctx.save();para(x,y,cw,ch,12);ctx.clip();ctx.fillStyle=o?wi.col:'#373c58';ctx.fillRect(x,y,24,ch);ctx.globalAlpha=0.18;ctx.fillStyle=dotPat;ctx.fillRect(x,y+ch*0.55,cw+20,ch);ctx.restore();
  para(x,y,cw,ch,12);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();if(s){para(x-5,y-5,cw+10,ch+10,13);ctx.strokeStyle='#ffd91a';ctx.lineWidth=6;ctx.stroke()}
  fitTxt(o?wi.name:'？？？',x+38,y+32,24,cw-46,o?INK:'#c9cce0');if(!o)txt('未入手',x+40,y+62,15,'#a5a9c4',null,0,'left');
- if(o&&wi.id!=='gun')wtPips(x+40,y+63,wi.id,1);// 3つ目（大技）を取った数（wtree.js）
- if(o&&wi.id!=='gun'&&wtFree(wi.id)>0){ctx.beginPath();ctx.arc(x+cw-4,y+4,15,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('!',x+cw-4,y+5,20,'#fff')}
+ if(o)wtPips(x+40,y+63,wi.id,1);// 3つ目（大技）を取った数（wtree.js）
+ if(o&&wtFree(wi.id)>0){ctx.beginPath();ctx.arc(x+cw-4,y+4,15,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('!',x+cw-4,y+5,20,'#fff')}
  if(e){ctx.save();ctx.translate(x+cw-40,y+60);ctx.rotate(-0.12);para(-40,-15,80,30,6);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('装備中',3,1,18,'#fff');ctx.restore()}}
  ctx.restore();
 // scroll bar + more-below hint
@@ -461,10 +470,10 @@ panel(X,Y+PH+18,PW,170);const iy=Y+PH+18;para(X+16,iy-26,Math.min(PW-40,60+w.nam
 txt(ok?w.name:'？？？',X+40,iy-1,32,'#fff',INK,7,'left');txt(ok?w.type:'',X+PW-24,iy+22,18,'#555a70',null,0,'right');
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 if(ok){tag(X+18,iy+50,'通常',INK);fitTxt(w.d[0],X+92,iy+50,21,PW-110,INK);fitTxt(w.d[1],X+92,iy+80,18,PW-110,'#3a3f55');
- tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');if(w.id!=='gun'){const fr=wtFree(w.id);txt('凸'+wtTp(w.id)+' / '+WT_MAX+(fr?'（「強化」で '+fr+' 個とれる）':''),X+PW-24,iy+120,18,'#e5402b',null,0,'right')}fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
+ tag(X+18,iy+122,'必殺','#e5402b');txt(w.sp,X+92,iy+120,26,'#e5402b',null,0,'left');{const fr=wtFree(w.id);txt('凸'+wtTp(w.id)+' / '+WT_MAX+(fr?'（「強化」で '+fr+' 個とれる）':''),X+PW-24,iy+120,18,'#e5402b',null,0,'right')}fitTxt(w.s,X+92,iy+150,18,PW-110,INK)}
 else{txt('武器ガチャで入手できる',X+PW/2,iy+68,24,INK);txt('（モード選択の「ガチャ」から）',X+PW/2,iy+108,20,'#555a70')}
 if(eqDet&&ok)drawEqDet(w,X,Y,PW,PH+188);
-if(eqTree&&ok&&w.id!=='gun')wtDraw(w,X,Y,PW,PH+188);// 武器のスキルツリー（wtree.js）
+if(eqTree&&ok)wtDraw(w,X,Y,PW,PH+188);// 武器のスキルツリー（wtree.js）
 if(DEV)txt('超強化中：すべての武器が使えます',306,659,16,'#ffd91a',INK,5,'left');
 B(60,628,220,56,'もどる',()=>{G.menu=G.eqBack||'main'},{size:26});
 wtBtn(w,X+PW-624,628,148,62,ok);// 「強化」= スキルツリーを開く・閉じる (wtree.js)
@@ -474,7 +483,7 @@ if(now-eqPop<0.7){const u=now-eqPop,k=easeBack(sat(u/0.15));ctx.save();ctx.globa
 // 3D preview inside the equip window (camera space, layer 2): a light backdrop and the weapon turning slowly
 // largest scale that keeps the centred box inside the window over every angle the preview turns through, with perspective (cached per weapon and screen)
 // 装備画面での向き: ry=回転の中心の角度（既定は真横=PI/2）、roll=画面内で回す角度。弓は縦長なので横に寝かせ、盾は薄い板なので正面から見せる
-const WPV={bow:{roll:PI/2},shield:{ry:PI}};
+const WPV={bow:{roll:PI/2},shield:{ry:PI},glove:{ry:PI*0.8}};
 const wpPv=w=>{const v=WPV[w.id]||{};return{ry:v.ry==null?PI/2:v.ry,roll:v.roll||0}};
 const WFIT={};
 function wpFit(w,mn,mx,cx,cy,hw,hh,D){const pv=wpPv(w),cr=Math.cos(pv.roll),sr=Math.sin(pv.roll),key=w.id+'|'+W+'|'+H+'|'+cx.toFixed(3)+'|'+cy.toFixed(3)+'|'+hw.toFixed(3);if(WFIT[key])return WFIT[key];const c=[0,1,2].map(k=>(mn[k]+mx[k])/2),rots=[],pts=[];if(w.kind==='bomb')for(let k=0;k<12;k++)rots.push([k/12*TAU,0]);else for(let k=0;k<=16;k++)rots.push([pv.ry+0.4*Math.sin(k/16*TAU),0.15]);
