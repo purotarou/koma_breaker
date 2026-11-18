@@ -20,7 +20,7 @@ case'charge':tone('sawtooth',120,900,0.5,0.25*v);break;
 case'beam':noise(0.9,0.7*v,'lowpass',5000,200);tone('sawtooth',90,40,0.9,0.5*v);tone('square',880,220,0.6,0.15*v);break;
 case'roar':tone('sawtooth',90,45,1.2,0.5*v);tone('sawtooth',95,40,1.2,0.4*v);noise(1.1,0.35*v,'lowpass',700,150);break;
 case'spawn':tone('sine',90,240,0.2,0.2*v);break;
-case'ui':tone('triangle',620,840,0.07,0.07*v);break;
+case'ui':tone('square',660,990,0.09,0.07*v);tone('square',990,1320,0.1,0.07*v,0.08);break;
 case'jump':tone('square',260,520,0.1,0.15*v);break;
 case'land':noise(0.1,0.3*v,'lowpass',700,150);break;
 case'item':tone('triangle',880,1320,0.1,0.25*v);tone('triangle',1320,1760,0.14,0.25*v,0.09);break;
