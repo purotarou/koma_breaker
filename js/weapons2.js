@@ -42,14 +42,14 @@ switch(w.kind){case'flail':flailUpdate(dt,f);break;case'spear':spearUpdate(dt,f)
 const flSt=c=>c>=1?3:c>=0.45?2:1;
 const flOrigin=o=>[o.x,(o.y||0)+1.4,o.z];
 function flailUpdate(dt,f){const S=W2.fl;if(pl.fsp){flSpTick(dt);return}if(pl.fb)return;
-if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt/S.chg);const st=flSt(pl.hc);if(st>flSt(c0)){snd('item');addText(st>2?'ブォォン！':'ブンブン',W*0.68,H*0.6,{size:st>2?60:46,st:st>2?'boom':'cyan',life:0.4})}
+if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt*SK.chg/S.chg);const st=flSt(pl.hc);if(st>flSt(c0)){snd('item');addText(st>2?'ブォォン！':'ブンブン',W*0.68,H*0.6,{size:st>2?60:46,st:st>2?'boom':'cyan',life:0.4})}
  pl.fsT-=dt;if(pl.fsT<=0){pl.fsT=S.spinT;flSpin()}
  if(pl.sp)pl.hon=0;else if(!f){pl.hon=0;flThrow(flSt(pl.hc))}}
 else if(f&&pl.cool<=0&&!pl.sp){pl.hon=1;pl.hc=0;pl.fsT=0.15;wpAct(9);snd('whoosh')}}
 // the ball swinging over the head hits everything close around
-function flSpin(){const S=W2.fl,pw=w2pw();let n=0;if(lim('flw',0.4))snd('whoosh');
-for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(Math.hypot(s[0]-pl.x,s[2]-pl.z)-s[3]<S.spinR&&s[1]-s[3]<pl.y+3.4&&s[1]+s[3]>pl.y+0.3){wpDmg(e,S.spinDm*pw,s[0],s[1],s[2],{quiet:n>0});n++;break}}
-for(const s of shots)if(!s.dead&&Math.hypot(s.x-pl.x,s.z-pl.z)<S.spinR&&Math.abs(s.y-pl.y-2.4)<1.4){popShot(s);if(isCli())net.q.ps.push(s.id)}
+function flSpin(){const S=W2.fl,sk=wb('fl_spike'),pw=w2pw()*(sk?2:1),R=S.spinR+(sk?1.2:0);let n=0;if(lim('flw',0.4))snd('whoosh');
+for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(Math.hypot(s[0]-pl.x,s[2]-pl.z)-s[3]<R&&s[1]-s[3]<pl.y+3.4&&s[1]+s[3]>pl.y+0.3){wpDmg(e,S.spinDm*pw,s[0],s[1],s[2],{quiet:n>0});n++;break}}
+for(const s of shots)if(!s.dead&&Math.hypot(s.x-pl.x,s.z-pl.z)<R&&Math.abs(s.y-pl.y-2.4)<1.4){popShot(s);if(isCli())net.q.ps.push(s.id)}
 if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-pl.x,o.z-pl.z)<S.spinR)pvHit(o,6*pw,false,o.x,o.y+1.4,o.z)}
 function flThrow(st){const S=W2.fl,as=touchMode||G.demoOn,d=aimAssist(aimDir(),as?0.08:0.04,as?0.7:0.4),O=flOrigin(pl);let R=S.R[st-1];const tw=rayWorld(O[0],O[1],O[2],d[0],d[1],d[2],R);R=Math.max(1.5,Math.min(R,tw-0.3));
 const fb=flMake(pl,1,d,R,st);wflys.push(fb);pl.fb=fb;pl.cool=0.25;wpAct(10);snd('whoosh');if(st>2)snd('charge');
@@ -68,7 +68,7 @@ for(const s of shots)if(!s.dead&&w2Seg3(a,b,[s.x,s.y,s.z,s.r],rb)){popShot(s);if
 if(G.mode==='pvp')for(const o of others)if(!o.dead&&!f.hit.has(o)&&w2Seg3(a,b,[o.x,o.y+1.1,o.z,0.6],rb)){f.hit.add(o);pvHit(o,(f.big?50:10+12*f.st)*pw,false,o.x,o.y+1.1,o.z)}
 if(n){shake(0.1+0.08*f.st);stopT(0.03)}}
 // the ball reaches the end (throw) or lands (slam)
-function flBang(f,p){if(f.m==='t'){if(f.big){fxStar(p[0],p[1],p[2],3.2,C.white,0.14);fxSparks(p[0],p[1],p[2],18,9,C.yellow);if(p[1]<2)hammerFx(p[0],p[2],3,0.6);sfxAt('ドゴォォン！！',p[0],p[1]+1.8,p[2],{size:84,st:'boom',life:0.5});snd('boom');shake(0.4);return}fxStar(p[0],p[1],p[2],1+0.5*f.st,C.white,0.1);fxSparks(p[0],p[1],p[2],5+3*f.st,6,C.yellow);if(p[1]<1.4)fxRing(p[0],0.1,p[2],2+f.st,C.white,0.2);if(f.st>1)sfxAt(f.st>2?'ドゴォン！':'ガゴッ',p[0],p[1]+1.6,p[2],{size:44+12*f.st,st:'boom',life:0.4});snd(f.st>2?'boom':'clank',0.6);return}
+function flBang(f,p){if(f.m==='t'){if(f.big){fxStar(p[0],p[1],p[2],3.2,C.white,0.14);fxSparks(p[0],p[1],p[2],18,9,C.yellow);if(p[1]<2)hammerFx(p[0],p[2],3,0.6);sfxAt('ドゴォォン！！',p[0],p[1]+1.8,p[2],{size:84,st:'boom',life:0.5});snd('boom');shake(0.4);return}if(f.own&&f.st>=2&&wb('fl_burst'))w2Blast(p[0],p[1],p[2],3.5,90*w2pw(),'ドガァン！');fxStar(p[0],p[1],p[2],1+0.5*f.st,C.white,0.1);fxSparks(p[0],p[1],p[2],5+3*f.st,6,C.yellow);if(p[1]<1.4)fxRing(p[0],0.1,p[2],2+f.st,C.white,0.2);if(f.st>1)sfxAt(f.st>2?'ドゴォン！':'ガゴッ',p[0],p[1]+1.6,p[2],{size:44+12*f.st,st:'boom',life:0.4});snd(f.st>2?'boom':'clank',0.6);return}
 const S=W2.fl,r=f.big?S.lastR:S.slamR;hammerFx(f.tx,f.tz,r,f.big?1:0.35);if(!f.own)return;
 const pw=w2pw(),dm=(f.big?S.last:S.slam)*SK.spw*pw;let n=0;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;let hs=null;for(const s of spheres(e))if(Math.hypot(s[0]-f.tx,s[2]-f.tz)-s[3]<r&&s[1]-s[3]<(f.big?6:3.2)){hs=s;break}
@@ -78,10 +78,12 @@ if(G.mode==='pvp')for(const o of others)if(!o.dead&&Math.hypot(o.x-f.tx,o.z-f.tz
 // 必殺「流星乱れ打ち」: right-front, left-front, right, left, then a big straight throw where you're looking (like a charged throw)
 const FL_SEQ=[[0.05,0.75],[0.4,-0.75],[0.75,1.5],[1.1,-1.5]],FL_LAST=1.5,FL_END=2.35;
 function flSpStart(){pl.hon=0;pl.fsp={t:0};snd('charge');addText('オリャリャリャ！',W/2,H*0.16,{size:80,st:'boom',life:0.9,rot:-0.06})}
-function flSpTick(dt){const F=pl.fsp,t0=F.t;F.t+=dt;
-for(const[t,a]of FL_SEQ)if(t0<t&&F.t>=t)flSpLaunch(a,6.5,0);
-if(t0<FL_LAST&&F.t>=FL_LAST)flSpLast();
-if(F.t>=FL_END)pl.fsp=null}
+// 凸の大技「流星・八連」: 叩きつけが8回（FL_SEQ8）
+const FL_SEQ8=[[0.05,0.75],[0.33,-0.75],[0.61,1.5],[0.89,-1.5],[1.17,0.3],[1.45,-0.3],[1.73,2.3],[2.01,-2.3]];
+function flSpTick(dt){const F=pl.fsp,t0=F.t,b8=wb('fl_sp'),Q=b8?FL_SEQ8:FL_SEQ,L=b8?2.4:FL_LAST,E=b8?3.25:FL_END;F.t+=dt;
+for(const[t,a]of Q)if(t0<t&&F.t>=t)flSpLaunch(a,6.5,0);
+if(t0<L&&F.t>=L)flSpLast();
+if(F.t>=E)pl.fsp=null}
 function flSpLast(){const S=W2.fl,as=touchMode||G.demoOn,d=aimAssist(aimDir(),as?0.08:0.04,as?0.7:0.4),O=flOrigin(pl),tw=rayWorld(O[0],O[1],O[2],d[0],d[1],d[2],S.lastD),R=Math.max(1.5,Math.min(S.lastD,tw-0.3));
 const f=flMake(pl,1,d,R,3,1);wflys.push(f);pl.fb=f;pl.fsA=0;wpAct(11);snd('whoosh');snd('charge');addText('ドッセェェイ！',W/2,H*0.2,{size:84,st:'boom',life:0.7,rot:0.05});
 wxPush(['F',r2(d[0]),r2(d[1]),r2(d[2]),r1(R),3,1])}
@@ -89,40 +91,43 @@ function flSpLaunch(a,dist,big){const yaw=pl.yaw-a,dx=-Math.sin(yaw),dz=-Math.co
 const f=flSlam(pl,1,tx,tz,big);wflys.push(f);pl.fb=f;pl.fsA=a;wpAct(11);snd('whoosh');if(big){snd('charge');addText('ドッセェェイ！',W/2,H*0.2,{size:84,st:'boom',life:0.7,rot:0.05})}
 wxPush(['f',r1(tx),r1(tz),big])}
 // ================= 雷鳴の槍 =================
-function spearUpdate(dt,f){if(f&&pl.cool<=0&&pl.sp!==1){const k=now-(pl.spkT==null?-9:pl.spkT)<0.8?((pl.spk|0)+1)%3:0;pl.spk=k;pl.spkT=now;spearThrust(k)}}
+function spearUpdate(dt,f){pl.spH=f?(pl.spH||0)+dt:0;if(wb('sp_hold')&&pl.spH>0.45&&!pl.spHT){pl.spHT=1;addText('乱れ突き！',W/2,H*0.34,{size:66,st:'fire',life:0.5})}if(!f)pl.spHT=0;if(f&&pl.cool<=0&&pl.sp!==1){const k=now-(pl.spkT==null?-9:pl.spkT)<0.8?((pl.spk|0)+1)%3:0;pl.spk=k;pl.spkT=now;spearThrust(k)}}
 function spearThrust(k){const S=W2.sp,big=pl.sp===2,pw=w2pw(),R=big?S.spR:S.R,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw);
-pl.cool=S.cool[k]*(big?0.9:1);wpAct(12+k);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.07;pl.lgV=pl.frz>0?0:5;pl.lgP=0;snd('slash');
+pl.cool=S.cool[k]*(big?0.9:1)*(pl.spHT?0.4:1);wpAct(12+k);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.07;pl.lgV=pl.frz>0?0:5;pl.lgP=0;snd('slash');
 let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,R,S.A,pl.y-0.6,pl.y+3.8);if(s){wpDmg(e,S.dm[k]*pw*(big?S.spK:1),s[0],s[1],s[2],{quiet:n>1});spZap(e,s);n++}}
 for(const s of shots)if(!s.dead){const dx=s.x-pl.x,dz=s.z-pl.z,d=Math.hypot(dx,dz);if(d<R&&s.y<pl.y+3.8&&(d<0.8||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A)){popShot(s);if(isCli())net.q.ps.push(s.id)}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z,d=Math.hypot(dx,dz);if(d<R&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<S.A)pvHit(o,(k===2?22:16)*pw*(big?S.spK:1),false,o.x,o.y+1.2,o.z)}
 if(n){shake(0.1);stopT(0.03)}
-const d=aimDir(),x=pl.x+fx*0.6,y=pl.y+[1.7,1.0,1.35][k],z=pl.z+fz*0.6,wl=big?S.spWv:Math.min(S.wv,rayWorld(x,y,z,d[0],d[1],d[2],S.wv));
-wspk.push({own:1,x,y,z,dx:d[0],dy:d[1],dz:d[2],k,big,t:0,d:0,R:wl,hit:new Set(),n:big?999:2});wxPush(['S',r2(x),r2(y),r2(z),r2(d[0]),r2(d[1]),r2(d[2]),k,big?1:0,r1(wl)]);
+const far=wb('sp_far'),d=aimDir(),x=pl.x+fx*0.6,y=pl.y+[1.7,1.0,1.35][k],z=pl.z+fz*0.6,wl=big?S.spWv:Math.min(S.wv*(far?2:1),rayWorld(x,y,z,d[0],d[1],d[2],S.wv*(far?2:1)));
+if(big&&wb('sp_sp')&&lim('splt',0.45))wtBolt(pl.x+fx*6,pl.z+fz*6);
+wspk.push({own:1,x,y,z,dx:d[0],dy:d[1],dz:d[2],k,big,t:0,d:0,R:wl,hit:new Set(),n:big?999:far?5:2});wxPush(['S',r2(x),r2(y),r2(z),r2(d[0]),r2(d[1]),r2(d[2]),k,big?1:0,r1(wl)]);
 addText(pick(big?['ズドドッ！','バリバリッ！']:['ズドッ','シュバッ','ザシュッ']),W*0.64+rnd(-60,80),H*0.58+rnd(-30,30),{size:big?62:50,st:big?'fire':'cyan',life:0.3})}
 // 雷: stun (host: wpEffectHost 4) and a small shock (at most once in a while per enemy)
-function spZap(e,s){const S=W2.sp,B=e.type==='boss';wpEffect(e,4,B?S.bstun:S.stun);e.zapT=now;
+function spZap(e,s,ch){const S=W2.sp,B=e.type==='boss';wpEffect(e,4,B?S.bstun:S.stun);e.zapT=now;if(!ch&&wb('sp_chain')&&lim('spch'+e.id,0.5))wtChain(e,s);
 if(lim('zap'+e.id,0.7)){wpDmg(e,S.zap*w2pw(),s[0],s[1],s[2],{quiet:1});fxSparks(s[0],s[1],s[2],6,7,C.yellow);if(lim('zapT',0.25))sfxAt('ビリッ！',s[0],s[1]+s[3]+0.6,s[2],{size:46,st:'fire',life:0.35})}}
 // ================= 波雲の長弓 =================
-function bowUpdate(dt,f){const S=W2.bw;if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt*bwZoneK(pl)/S.chg);if(c0<1&&pl.hc>=1){snd('item');addText('キリリッ',W*0.66,H*0.6,{size:50,st:'cyan',life:0.4})}
+function bowUpdate(dt,f){const S=W2.bw;if(pl.hon){const c0=pl.hc;pl.hc=Math.min(1,pl.hc+dt*bwZoneK(pl)*SK.chg/S.chg);if(c0<1&&pl.hc>=1){snd('item');addText('キリリッ',W*0.66,H*0.6,{size:50,st:'cyan',life:0.4})}
  if(pl.sp===1)pl.hon=0;else if(!f){pl.hon=0;bowShoot(pl.hc)}}
 else if(f&&pl.cool<=0&&pl.sp!==1){pl.hon=1;pl.hc=0;wpAct(16)}}
 // inside a rain of arrows (ours or a friend's) the bow draws faster
 function bwZoneK(o){for(const r of wrains)if(Math.hypot(o.x-r.x,o.z-r.z)<r.r)return W2.bw.zoneK;return 1}
 function bowShoot(c){const S=W2.bw,pw=w2pw(),as=touchMode||G.demoOn,AO=aimOrigin(),d=aimAssist(aimDir(),as?0.08:0.03,as?0.7:0.4),sp=S.spd*(0.75+0.5*c);
 const a={own:1,x:AO[0]+d[0]*0.6,y:AO[1]-0.05+d[1]*0.6,z:AO[2]+d[2]*0.6,dx:d[0],dy:d[1],dz:d[2],sp,t:0,c,dm:S.dm*(1+2*c)*pw,n:1+Math.floor(c*4+1e-6),hit:new Set(),stk:0};
-warrows.push(a);wxPush(['A',r2(a.x),r2(a.y),r2(a.z),r2(d[0]),r2(d[1]),r2(d[2]),r2(c)]);pl.cool=0.22;wpAct(17);snd('whoosh');if(c>=1){snd('slash');shake(0.12)}
+if(c>=1&&wb('bw_bomb'))a.bm=1;warrows.push(a);wxPush(['A',r2(a.x),r2(a.y),r2(a.z),r2(d[0]),r2(d[1]),r2(d[2]),r2(c)]);
+if(c>=1&&wb('bw_split'))for(const t of[0.1,-0.1]){const cs=Math.cos(t),sn=Math.sin(t),q=[d[0]*cs+d[2]*sn,d[1],-d[0]*sn+d[2]*cs],b=Object.assign({},a,{dx:q[0],dz:q[2],hit:new Set(),bm:0});warrows.push(b);wxPush(['A',r2(b.x),r2(b.y),r2(b.z),r2(q[0]),r2(q[1]),r2(q[2]),r2(c)])}pl.cool=0.22;wpAct(17);snd('whoosh');if(c>=1){snd('slash');shake(0.12)}
 addText(c>=1?'ズバァッ！':'ヒュンッ',W*0.66+rnd(-30,30),H*0.58,{size:c>=1?64:44,st:c>=1?'boom':'cyan',life:0.3})}
 // 必殺「波雲・矢時雨」: a circle ahead (where the aim meets the ground)
 function bowRain(){const S=W2.bw,d=aimDir(),AO=aimOrigin(),l=Math.hypot(d[0],d[2])||1;let dist=16;if(d[1]<-0.05)dist=clamp(AO[1]/-d[1]*l,8,26);
 const x=clamp(pl.x+d[0]/l*dist,-BX+1,BX-1),z=clamp(pl.z+d[2]/l*dist,BZ0+1,BZ1-1),life=S.rainT+S.zoneT*SK.beam/0.8;
-wrains.push(bwRainMk(1,x,z,life));wxPush(['R',r1(x),r1(z),r1(life)]);wpAct(18);snd('whoosh');snd('charge');flash(0.3);addText('ヒュルルル…',W/2,H*0.16,{size:80,st:'cyan',life:0.8,rot:-0.06})}
+wrains.push(bwRainMk(1,x,z,life));wxPush(['R',r1(x),r1(z),r1(life)]);
+if(wb('bw_sp')){const x2=clamp(x+d[0]/l*10,-BX+1,BX-1),z2=clamp(z+d[2]/l*10,BZ0+1,BZ1-1);wrains.push(bwRainMk(1,x2,z2,life));wxPush(['R',r1(x2),r1(z2),r1(life)])}wpAct(18);snd('whoosh');snd('charge');flash(0.3);addText('ヒュルルル…',W/2,H*0.16,{size:80,st:'cyan',life:0.8,rot:-0.06})}
 function bwRainMk(own,x,z,life){const S=W2.bw,r=mulberry(((x*31+z*17)|0)+7),arr=[];for(let i=0;i<54;i++){const a=r()*TAU,q=Math.sqrt(r())*S.rainR*0.95;arr.push([x+Math.cos(a)*q,z+Math.sin(a)*q,0.15+r()*(S.rainT-0.25),r()*TAU,0.25+r()*0.3])}
 return{own,x,z,r:S.rainR,t:0,life,tk:0,arr}}
 // ================= 城壁の大楯 =================
-function shieldUpdate(dt,f){const S=W2.sh;if(pl.jrT>0)pl.jrT-=dt;if(pl.dashT>0)pl.lastDash=now;
+function shieldUpdate(dt,f){const S=W2.sh;if(pl.jrT>0)pl.jrT-=dt;if(pl.grd&&wb('sh_spike'))wtSpike(dt);if(pl.dashT>0)pl.lastDash=now;
 if(f&&pl.sp!==1){if(!pl.gp){pl.gp=1;pl.gdT=0;pl.grd=1;pl.jrT=0}else pl.gdT+=dt}
 // 離した瞬間だけジャストガード（押した直後は対象外。ちょん押し＝攻撃は対象外）
-else if(pl.gp){pl.gp=0;pl.grd=0;const tap=pl.gdT<0.2;pl.jrT=tap?0:S.jg;if(tap&&pl.cool<=0&&pl.sp!==1)shieldBash()}}
+else if(pl.gp){pl.gp=0;pl.grd=0;const tap=pl.gdT<0.2;pl.jrT=tap?0:S.jg*(wb('sh_jg')?2:1);if(tap&&pl.cool<=0&&pl.sp!==1)shieldBash()}}
 function shieldBash(){const S=W2.sh,pw=w2pw(),dash=now-(pl.lastDash||-9)<0.35,fx=-Math.sin(pl.yaw),fz=-Math.cos(pl.yaw),dm=(dash?S.dash:S.bash)*pw,R=S.R+(dash?0.5:0);
 pl.cool=0.32;wpAct(20);pl.lgx=fx;pl.lgz=fz;pl.lgT=0.08;pl.lgV=pl.frz>0?0:dash?S.lungeD:S.lunge;pl.lgP=0;snd('whoosh');
 let n=0;for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,R,S.A,pl.y-0.5,pl.y+3);if(!s)continue;wpDmg(e,dm,s[0],s[1],s[2],{quiet:n>0});n++;
@@ -138,12 +143,12 @@ function w2Flags(){const g=shGuardOf(pl);return(g&1?32:0)|(g&2?64:0)|(wpW().kind
 function wpGuardShot(p,s){const g=shGuardOf(p);if(!g)return false;const fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw),l=Math.hypot(s.vx,s.vz)||1;if((-s.vx*fx-s.vz*fz)/l<0.34)return false;
 if(g&2){s.dead=true;const v=Math.hypot(s.vx,s.vy,s.vz)||10,k=Math.max(18,v*1.8)/v,b={own:1,x:s.x,y:Math.max(0.8,s.y),z:s.z,vx:-s.vx*k,vy:-s.vy*k*0.3,vz:-s.vz*k,t:0,dm:W2.sh.refl*(s.dmg||10)+20,by:p.slot};
  wrefl.push(b);wxPush(['X',r2(b.x),r2(b.y),r2(b.z),r1(b.vx),r1(b.vy),r1(b.vz)]);ev('txt','カキィン！',r1(s.x),r1(s.y+1),r1(s.z),56,'cyan');fxStar(s.x,s.y,s.z,1.8,C.cyan,0.12);
- if(p===pl){addGauge(5);addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}}
+ if(p===pl){addGauge(5);wtJG();addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}}
 else{popShot(s);ev('txt','ガキン！',r1(s.x),r1(s.y+0.8),r1(s.z),48,'cyan');if(p===pl){snd('clank');pl.shHit=now}}
 return true}
 // local: a hit from (x,z) on a guarding player (the shield's front); true = no damage
 function wpGuardHit(d,x,z){const jg=pl.jrT>0&&!pl.grd;if(x==null||wpW().kind!=='shield'||!(pl.grd||pl.sp===2||jg))return false;const dx=x-pl.x,dz=z-pl.z;if(Math.hypot(dx,dz)<0.6||Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))>1.2)return false;
-if(jg){addGauge(6);pl.inv=Math.max(pl.inv,0.3);shStagger(x,z);addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}
+if(jg){addGauge(6);wtJG();pl.inv=Math.max(pl.inv,0.3);shStagger(x,z);addText('ジャストガード！',W/2,H*0.36,{size:70,st:'cyan',life:0.6});snd('crit');flash(0.15)}
 else{addText('ガキン！',W/2+rnd(-120,120),H*0.45,{size:60,st:'cyan',life:0.35});snd('clank')}
 shake(0.15);pl.shHit=now;return true}
 // ジャストガードで近接の雑魚敵をのけぞらせる（攻撃してきた位置 x,z にいちばん近い敵）
@@ -155,22 +160,22 @@ function wpBarShot(s){if(s.dead)return false;const S=W2.sh;for(const p of allP()
 function w2HostHit(e,dm,by,x,y,z){if(e.type==='boss'&&(e.st==='rise'||e.st==='die'||e.st==='drop'))return;if(by===pl.slot||!net.on){wpDmg(e,dm,x,y,z,{fx:x-1,fz:z});return}
 e.hp-=dm;e.flash=0.07;fxStar(x,y,z,1.2,C.cyan,0.1);if(e.hp<=0)kill(e,by)}
 // ================= 護符の錫杖 =================
-function staffUpdate(dt,f){if(f&&pl.cool<=0&&pl.sp!==1){pl.cool=W2.st.cool;let near=false;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;if(w2Arc(e,pl.x,pl.z,pl.yaw,1.9,0.9,pl.y-0.5,pl.y+3)){near=true;break}}
+function staffUpdate(dt,f){if(f&&pl.cool<=0&&pl.sp!==1){pl.cool=W2.st.cool*(wb('st_rapid')?0.5:1);let near=false;for(const e of enemies){if(e.dead||e.st==='spawn'||e.type==='boss')continue;if(w2Arc(e,pl.x,pl.z,pl.yaw,1.9,0.9,pl.y-0.5,pl.y+3)){near=true;break}}
  if(near)staffBonk();else staffCast()}}
 function staffBonk(){const S=W2.st,pw=w2pw();wpAct(23);pl.cool=0.45;snd('whoosh');let n=0;
 for(const e of enemies){if(e.dead||e.st==='spawn')continue;const s=w2Arc(e,pl.x,pl.z,pl.yaw,2.3,0.95,pl.y-0.5,pl.y+3);if(!s)continue;wpDmg(e,S.bonk*pw,s[0],s[1],s[2],{quiet:n>0});n++;if(e.type==='imp'&&!isCli()){const d=Math.hypot(e.x-pl.x,e.z-pl.z)||1;e.kx=(e.x-pl.x)/d*9;e.kz=(e.z-pl.z)/d*9}}
 if(G.mode==='pvp')for(const o of others){if(o.dead)continue;const dx=o.x-pl.x,dz=o.z-pl.z;if(Math.hypot(dx,dz)<2.3&&Math.abs(angDiff(Math.atan2(-dx,-dz),pl.yaw))<0.95)pvHit(o,14*pw,false,o.x,o.y+1.1,o.z)}
 if(n)shake(0.1);addText('ポカッ！',W*0.62+rnd(-40,60),H*0.56,{size:52,st:'hit',life:0.3})}
 function staffCast(){const S=W2.st,AO=aimOrigin(),d=aimDir(),near=Math.hypot(muz[0]-pl.x,muz[2]-pl.z)<2.5,x=near?muz[0]:AO[0]+d[0]*0.9,y=near?muz[1]:AO[1]-0.1+d[1]*0.9,z=near?muz[2]:AO[2]+d[2]*0.9;
-worbs.push({own:1,x,y,z,vx:d[0]*S.spd,vy:d[1]*S.spd,vz:d[2]*S.spd,t:0,by:pl.slot});wxPush(['O',r2(x),r2(y),r2(z),r2(d[0]),r2(d[1]),r2(d[2])]);wpAct(22);snd('whoosh');
+for(const t of wb('st_twin')?[0.09,-0.09]:[0]){const cs=Math.cos(t),sn=Math.sin(t),q=[d[0]*cs+d[2]*sn,d[1],-d[0]*sn+d[2]*cs];worbs.push({own:1,x,y,z,vx:q[0]*S.spd,vy:q[1]*S.spd,vz:q[2]*S.spd,t:0,by:pl.slot});wxPush(['O',r2(x),r2(y),r2(z),r2(q[0]),r2(q[1]),r2(q[2])])}wpAct(22);snd('whoosh');
 addText(pick(['シャラン','リン…','シャン！']),W*0.64+rnd(-40,50),H*0.6,{size:44,st:'cyan',life:0.3})}
 // 加護: a blessing on the local player (the stronger one wins, the time is the longer one)
 function w2Bless(dur,atk,def){if(!(dur>0))return;const on=pl.bls>0;pl.blsA=Math.max(on?pl.blsA:1,atk||1);pl.blsD=Math.min(on?pl.blsD:1,def||1);pl.bls=pl.blsT=Math.max(on?pl.bls:0,dur);addText('加護！',W/2,H*0.44,{size:64,st:'cyan',life:0.7})}
 // the special's strength (grows with 凸 through SK.spw / SK.beam)
-function w2SpBless(){const S=W2.st;return{heal:Math.min(1,S.sh*SK.spw),dur:S.sT*SK.beam/0.8,atk:Math.min(2.5,1+S.sA*SK.spw),def:Math.max(0.3,1/(1+S.sD*SK.spw))}}
+function w2SpBless(){const S=W2.st;return{heal:Math.min(1,S.sh*SK.spw),dur:S.sT*SK.beam/0.8*(wb('st_long')?1.5:1),atk:Math.min(2.5,1+S.sA*SK.spw),def:Math.max(0.3,1/(1+S.sD*SK.spw))}}
 // the staff's special can always be used (no downed friend needed)
 function wpSpOk(){return true}
-function staffRevive(){const b=w2SpBless();wpAct(24);wxPush(['rv',r2(b.heal),r1(b.dur),r2(b.atk),r2(b.def)]);snd('item');snd('charge');flash(0.4);fxRing(pl.x,0.1,pl.z,9,W2_GREEN,0.5);fxStar(pl.x,2,pl.z,3,C.white,0.15);
+function staffRevive(){const b=w2SpBless();wpAct(24);if(wb('st_sp'))wtStWave();wxPush(['rv',r2(b.heal),r1(b.dur),r2(b.atk),r2(b.def)]);snd('item');snd('charge');flash(0.4);fxRing(pl.x,0.1,pl.z,9,W2_GREEN,0.5);fxStar(pl.x,2,pl.z,3,C.white,0.15);
 pl.hp=Math.min(SK.hp,pl.hp+SK.hp*b.heal);w2Bless(b.dur,b.atk,b.def);
 for(const o of others){if(o.dead){fxRing(o.x,0.1,o.z,5,C.white,0.4);fxStar(o.x,1.2,o.z,3,C.cyan,0.15)}else if(G.mode!=='pvp')w2HealFx(o)}addText('反魂の祈り！',W/2,H*0.16,{size:84,st:'cyan',life:0.9,rot:-0.06})}
 // ================= SPECIALS =================
@@ -178,7 +183,7 @@ function w2SpStart(w){switch(w.kind){
 case'flail':flSpStart();break;
 case'spear':snd('charge');snd('zap');flash(0.4);lines(0.6,'#ffe680');addText('バリバリバリッ！',W/2,H*0.15,{size:84,st:'fire',life:0.9,rot:-0.08});break;
 case'bow':bowRain();break;
-case'shield':pl.hon=0;snd('freeze');flash(0.4);addText('ガキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.06});break;
+case'shield':pl.hon=0;if(wb('sh_sp'))wtShWave();snd('freeze');flash(0.4);addText('ガキィィン！',W/2,H*0.15,{size:86,st:'cyan',life:0.9,rot:-0.06});break;
 case'staff':staffRevive();break}}
 // ================= WORLD (everyone's; only the owner's deal damage) =================
 function w2World(dt){
@@ -195,12 +200,12 @@ for(let i=wspk.length-1;i>=0;i--){const s=wspk[i],d0=s.d;s.d+=(s.big?70:48)*dt;s
 for(let i=warrows.length-1;i>=0;i--){const a=warrows[i];a.t+=dt;if(a.stk){if(a.t>a.stk)warrows.splice(i,1);continue}
  const st=a.sp*dt,x0=a.x,y0=a.y,z0=a.z,tw=rayWorld(x0,y0,z0,a.dx,a.dy,a.dz,st);let end=Math.min(st,tw);
  const pw=w2pw(),hits=[];for(const e of enemies){if(e.dead||e.st==='spawn'||a.hit.has(e))continue;let tm=1e9,hs=null;for(const s of spheres(e)){const t=raySph(x0,y0,z0,[a.dx,a.dy,a.dz],s[0],s[1],s[2],s[3]+0.1);if(t>=0&&t<tm){tm=t;hs=s}}if(hs&&tm<end)hits.push([tm,e,hs])}
- hits.sort((p,q)=>p[0]-q[0]);for(const[t,e,s]of hits){if(a.n<=0)break;a.hit.add(e);a.n--;if(a.own){wpDmg(e,a.dm,x0+a.dx*t,y0+a.dy*t,z0+a.dz*t,{quiet:a.hit.size>2});if(a.c>=1)fxStar(x0+a.dx*t,y0+a.dy*t,z0+a.dz*t,1.4,C.cyan,0.1)}if(a.n<=0)end=t}
+ hits.sort((p,q)=>p[0]-q[0]);for(const[t,e,s]of hits){if(a.n<=0)break;a.hit.add(e);a.n--;if(a.own&&a.bm){a.bm=0;w2Blast(x0+a.dx*t,y0+a.dy*t,z0+a.dz*t,3.2,70*w2pw(),'ドカッ！')}if(a.own){wpDmg(e,a.dm,x0+a.dx*t,y0+a.dy*t,z0+a.dz*t,{quiet:a.hit.size>2});if(a.c>=1)fxStar(x0+a.dx*t,y0+a.dy*t,z0+a.dz*t,1.4,C.cyan,0.1)}if(a.n<=0)end=t}
  if(a.own){for(const q of shots)if(!q.dead){const t=raySph(x0,y0,z0,[a.dx,a.dy,a.dz],q.x,q.y,q.z,q.r+0.2);if(t>=0&&t<end){popShot(q);if(isCli())net.q.ps.push(q.id)}}
   if(G.mode==='pvp')for(const o of others)if(!o.dead&&!a.hit.has(o)&&a.n>0){const t=raySph(x0,y0,z0,[a.dx,a.dy,a.dz],o.x,o.y+1.1,o.z,0.6);if(t>=0&&t<end){a.hit.add(o);a.n--;pvHit(o,a.dm*0.35,false,o.x,o.y+1.1,o.z)}}}
  a.x+=a.dx*end;a.y+=a.dy*end;a.z+=a.dz*end;
  if(a.n<=0){warrows.splice(i,1);continue}
- if(tw<st-1e-4||a.y<0.05){a.stk=a.t+1.2;if(lim('awl',0.1))fxSparks(a.x,a.y,a.z,3,4,C.white);continue}
+ if(tw<st-1e-4||a.y<0.05){a.stk=a.t+1.2;if(a.own&&a.bm){a.bm=0;w2Blast(a.x,Math.max(0.5,a.y),a.z,3.2,70*w2pw(),'ドカッ！')}if(lim('awl',0.1))fxSparks(a.x,a.y,a.z,3,4,C.white);continue}
  if(a.t>1.6)warrows.splice(i,1)}
 for(let i=wrains.length-1;i>=0;i--){const r=wrains[i],S=W2.bw;r.t+=dt;
  if(r.t<S.rainT){if(lim('rnT',0.2)&&Math.hypot(r.x-cam.x,r.z-cam.z)<45){const v=sndVol;sndVol=v*0.5;snd('whoosh');sndVol=v}if(r.t>0.2&&lim('rnTx',0.5))sfxAt('ドドドドッ',r.x+rnd(-3,3),2.5,r.z+rnd(-3,3),{size:62,st:'cyan',life:0.4})
@@ -220,7 +225,7 @@ for(let i=worbs.length-1;i>=0;i--){const b=worbs[i],S=W2.st,x0=b.x,y0=b.y,z0=b.z
  if(!done){const l=Math.hypot(b.x-x0,b.y-y0,b.z-z0);if(l>1e-4&&rayWorld(x0,y0,z0,(b.x-x0)/l,(b.y-y0)/l,(b.z-z0)/l,l)<l)done=true}
  if(!done)for(const p of[pl,...others]){if(p.dead||p.slot===b.by)continue;if(Math.hypot(b.x-p.x,b.y-(p.y||0)-1.1,b.z-p.z)<0.95){done=true;heal=p;break}}
  if(!done)for(const e of enemies){if(e.dead||e.st==='spawn')continue;for(const s of spheres(e))if(Math.hypot(b.x-s[0],b.y-s[1],b.z-s[2])<s[3]+0.3){foe=[e,s];break}if(foe){done=true;break}}
- if(heal&&b.own){if(G.mode==='pvp')pvHit(heal,14*w2pw(),false,heal.x,heal.y+1.1,heal.z);else{wxPush(['hl',heal.slot,W2.st.heal,S.bT,S.bA,S.bD]);w2HealFx(heal)}}
+ if(heal&&b.own){if(G.mode==='pvp')pvHit(heal,14*w2pw(),false,heal.x,heal.y+1.1,heal.z);else{const lg=wb('st_long');wxPush(['hl',heal.slot,W2.st.heal,S.bT*(lg?2:1),r2(lg?1+(S.bA-1)*2:S.bA),r2(lg?1-(1-S.bD)*2:S.bD)]);w2HealFx(heal)}}
  if(foe&&b.own)wpDmg(foe[0],S.dm*w2pw(),foe[1][0],foe[1][1],foe[1][2]);
  if(done){if(!heal){fxStar(b.x,b.y,b.z,0.9,C.cyan,0.08);fxSparks(b.x,b.y,b.z,4,4,W2_GREEN)}worbs.splice(i,1)}}}
 const W2_GREEN=[0.35,0.95,0.55],W2_LGREEN=[0.75,1,0.8];

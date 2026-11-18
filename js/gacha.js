@@ -3,9 +3,9 @@
 // Currency: コマ札 (localStorage koma_gacha {f: count, paid: [times paid per stage], pick: pickup weapon id, n: total pulls}).
 // A stage clear (solo / co-op) gives stage number × 1 (stage 1 = 1 … stage 5 = 5), only for the first two clears of each stage.
 // Weapon gacha: the six weapons of weapons.js. 1 札 = 1 pull, 5 札 = 6 pulls. The pickup (one, chosen by the player) comes out
-// at GA_PU, every other weapon has the same share of the rest. A duplicate adds a waiting 必殺 level-up (wsGive → WS.up), which the
-// player applies by hand on the equip screen (「強化」 next to 「詳細」, wpUpBtn). A weapon at 凸 Lv10 (WLV, counting the waiting ones) leaves the pool; once every weapon is at Lv10 all of them are in the pool again,
-// and a duplicate of a Lv10 weapon turns into GA_MAXPT skill points (SKS.pt) — the draw never gets blocked.
+// at GA_PU, every other weapon has the same share of the rest. A duplicate adds 凸 (wsGive → WS.tp), one point of the weapon's own skill tree
+// (wtree.js, 「強化」 next to 「詳細」 on the equip screen). A weapon at 凸12 (WT_MAX) leaves the pool; once every weapon is at 凸12 all of them are in the pool again,
+// and a duplicate of a 凸12 weapon turns into GA_MAXPT skill points (SKS.pt) — the draw never gets blocked.
 // The screen: the weapon card (picture assets/gacha/cut_*.webp) on the left; on the right / behind it,
 // background: the weapon turning, then a demo play of stage 1 with that weapon (gaD, gaDemoStart / gaDemoUpdate).
 const GA_IDS=['rifle','shotgun','rail','katana','hammer','bomb','flail','spear','bow','shield','staff'],GA_PIC={rail:'railgun'},GA_PU=0.3,GA_MAXPT=3;// GA_MAXPT: skill points for a pull of a weapon that is already at the top level
@@ -21,12 +21,12 @@ function gaPreload(){for(const id of GA_IDS)gaImg(id)}
 function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>4)return;if((GA.paid[i]|0)>=2){G.fuda=0;return}
 GA.paid[i]=(GA.paid[i]|0)+1;GA.f+=i+1;G.fuda=i+1;gaSave()}
 // ---- draw logic ----
-const gaPool=()=>{const P=GA_IDS.filter(id=>wpLvAll(id)<WLV);return P.length?P:GA_IDS.slice()};// 全部が最大なら全部が出る（重なるとスキルP）
+const gaFull=id=>!!WS.own[id]&&wtTp(id)>=WT_MAX,gaPool=()=>{const P=GA_IDS.filter(id=>!gaFull(id));return P.length?P:GA_IDS.slice()};// 全部が最大なら全部が出る（重なるとスキルP）
 function gaRates(){const P=gaPool(),r={};if(!P.length)return r;if(P.includes(GA.pick)&&P.length>1){r[GA.pick]=GA_PU;for(const id of P)if(id!==GA.pick)r[id]=(1-GA_PU)/(P.length-1)}else for(const id of P)r[id]=1/P.length;return r}
 function gaRoll(){const r=gaRates();let u=Math.random(),last=null;for(const id in r){last=id;u-=r[id];if(u<0)return id}return last}
 let gaMsg=null;
 function gaPull(n,cost){if(gaA)return;if(DEV)cost=0;if(GA.f<cost){gaMsg={s:'コマ札が足りません（ステージをクリアするともらえる）',t:now};snd('clank');return}
-GA.f-=cost;const res=[];for(let i=0;i<n;i++){const id=gaRoll();if(!id)break;const was=WS.own[id]?wpLvAll(id):0,k=wsGive(id),pt=k==='max'?GA_MAXPT:0;if(pt)SKS.pt+=pt;res.push({id,k,pu:id===GA.pick,lv:wpLvAll(id),was,pt})}
+GA.f-=cost;const res=[];for(let i=0;i<n;i++){const id=gaRoll();if(!id)break;const was=wtTp(id),k=wsGive(id),pt=k==='max'?GA_MAXPT:0;if(pt)SKS.pt+=pt;res.push({id,k,pu:id===GA.pick,lv:wtTp(id),was,pt})}
 if(res.some(r=>r.pt))skSave();GA.n+=res.length;gaSave();gaA={res,i:0,ph:0,t:0,multi:n>1};gaCrack();snd('charge')}
 // ---- screen state ----
 let gaSel=0,gaDet=0,gaA=null;
@@ -52,8 +52,8 @@ ctx.save();ctx.translate(0,36);ctx.rotate(now*1.5);ctx.beginPath();ctx.arc(0,0,2
 // prize outlet: dark opening, hinged flap in front
 ctx.fillStyle=INK;ctx.fillRect(-30,62,60,26);
 ctx.beginPath();ctx.moveTo(-30,62);ctx.lineTo(30,62);ctx.lineTo(27,72);ctx.lineTo(-27,72);ctx.closePath();ctx.fillStyle='#c4c9d6';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke();ctx.beginPath();ctx.moveTo(-20,66);ctx.lineTo(-8,66);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();ctx.restore()}
-// level pips ◆×10 (filled = in use, pink = waiting in the settings; the bigger ones at Lv5 / Lv10 are the big jumps)
-function gaPips(x,y,id,s){const lv=WS.own[id]?wpLv(id):0,all=wpLvAll(id);s=s||1;for(let i=0;i<WLV;i++){const cx=x+i*22*s,b=SPLV_BIG(i+1)?1.3:1;ctx.save();ctx.translate(cx,y);ctx.rotate(PI/4);ctx.fillStyle=i<lv?'#ffd91a':i<all?'#ffb3a8':'#d0d3e2';ctx.fillRect(-7*s*b,-7*s*b,14*s*b,14*s*b);ctx.strokeStyle=INK;ctx.lineWidth=SPLV_BIG(i+1)?3:2;ctx.strokeRect(-7*s*b,-7*s*b,14*s*b,14*s*b);ctx.restore()}}
+// 凸: four simple diamonds = the 3rd (big) node of each arm of the weapon's tree (filled = taken)
+function gaPips(x,y,id,s){const T=WS.own[id]?wtTr(id):[0,0,0,0];s=s||1;for(let i=0;i<4;i++){ctx.save();ctx.translate(x+i*24*s,y);ctx.rotate(PI/4);const r=7*s;ctx.fillStyle=T[i]>=3?'#ffc61a':'#d0d3e2';ctx.fillRect(-r,-r,r*2,r*2);ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(-r,-r,r*2,r*2);ctx.restore()}}
 // picture contained in a box (centre cx,cy), with a float
 function gaPic(id,cx,cy,bw,bh,k){const im=gaImg(id);if(!im){txt('…',cx,cy,40,INK);return}const s=Math.min(bw/im.naturalWidth,bh/im.naturalHeight)*(k==null?1:k),w=im.naturalWidth*s,h=im.naturalHeight*s;ctx.drawImage(im,cx-w/2,cy-h/2,w,h)}
 function gaRays(cx,cy,R,n,c1,a,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.globalAlpha=a;ctx.fillStyle=c1;ctx.beginPath();for(let i=0;i<n;i++){const a0=i/n*TAU,a1=(i+0.5)/n*TAU;ctx.moveTo(0,0);ctx.lineTo(Math.cos(a0)*R,Math.sin(a0)*R);ctx.lineTo(Math.cos(a1)*R,Math.sin(a1)*R)}ctx.fill();ctx.restore()}
@@ -61,14 +61,14 @@ function gaRays(cx,cy,R,n,c1,a,rot){ctx.save();ctx.translate(cx,cy);ctx.rotate(r
 function gaMenuBtn(x,y,w,h){B(x,y,w,h,null,openGacha,{col:'#fff3b0',sk:10});ctx.save();ctx.beginPath();para(x,y,w,h,10);ctx.clip();gaRays(x+w/2+5,y+h*0.42,w,14,'#ffd91a',0.6,now*0.3);ctx.restore();para(x,y,w,h,10);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
 gaMachine(x+w/2+5,y+h*0.42,0.92);txt('ガチャ',x+w/2+5,y+h-30,34,'#fff',INK,8);
 if(GA.f>0){ctx.save();ctx.translate(x+w-8,y+10);ctx.rotate(0.12);const s=1+0.06*Math.sin(now*8);ctx.scale(s,s);burstPath(3,4,50,26,10,1.25,5);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,50,26,10,1.25,5);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();gaFuda(-22,0,0.62,-0.2);txt('×'+GA.f,14,1,22,'#fff',INK,5);ctx.restore()}}
-// small ! on the 装備 buttons while 必殺 level-ups are waiting
-function gaUpBadge(x,y){let n=0;for(const id of GA_IDS)if(WS.own[id]&&wpLv(id)<WLV)n+=WS.up[id]|0;if(!n)return;ctx.beginPath();ctx.arc(x,y,15,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('!',x,y+1,20,'#fff')}
+// small ! on the 装備 buttons while tree points are waiting
+function gaUpBadge(x,y){let n=0;for(const id of GA_IDS)n+=wtFree(id);if(!n)return;ctx.beginPath();ctx.arc(x,y,15,0,TAU);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('!',x,y+1,20,'#fff')}
 // ---- result screen: the コマ札 of this clear ----
 function gaRewardCard(u){if(G.fuda==null)return;const k=easeBack(sat(u/0.25));ctx.save();ctx.translate(1158,62);ctx.rotate(0.06);ctx.scale(k,k);ctx.fillStyle=INK;ctx.fillRect(-86,-38,180,84);ctx.fillStyle='#fff';ctx.fillRect(-92,-44,180,84);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(-92,-44,180,84);
 gaFuda(-58,-2,1.05,-0.15);txt('コマ札',22,-20,20,INK);if(G.fuda>0)txt('＋'+G.fuda,22,14,40,'#e5402b',INK,4);else{txt('受取済み',22,8,20,'#555a70');txt('（各ステージ2回まで）',22,28,12,'#555a70')}ctx.restore()}
 // ================= GACHA SCREEN =================
 const GC={x:40,y:196,w:530,h:412};// the weapon card
-function drawGacha(dt){const id=GA_IDS[gaSel],wi=wpIdx(id),w=WPN[wi],own=!!WS.own[id],all=wpLvAll(id),R=gaRates(),pu=GA.pick===id,X=GC.x,Y=GC.y,CW=GC.w,CH=GC.h;
+function drawGacha(dt){const id=GA_IDS[gaSel],wi=wpIdx(id),w=WPN[wi],own=!!WS.own[id],full=gaFull(id),R=gaRates(),pu=GA.pick===id,X=GC.x,Y=GC.y,CW=GC.w,CH=GC.h;
 if(gaA){drawGaAnim(dt);return}
 // a veil on the left only: the highlight on the right stays clear
 const gr=ctx.createLinearGradient(0,0,W*0.62,0);gr.addColorStop(0,'rgba(22,18,31,.62)');gr.addColorStop(0.75,'rgba(22,18,31,.18)');gr.addColorStop(1,'rgba(22,18,31,0)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
@@ -94,10 +94,10 @@ const arr=(x,dir)=>{const y=PY+PH/2;btns.push({x:x-34,y:y-50,w:68,h:100,cb:()=>g
 arr(PX+4,-1);arr(PX+PW-4,1);
 // name / status
 const ny=PY+PH+12;para(X+14,ny,Math.min(CW-40,70+w.name.length*36),50,14);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name,X+44,ny+26,34,'#fff',INK,7,'left');
-const sy=ny+76;if(own){txt('所持',X+16,sy,20,INK,null,0,'left');txt('凸Lv'+wpLv(id),X+62,sy,18,'#e5402b',null,0,'left');gaPips(X+150,sy,id,0.62);if(WS.up[id]>0&&wpLv(id)<WLV)txt('＋'+WS.up[id]+'待ち',X+270,sy,15,'#e5402b',null,0,'left')}
+const sy=ny+76;if(own){txt('所持',X+16,sy,20,INK,null,0,'left');txt('凸'+wtTp(id)+'/'+WT_MAX,X+62,sy,18,'#e5402b',null,0,'left');gaPips(X+150,sy,id,0.85);if(wtFree(id))txt('＋'+wtFree(id)+'ポイント',X+246,sy,15,'#e5402b',null,0,'left')}
 else txt('未入手',X+20,sy,22,'#555a70',null,0,'left');
-if(all>=WLV)txt(R[id]?'ダブるとスキルP＋'+GA_MAXPT:'もう出ません',X+CW-20,sy,15,'#555a70',null,0,'right');else txt('出る確率 '+((R[id]||0)*100).toFixed(1)+'%',X+CW-20,sy,17,INK,null,0,'right');
-const by=Y+CH-58,canPick=all<WLV&&gaPool().includes(id);B(X+14,by,262,46,pu?'ピックアップ中':'ピックアップにする',canPick&&!pu?()=>{GA.pick=id;gaSave();snd('item')}:null,{col:pu?'#ffd91a':canPick?'#ff4a3d':'#d8d8e0',tc:!pu&&canPick?'#fff':INK,size:pu?22:21,sk:10});
+if(full)txt(R[id]?'ダブるとスキルP＋'+GA_MAXPT:'もう出ません',X+CW-20,sy,15,'#555a70',null,0,'right');else txt('出る確率 '+((R[id]||0)*100).toFixed(1)+'%',X+CW-20,sy,17,INK,null,0,'right');
+const by=Y+CH-58,canPick=!full&&gaPool().includes(id);B(X+14,by,262,46,pu?'ピックアップ中':'ピックアップにする',canPick&&!pu?()=>{GA.pick=id;gaSave();snd('item')}:null,{col:pu?'#ffd91a':canPick?'#ff4a3d':'#d8d8e0',tc:!pu&&canPick?'#fff':INK,size:pu?22:21,sk:10});
 B(X+296,by,110,46,gaDet?'閉じる':'詳細',()=>{gaDet=gaDet?0:1},{col:gaDet?'#59d8ff':'#fff',size:24,sk:10});B(X+420,by,96,46,'装備',()=>{gaDemoEnd();openEquip('gacha')},{col:'#ffb35a',size:22,sk:10});gaUpBadge(X+522,by+2);
 txt('ピックアップ '+Math.round(GA_PU*100)+'%・ほかは同じ確率',450,656,16,'#fff',INK,5);
 // ---- pull buttons ----
@@ -109,7 +109,7 @@ if(gaMsg&&now-gaMsg.t<2.6){const a=sat((2.6-(now-gaMsg.t))/0.3);ctx.globalAlpha=
 if(gaDet)gaDetail(w,id);gaGiftUI()}
 // details: what the weapon does + 必殺Lv table (right side, over the highlight)
 // 詳細の中身は縦スクロール（ドラッグ・スワイプ・ホイール）。枠の外はクリップする
-const gaDS={y:0,v:0,id:null,py:0,k:'',t:0,ch:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=742;
+const gaDS={y:0,v:0,id:null,py:0,k:'',t:0,ch:0},GA_DX=600,GA_DY=232,GA_DW=640,GA_DH=362,GA_DCH=760;
 const gaDMax=()=>Math.max(0,(gaDet===2?gaDS.ch:GA_DCH)-GA_DH);
 function gaDetTouch(ph,p,id){if(!(G.menu==='gacha'&&gaDet&&!gaA)){gaDS.id=null;return false}
 if(ph==='d'){if(p.x<GA_DX||p.x>GA_DX+GA_DW||p.y<GA_DY+22||p.y>GA_DY+GA_DH)return false;gaDS.id=id;gaDS.py=p.y;gaDS.v=0;return true}
@@ -125,8 +125,8 @@ if(gaDet===1){ctx.save();ctx.beginPath();ctx.rect(X,Y,PW,PH);ctx.clip();ctx.tran
 const tag=(x,y,s,col)=>{para(x,y-15,60,30,8);ctx.fillStyle=col;ctx.fill();txt(s,x+33,y+1,17,'#fff')};
 tag(X+20,Y+48,'通常',INK);fitTxt(w.d[0],X+94,Y+48,21,PW-114,INK);fitTxt(w.d[1],X+94,Y+80,18,PW-114,'#3a3f55');
 tag(X+20,Y+126,'必殺','#e5402b');txt(w.sp,X+94,Y+124,26,'#e5402b',null,0,'left');fitTxt(w.s,X+94,Y+156,18,PW-114,INK);
-const lv=WS.own[id]?wpLv(id):0;ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+20,Y+184,PW-40,2);txt('凸（★＝大幅強化）',X+24,Y+210,22,INK,null,0,'left');txt('重なると装備の「強化」で上げられる・最大のあとはスキルP',X+24,Y+240,15,'#555a70',null,0,'left');
-for(let l=1;l<=WLV;l++){const y=Y+284+(l-1)*46,x=X+20,on=l===lv,big=SPLV_BIG(l);if(on||big){ctx.fillStyle=on?'#fff3b0':'#ffe9a8';ctx.fillRect(x,y-20,PW-40,40)}txt('Lv'+l,x+12,y,24,on?'#e5402b':INK,null,0,'left');if(big)txt('★',x+84,y,22,'#e5402b');fitTxt(SPLV_T[l-1],x+120,y,21,PW-190,INK);if(on)txt('今',x+PW-52,y,20,'#e5402b',null,0,'right')}
+ctx.fillStyle='rgba(22,18,31,.15)';ctx.fillRect(X+20,Y+184,PW-40,2);txt('凸でひらく武器のスキルツリー',X+24,Y+210,22,INK,null,0,'left');txt('凸1つで1個。十字の先（3つ目）は大技・最大 凸'+WT_MAX,X+24,Y+240,15,'#555a70',null,0,'left');
+{const T=WS.own[id]?wtTr(id):[0,0,0,0];for(let a=0;a<4;a++){const n=WTREE[id][a][2],y=Y+290+a*112,on=T[a]>=3;if(on){ctx.fillStyle='#fff3b0';ctx.fillRect(X+20,y-26,PW-40,100)}wtGem(X+50,y+4,16,on?2:0,1);txt(WT_ARM[a],X+82,y-6,16,'#555a70',null,0,'left');fitTxt(n.n,X+130,y-6,23,PW-160,on?'#e5402b':INK);wtWrap(n.d,X+82,y+26,17,PW-110,24,'#3a3f55')}}
 ctx.restore();
 const m=gaDMax();if(m>0){const th=PH*PH/GA_DCH,ty=Y+(PH-th)*clamp(sy/m,0,1);ctx.fillStyle='rgba(22,18,31,.35)';ctx.fillRect(X+PW-9,ty,5,th);if(sy<m-20){txt('▼ 下にスクロール',X+PW-24,Y+PH-14,15,'#555a70',null,0,'right')}}}
 para(X+16,Y-24,280,46,14);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt(w.name+'の詳細',X+40,Y,24,'#fff',INK,6,'left');
@@ -168,8 +168,8 @@ else{// reveal
  const k=easeBack(sat(t/0.35));gaPic(r.id,W/2,H/2-90+Math.sin(now*2.2)*6,700,430,k);
  if(t>0.25){const k2=easeBack(sat((t-0.25)/0.2));ctx.save();ctx.translate(W/2,530);ctx.rotate(-0.03);ctx.scale(k2,k2);para(-300,-44,600,88,30);ctx.fillStyle=INK;ctx.fill();para(-290,-36,580,72,24);ctx.fillStyle=w.col;ctx.fill();txt(w.name,0,2,58,'#fff',INK,10);ctx.restore()}
  if(t>0.4){const k3=easeBack(sat((t-0.4)/0.2)),nw=r.k==='new';ctx.save();ctx.translate(W/2+380,170);ctx.rotate(0.12);ctx.scale(k3,k3);burstPath(5,7,nw?130:190,nw?66:74,14,1.25,4);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,nw?130:190,nw?66:74,14,1.25,4);ctx.fillStyle=nw?'#e5402b':'#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
-  if(nw)txt('NEW!',0,2,72,'#fff',INK,10);else if(r.k==='max'){txt('スキルP ＋'+r.pt,0,-14,40,'#e5402b',INK,4,'center','#fff',10);txt('凸Lv'+WLV+'（最大）',0,26,24,INK)}else{txt(SPLV_BIG(r.lv)||SPLV_BIG(r.was+1)?'大幅強化!':'凸 UP!',0,-16,40,'#e5402b',INK,4,'center','#fff',10);txt('Lv'+r.was+' → Lv'+r.lv,0,26,28,INK)}ctx.restore();
-  if(!nw&&t>0.6){ctx.globalAlpha=sat((t-0.6)/0.2);para(W/2-330,584,660,32,12);ctx.fillStyle=INK;ctx.fill();txt(r.k==='max'?'もう最大なので、スキルポイントに変わりました':'装備画面の「強化」で凸（必殺レベル）を上げよう',W/2+6,601,21,'#ffd91a');ctx.globalAlpha=1}}
+  if(nw)txt('NEW!',0,2,72,'#fff',INK,10);else if(r.k==='max'){txt('スキルP ＋'+r.pt,0,-14,40,'#e5402b',INK,4,'center','#fff',10);txt('凸'+WT_MAX+'（最大）',0,26,24,INK)}else{txt('凸 UP!',0,-16,40,'#e5402b',INK,4,'center','#fff',10);txt('凸'+r.was+' → 凸'+r.lv,0,26,28,INK)}ctx.restore();
+  if(!nw&&t>0.6){ctx.globalAlpha=sat((t-0.6)/0.2);para(W/2-330,584,660,32,12);ctx.fillStyle=INK;ctx.fill();txt(r.k==='max'?'もう最大なので、スキルポイントに変わりました':'装備画面の「強化」で武器のスキルツリーをひらこう',W/2+6,601,21,'#ffd91a');ctx.globalAlpha=1}}
  if(r.pu&&t>0.3){ctx.save();ctx.translate(170,120);ctx.rotate(-0.1);para(-120,-26,240,52,14);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('ピックアップ！',4,1,26,'#fff');ctx.restore()}
  if(A.sh&&t<0.75){ctx.save();ctx.translate(W/2,H/2-10);ctx.rotate(GA_PNL.rot);ctx.globalAlpha=sat((0.75-t)/0.35);for(const s of A.sh){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.r);ctx.beginPath();s.p.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.closePath();ctx.fillStyle='#fff';ctx.fill();if(s.tone){ctx.save();ctx.clip();ctx.globalAlpha*=0.3;ctx.fillStyle=dotPat;ctx.fillRect(-200,-200,400,400);ctx.restore()}ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();ctx.restore()}ctx.restore()}
  if(t<0.3){ctx.fillStyle='rgba(255,255,255,'+(1-t/0.3)+')';ctx.fillRect(0,0,W,H)}
@@ -185,7 +185,7 @@ let ups=0;A.res.forEach((r,i)=>{const w=WPN[wpIdx(r.id)],c=i%3,rw=(i/3)|0,cw=360
  gaPic(r.id,0,-18,cw-40,ch-66);ctx.strokeStyle=r.pu?'#ffd91a':INK;ctx.lineWidth=r.pu?8:5;ctx.strokeRect(-cw/2,-ch/2,cw,ch);if(r.pu){ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(-cw/2-4,-ch/2-4,cw+8,ch+8)}
  para(-cw/2+10,ch/2-50,cw-30,40,12);ctx.fillStyle=w.col;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();fitTxt(w.name,-cw/2+30,ch/2-29,26,170,'#fff');
  if(r.k==='new'){ctx.save();ctx.translate(cw/2-60,-ch/2+24);ctx.rotate(0.15);burstPath(0,0,58,26,10,1.25,4);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('NEW!',0,1,28,'#fff',INK,4);ctx.restore()}
- else if(r.k==='max')txt('スキルP＋'+r.pt,cw/2-24,ch/2-29,19,'#ffd91a',INK,5,'right');else txt('凸Lv'+r.was+'→'+r.lv,cw/2-24,ch/2-29,18,'#fff',INK,5,'right');
+ else if(r.k==='max')txt('スキルP＋'+r.pt,cw/2-24,ch/2-29,19,'#ffd91a',INK,5,'right');else txt('凸'+r.was+'→'+r.lv,cw/2-24,ch/2-29,18,'#fff',INK,5,'right');
  if(r.pu){para(-cw/2-6,-ch/2-12,104,28,8);ctx.fillStyle='#e5402b';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.stroke();txt('PICK UP',-cw/2+50,-ch/2+3,15,'#fff')}ctx.restore()});
 const spt=A.res.reduce((n,r)=>n+(r.pt|0),0);if(t>0.6){if(ups)txt('重なった武器は、装備画面の「強化」で凸（必殺レベル）を上げられます',W/2,spt?580:606,20,'#ffd91a',INK,6);if(spt)txt('最大の武器が重なった分：スキルポイント ＋'+spt,W/2,spt&&ups?612:606,22,'#fff',INK,6);B(W/2-150,642,300,58,'とじる',gaAnimClose,{col:'#ffd91a',size:30})}}
 // ================= BACKGROUND: weapon turntable → highlight demo (inside the same frame) =================
@@ -287,13 +287,3 @@ function gaGiftUI(){if(!gaGift||!gaOn()||setOpen||gaA)return;
  const kw=58,kh=62,kg=6,kx=(W-(11*kw+10*kg))/2,ky=Y+226,keys=['1','2','3','4','5','6','7','8','9','0','⌫'];
  keys.forEach((k,i)=>{B(kx+i*(kw+kg),ky,kw,kh,k,k==='⌫'?()=>{gaGift.v=gaGift.v.slice(0,-1)}:()=>gaGiftKey(k),{size:30,sk:8,col:'#fff3b0'})});
  B(X+90,Y+PH-84,250,58,'もらう',gaGiftSubmit,{size:30,col:'#e5402b',tc:'#fff'});B(X+PW-340,Y+PH-84,250,58,'とじる',gaGiftClose,{size:30})}
-// ================= EQUIP SCREEN:「強化」(必殺 level-ups waiting from gacha duplicates) =================
-let wpUpPop=null;
-// the 強化 button of the equip screen for weapon w (x,y,w,h)
-function wpUpBtn(w,x,y,bw,bh,ok){const id=w.id,own=ok&&w.id!=='gun'&&!!WS.own[id],lv=own?wpLv(id):0,up=own?WS.up[id]|0:0,can=own&&up>0&&lv<WLV;
-B(x,y,bw,bh,lv>=WLV?'最大':'強化',own?()=>{if(wpLvUp(id)){snd('item');wpUpPop={id,t:now};skApply()}else{snd('clank');wpUpPop={id,t:now,msg:lv>=WLV?'凸Lv'+WLV+'（最大）です':'ガチャで同じ武器が出ると強化できます'}}}:null,{col:can?'#ff4a3d':lv>=WLV?'#ffd91a':'#d8d8e0',tc:can?'#fff':INK,size:28});
-if(can){ctx.beginPath();ctx.arc(x+bw+8,y+4,16,0,TAU);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('+'+up,x+bw+8,y+5,16,INK)}
-const P=wpUpPop;if(P&&P.id===id&&now-P.t<1.4){const u=now-P.t,k=easeBack(sat(u/0.15));ctx.save();ctx.globalAlpha=sat((1.4-u)/0.3);ctx.translate(x+bw/2,y-40);ctx.rotate(-0.06);ctx.scale(k,k);
- if(P.msg){para(-200,-20,400,40,12);ctx.fillStyle=INK;ctx.fill();txt(P.msg,6,1,18,'#fff')}
- else{burstPath(3,4,140,36,12,1.25,7);ctx.fillStyle=INK;ctx.fill();burstPath(0,0,140,36,12,1.25,7);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.stroke();txt('必殺Lv'+wpLv(id)+'！',0,2,32,'#e5402b',INK,4)}ctx.restore()}}
-function wpUpN(){let n=0;for(const id of GA_IDS)if(WS.own[id]&&wpLv(id)<WLV)n+=WS.up[id]|0;return n}

@@ -110,7 +110,7 @@ let SK={},skPop=null,skMsg=null,skSel=null;
 function skApply(){const on=G.mode!=='pvp'&&!G.demoOn,h=c=>on&&skHas(c);
 const s={atk:1,rel:1,mag:16,cool:1,crit:1.25,pierce:0,crush:0,low:0,def:1,spd:1,dash:1,dinv:0.34,ddist:1,dash2:0,jump:1,sj:0,grav:1,air:0,dj:0,airc:0,
  hp:100,regen:0,heal:1,heal2:1,radar:0,fud:0,rev:0,revH:0.3,gauge:1,spw:1,gReg:0,gKeep:0,gKill:0,g0:0,beam:0.8,spinv:0,gAfter:0,again:0,spCost:0,pow:12,
- run:0,dB:0,combo:0,boss:1,vamp:0,aKill:0,save:0,airDef:1,dodge:0,hinv:1,cap:0,gHit:0,gItem:0,xpk:1,still:0,dDef:1,airDodge:0,gDuring:0,gLow:0,spHeal:0,fullAtk:0,kAmmo:0,boom:0,spMin:100,freeCombo:0,revClr:0};
+ run:0,dB:0,combo:0,boss:1,vamp:0,aKill:0,save:0,airDef:1,dodge:0,hinv:1,cap:0,gHit:0,gItem:0,xpk:1,still:0,dDef:1,airDodge:0,gDuring:0,gLow:0,spHeal:0,fullAtk:0,kAmmo:0,boom:0,spMin:100,freeCombo:0,revClr:0,aspd:1,chg:1,heat:1};// aspd/chg/heat = 武器のスキルツリー（攻撃の速さ・溜めの速さ・熱のたまり）
 // level: a small rise of the base numbers
 if(on){const k=Math.max(0,(SKS.lv|0)-1);s.hp+=k*SKLV_HP;s.atk*=1+k*SKLV_ATK}
 // 攻
