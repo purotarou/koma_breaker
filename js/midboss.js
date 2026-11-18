@@ -13,8 +13,8 @@
 // Wave entries: g:[{twin:1}] / g:[{dmon:1}] (spawnGroup -> MBS).
 // ---- tuning (目安) ----
 const MBT={
- twin:{hp:3000,spd:6.4,keep:10,apart:9,range:30,cd:[0.75,1.3],w1:0.5,w2:0.6,w3:0.5,w4:0.8,rec:0.42,recR:0.25,sv:21,dmg:13,big:18,dash:17,dashT:0.5,dashDmg:16,blind:2.4,rage:1.45},
- dmon:{hp:6500,spd:4.0,keep:[6,12],range:32,cd:[0.75,1.25],w1:0.65,w2:0.8,w3:0.85,w4:0.45,w5:0.65,rec:0.55,rec2:0.35,pilT:0.34,sv:19,dmg:22,ring:16,burstR:8,burstDmg:14,blind:3.2,pilN:5,
+ twin:{hp:3000,spd:6.4,keep:10,apart:9,range:30,cd:[0.75,1.3],w1:0.5,w2:0.6,w3:0.5,w4:0.8,rec:0.42,recR:0.25,sv:21,dmg:13,big:18,dash:17,dashT:0.5,dashDmg:16,blind:4.4,rage:1.45},
+ dmon:{hp:6500,spd:4.0,keep:[6,12],range:32,cd:[0.75,1.25],w1:0.65,w2:0.8,w3:0.85,w4:0.45,w5:0.65,rec:0.55,rec2:0.35,pilT:0.34,sv:19,dmg:22,ring:16,burstR:8,burstDmg:14,blind:5.2,pilN:5,
   charge:21,chargeT:0.9,chargeDmg:22,score:3000}};
 const MB_NAME=['アカツキ','ヨイヤミ'],MB_SHOT={8:1,9:1,10:1.6,11:1.6,12:2.4,13:2.6};// slash shots: k -> size (8 fire / 9 dark / 10,11 big / 12 huge 焔墨 / 13 シロヌキ第3形態の白い斬撃: wide and low, jump over it)
 Object.assign(C,{fireD:hex(0xb3262a),darkP:hex(0x5a2a8a)});
