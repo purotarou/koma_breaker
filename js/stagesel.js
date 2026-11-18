@@ -30,7 +30,7 @@ for(let n=0;n<STG.length;n++){const x=SS.X0+n*ssP()-SS.x,s=STG[n];if(x>W||x+w<0)
  para(x+(fit?10:22),y+350,w-(fit?28:52),28,8);ctx.fillStyle=INK;ctx.fill();txt(fit?s.boss:'ボス　'+s.boss,x+w/2,y+365,fit?15:16,'#fff');if(exSel&&exOpen()){ctx.save();ctx.translate(x+36,y+38);ctx.rotate(-0.15);para(-30,-20,60,40,8);ctx.fillStyle='#ff4a3d';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();txt('極',0,1,28,'#fff',INK,5);ctx.restore()}txt('ハイスコア '+getHi(n),x+w/2,y+393,16,INK)}
 B(60,628,220,56,'もどる',()=>{G.menu='main'},{size:26});
 // 難易度 (極 opens once all five stages are cleared)
-if(exOpen()){txt('難易度',800,150,22,'#fff',INK,6);B(850,124,170,52,'普通',()=>{exSet(0);snd('ui')},{sk:0,size:24,col:exSel?'#fff':'#ffd91a'});B(1032,124,190,52,'極',()=>{exSet(1);snd('ui')},{sk:0,size:30,col:exSel?'#ff4a3d':'#fff',tc:exSel?'#fff':INK});
+if(exOpen()){txt('難易度',800,150,22,'#fff',INK,6);B(850,124,170,52,'普通',()=>{exSet(0);snd('ui')},{sk:0,size:24,col:exSel?'#fff':'#ffd91a'});B(1032,124,190,52,'極',()=>{exSet(1);snd('ui')},{sk:0,size:30,col:exSel?'#ff4a3d':'#a35cff',tc:'#fff'});
  if(exSel)txt('敵が大幅に強化・新たな敵・ボスの新技',800,656,20,'#fff',INK,6)}
 else txt('全ステージ制覇で　難易度：極　解放',1010,150,19,'#fff',INK,5);
 if(m<=0)return;
