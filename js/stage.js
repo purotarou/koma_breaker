@@ -19,8 +19,10 @@ box(0,6.25,z,12.6,0.6,0.55,P);box(0,7.95,z,13.2,0.62,0.95,P);box(0,8.48,z,14.2,0
 function toro(x,z){mPush();mT(x,0,z);box(0,0.2,0,1.3,0.4,1.3,C.stoneD,5);cyl(0,1.05,0,0.42,1.4,0.42,C.stone);box(0,1.85,0,1.1,0.22,1.1,C.stone);box(0,2.3,0,0.78,0.7,0.78,C.stone);
 box(0,2.3,0,0.82,0.42,0.5,C.yellow,0,0,F_UNLIT);box(0,2.3,0,0.5,0.42,0.82,C.yellow,0,0,F_UNLIT);put(PYR,0,2.95,0,0,0,0,1.6,0.6,1.6,C.stoneD);sph(0,3.32,0,0.28,0.32,0.28,C.stone);mPop();colC.push({x,z,r:0.85,h:3.4})}
 function cedar(x,z,s,R){const c=R()<.5?C.cedar:C.cedarD;cyl(x,1.5*s,z,0.8*s,3*s,0.8*s,C.trunk,9);put(CONE,x,5.5*s,z,0,0,0,6*s,7*s,6*s,c,8,0,F_SWAY);put(CONE,x,9*s,z,0,0,0,4.8*s,6*s,4.8*s,c,8,0,F_SWAY);put(CONE,x,12*s,z,0,0,0,3.4*s,5*s,3.4*s,c,8,0,F_SWAY)}
-function leafy(x,z,s,R,ca,cb,col){put(CYL,x,1.7*s,z,0,0,0.06,0.75*s,3.6*s,0.75*s,C.trunk,9);put(CYL,x+0.7*s,3.4*s,z,0,0,-0.8,0.3*s,1.8*s,0.3*s,C.trunk,9);put(CYL,x-0.7*s,3.6*s,z,0,0,0.8,0.3*s,1.8*s,0.3*s,C.trunk,9);
-for(let i=0;i<7;i++){const a=i/7*TAU+R(),d=(2.4+R()*1.3)*s,rr=i<6?1.7*s:0;sph(x+Math.cos(a)*rr,(4.4+R()*1.5+(i===6?1.4:0))*s,z+Math.sin(a)*rr,d,d*0.82,d,i%2?ca:cb,8,0,F_SWAY)}if(col)colC.push({x,z,r:0.6*s,h:5})}
+// The trunk runs up into the middle sphere of the crown (its top sits 40% up that sphere), so no sky shows between trunk and leaves even while the crown sways.
+function leafy(x,z,s,R,ca,cb,col){const L=[];for(let i=0;i<7;i++){const a=i/7*TAU+R(),d=(2.4+R()*1.3)*s,rr=i<6?1.7*s:0;L.push([x+Math.cos(a)*rr,(4.4+R()*1.5+(i===6?1.4:0))*s,z+Math.sin(a)*rr,d,d*0.82,d,i%2?ca:cb])}
+const m=L[6],th=m[1]-m[4]/2+0.4*m[4];put(CYL,x,th/2-0.1*s,z,0,0,0.06,0.75*s,th,0.75*s,C.trunk,9);put(CYL,x+0.7*s,3.4*s,z,0,0,-0.8,0.3*s,1.8*s,0.3*s,C.trunk,9);put(CYL,x-0.7*s,3.6*s,z,0,0,0.8,0.3*s,1.8*s,0.3*s,C.trunk,9);
+for(const q of L)sph(q[0],q[1],q[2],q[3],q[4],q[5],q[6],8,0,F_SWAY);if(col)colC.push({x,z,r:0.6*s,h:5})}
 function nobori(x,z,c){cyl(x,2.3,z,0.08,4.6,0.08,C.black);box(x,4.5,z+0.3,0.06,0.06,0.75,C.black);box(x,2.75,z+0.42,0.04,3.3,0.72,c,0,0,F_CLOTH);box(x,4.15,z+0.42,0.06,0.4,0.74,C.white,0,0,F_CLOTH);for(let i=0;i<4;i++)box(x,3.55-i*0.6,z+0.42,0.07,0.36,0.4,C.white,0,0,F_CLOTH)}
 function chochin(x,y,z,c,fl){box(x,y+0.9,z,0.05,0.3,0.05,C.black,0,0,F_SWAY);cyl(x,y+0.7,z,0.56,0.16,0.56,C.black,0,0,F_SWAY);sph(x,y,z,1.0,1.3,1.0,c,6,0,(fl||0)|F_SWAY);cyl(x,y-0.68,z,0.56,0.14,0.56,C.black,0,0,F_SWAY)}
 function fox(x,z,s){mPush();mT(x,0,z);box(0,0.7,0,1.4,1.4,1.4,C.stoneD,5);box(0,1.48,0,1.6,0.16,1.6,C.stone);sph(0,2.2,-0.1,0.8,1.3,0.9,C.paper);sph(0,3.0,0.15,0.62,0.6,0.7,C.paper);put(CONE,0,2.95,0.6,PI/2,0,0,0.3,0.4,0.3,C.paper);
@@ -40,9 +42,10 @@ box(0,0.6,37,24,1.2,13,C.stoneD,5);box(0,3.6,38,19,5,8,C.plaster);for(let i=0;i<
 torii(-17);
 toro(-7.5,-9);toro(7.5,-9);toro(-7.5,6);toro(7.5,6);
 fox(-6.6,-14.4,1);fox(6.6,-14.4,-1);
-// sacred tree
-cyl(-15,3.5,-5,2.3,7,2.3,C.trunk,9);cyl(-15,1.7,-5,2.6,0.3,2.6,C.paper);for(let i=0;i<5;i++){const a=i/5*TAU;box(-15+Math.cos(a)*1.32,1.35,-5+Math.sin(a)*1.32,0.22,0.5,0.22,C.white)}
-for(let i=0;i<7;i++){const a=i/6*TAU,rr=i<6?3.2:0;const d=5+R()*1.6;sph(-15+Math.cos(a)*rr,8.6+R()*1.5+(i===6?2:0),-5+Math.sin(a)*rr,d,d*0.8,d,i%2?C.leaf:C.leafD,8,0,F_SWAY)}colC.push({x:-15,z:-5,r:1.5,h:7});
+// sacred tree (the trunk runs up into the middle sphere of the crown, like leafy())
+const stL=[];for(let i=0;i<7;i++){const a=i/6*TAU,rr=i<6?3.2:0;const d=5+R()*1.6;stL.push([-15+Math.cos(a)*rr,8.6+R()*1.5+(i===6?2:0),-5+Math.sin(a)*rr,d,d*0.8,d,i%2?C.leaf:C.leafD])}
+{const m=stL[6],th=m[1]-m[4]/2+0.4*m[4];cyl(-15,th/2,-5,2.3,th,2.3,C.trunk,9)}cyl(-15,1.7,-5,2.6,0.3,2.6,C.paper);for(let i=0;i<5;i++){const a=i/5*TAU;box(-15+Math.cos(a)*1.32,1.35,-5+Math.sin(a)*1.32,0.22,0.5,0.22,C.white)}
+for(const q of stL)sph(q[0],q[1],q[2],q[3],q[4],q[5],q[6],8,0,F_SWAY);colC.push({x:-15,z:-5,r:1.5,h:7});
 leafy(-18.5,-22,1,R,C.sakura,C.sakuraD,1);leafy(18.5,-22,1.1,R,C.sakura,C.sakuraD,1);leafy(18.5,17.5,1,R,C.sakura,C.sakuraD,1);leafy(-18.5,18,0.9,R,C.sakura,C.sakuraD,1);
 // chozuya
 for(const[x,z]of[[-1.5,-1.1],[1.5,-1.1],[-1.5,1.1],[1.5,1.1]])box(15+x,1.4,9+z,0.28,2.8,0.28,C.woodD,2);put(PRISM,15,3.35,9,0,PI/2,0,3.6,1.1,4.8,C.roof,3);box(15,0.45,9,2.2,0.9,1.1,C.stoneD,5);box(15,0.92,9,1.9,0.06,0.8,C.water,7,1);colB.push({x0:13.7,x1:16.3,z0:8.2,z1:9.8,h:1});
