@@ -8,7 +8,7 @@
 // dur 制限時間(秒) / hp 体力（墨鬼は40。ここに人数・ステージの倍率が掛かる） / spd 逃げる速さ m/s（主人公は6.6。ステージの速さの倍率が掛かる）
 // see この距離より近いプレイヤーから逃げる / cap 同時に出ている数（＋人数ごとに capN） / every 湧く間隔(秒) / first 始まりにまとめて出す数
 // xp 1体の経験値（墨鬼は 10×ステージの倍率≒24。極・スキルの経験値倍率も掛かる） / sc 点数 / g 必殺ゲージ
-const BON={dur:30,hp:62,spd:7.6,see:15,cap:10,capN:3,every:0.45,first:6,xp:250,sc:1000,g:6};
+const BON={dur:45,hp:62,spd:7.6,see:15,cap:10,capN:3,every:0.45,first:6,xp:250,sc:1000,g:6};
 Object.assign(C,{goldB:hex(0xffc21f),goldD:hex(0xc98a10),goldL:hex(0xfff0a0)});
 STY.gold={halo:'#fff',ink:'#16121f',f0:'#fffbd0',f1:'#f0a800'};
 const bonusOn=()=>G.mode!=='pvp'&&G.wave>=0&&!!(WAVESET[G.stage]&&WAVESET[G.stage][G.wave]&&WAVESET[G.stage][G.wave].bonus);
