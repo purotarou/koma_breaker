@@ -82,7 +82,7 @@ hRot('thigh_R',HZ,-a*0.25,H);hRot('thigh_L',HZ,a*0.25,H);
 const br=Math.sin(now*1.7+o.x)*0.025;hRot('hips',HY,(o.twist||0)*0.4+0.14*s*mv,H);hRot('spine',HX,(o.lean||0)*0.55+0.06*mv,H);hRot('chest',HX,(o.lean||0)*0.45+br,H);hRot('chest',HY,(o.twist||0)*0.6-0.1*s*mv,H);
 hRot('head',HX,-(o.mouth||0)*0.4-(o.lean||0)*0.5+(o.look||0),H);hRot('head',HY,o.lookY||0,H);
 heroGlobals(0,H);// plant the feet: the lowest heel / toe (rest pose: on the ground) goes to y 0, so a crouching / walking giant never sinks into the floor
-if(air)heroGlobals(-a*0.3,H);else{let lo=9;for(const n of['foot_R','foot_L']){const i=H.bi[n],h=H.head[i],R=H.GR[i],t=H.GT[i];for(const dz of[-0.05,0.2]){const r=m3v(R,[0,-h[1],dz]);lo=Math.min(lo,t[1]+r[1])}}heroGlobals(-lo,H)}
+if(air)heroGlobals(-a*0.3,H);else{let lo=9;for(const n of['foot_R','foot_L']){const i=H.bi[n],h=H.head[i],R=H.GR[i],t=H.GT[i];for(const dz of[-0.09,0.15,0.38]){const r=m3v(R,[0,-h[1],dz]);lo=Math.min(lo,t[1]+r[1])}}heroGlobals(-lo,H)}
 for(const sd of['R','L']){const q=o.arms&&o.arms[sd],sg=sd==='R'?-1:1,sh=H.GT[H.bi['upperarm_'+sd]];let t;
  let tw=null;if(q&&q.w){const f=snM(o,q.w),u=v3n([f[0]-sh[0],f[1]-sh[1],f[2]-sh[2]]);tw=[f[0]-u[0]*0.12,f[1]-u[1]*0.12,f[2]-u[2]*0.12]}
  if(q&&q.m){t=[sh[0]+q.m[0],sh[1]+q.m[1],sh[2]+q.m[2]];if(tw)t=[lerp(t[0],tw[0],q.f),lerp(t[1],tw[1],q.f),lerp(t[2],tw[2],q.f)]}// f: from the model pose to the world fist
