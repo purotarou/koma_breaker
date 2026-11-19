@@ -41,7 +41,7 @@ else if(st==='idle'){b.mouth=lerp(b.mouth,0,Math.min(1,dt*5));if(b.stT>b.cdT*K.c
   else if(m==='sweep'||m==='sweep2'){b.st='sweep';b.n=m==='sweep2'?2:1;b.p0=Math.random()<0.5?1:-1;b.ah=b.p0>0?0:1}
   else if(m==='lantern')b.st='lantern';
   else if(m==='pillar'||m==='chase'||m==='ripple'){b.st=m;b.ah=2}
-  else if(m==='side'||m==='inkjet'||m==='whirl')b.st=m;// 5面 クラーケン (kraken.js krPre)
+  else if(m==='side'||m==='inkjet'||m==='whirl'||m==='rain'||m==='stab'||m==='crush')b.st=m;// 5面 クラーケン (kraken.js krPre)
   else if(m==='suck'||m==='koma'||m==='slash'||m==='rows'||m==='firerain'||m==='inkrain'||m==='darkring'||m==='flines')b.st=m;// 5面 (boss5.js shPre)
   else{b.st='rubble';b.ah=P.x<0?0:1;const h=hands[b.ah];b.s0={x:h.x,y:h.y,z:h.z}}}}
 else if(st==='pillar'||st==='chase'||st==='ripple'){if(exBoss(b,dt,hands,p2))idle(0.6)}

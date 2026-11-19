@@ -31,7 +31,7 @@ const WAVESET=[[{ch:'第一話',name:'墨鬼、襲来！',g:[{imp:4},{imp:4,fox:
 // Difficulty by stage (the later the stage, the bigger the step): enemy HP / boss HP (the bell too) / damage dealt to the player / small-enemy ink-imp speed.
 // Meant to keep pace with the skill tree and the weapon gacha; tune here. Not used in the demo or versus. A 6th stage onwards keeps climbing by the last step.
 // Story mode (普通) is a little easier than before, most of all on the early stages. 難易度：極 (G.ex, js/extreme.js) multiplies it by EXK.
-const DIF=[{hp:1.0,bh:0.95,dmg:0.9,spd:1},{hp:1.2,bh:1.15,dmg:1.1,spd:1.05},{hp:1.6,bh:1.45,dmg:1.35,spd:1.12},{hp:2.0,bh:1.75,dmg:1.5,spd:1.18},{hp:2.25,bh:1.9,dmg:1.6,spd:1.2},{hp:2.5,bh:2.05,dmg:1.7,spd:1.23}];
+const DIF=[{hp:1.0,bh:0.95,dmg:0.9,spd:1},{hp:1.2,bh:1.15,dmg:1.1,spd:1.05},{hp:1.6,bh:1.45,dmg:1.35,spd:1.12},{hp:2.0,bh:1.75,dmg:1.5,spd:1.18},{hp:2.4,bh:2.0,dmg:1.7,spd:1.24},{hp:2.5,bh:2.05,dmg:1.7,spd:1.23}];
 // 極: enemy HP / boss HP / damage to the player / speed / pause between attacks (smaller = busier) / more small enemies per group / EXP
 const EXK={hp:2.2,bh:2.0,dmg:1.8,spd:1.3,cd:0.62,more:1.25,xp:1.6};
 function difOf(n){if(G.demoOn||G.mode==='pvp')return{hp:1,bh:1,dmg:1,spd:1};let d;if(n<DIF.length)d=DIF[n];else{const a=DIF[DIF.length-1],k=n-DIF.length+1;d={hp:a.hp+0.45*k,bh:a.bh+0.3*k,dmg:a.dmg+0.2*k,spd:Math.min(1.5,a.spd+0.05*k)}}
