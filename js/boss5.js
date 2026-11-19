@@ -20,16 +20,16 @@ const SH_WEAK=2.5,SH_BODY=0.5,SH_BRK=2.6,
  SH_SAY=[['黒ト紅…','二ツニ分カレヨ!!'],['全テヲ','白紙ニ還ス!!']],
  SN_S=15,SN_Z=-30,SN_X2=11,SN_SX=29,SN_SZ=-2,SN_S3=1.35,SH_BRK2=3.6;// giant scale (height 28), giant feet z, the two giants' x right after the split,
 // where they stand in 第2形態 (x = ±SN_SX at z SN_SZ, facing the middle), the white oni's scale (height 2.7), the 第2形態 break (they walk to the sides)
-BT.shiro={hp:9000,hpF:[1,1,0.8],cd:0.32,up:[0.75,0.6],hold:[0.7,0.55],slamDmg:34,up2:0.9,volN:[10,13],ballN:[9,12],ballDmg:17,sumN:[2,3],waveTel:0.9,waveN:[1,2],
+BT.shiro={hp:9000,hpF:[1,1,0.8],cd:0.32,up:[0.75,0.6],hold:[0.7,0.55],slamDmg:34,up2:0.9,volN:[10,13],ballN:[9,12],ballDmg:17,sumN:[2,3],waveTel:0.9,waveN:[2,3],
  brTel:0.9,brN:[3,5],spinTel:1.1,spinW:0.62,spinGap:0.85,
  suTel:1.0,suDur:3.6,suV:5.8,suR:9,suDmg:[17,6],suZ:-20,          // 吸い込み (第1形態): telegraph, pull time, pull speed (m/s), hurt radius, damage near / far, centre z
- koTel:[2.0,1.5],koDmg:36,koN:[4,5],                               // 白抜き (第3形態): warning (first / later waves), damage, waves [普通, 極]
+ koTel:[2.7,2.1],koDmg:36,koN:[4,5],                               // 白抜き (第3形態): warning (first / later waves), damage, waves [普通, 極]
  cuTel:0.55,cuN:[3,4],cuW:1.8,cuDmg:27,                            // 地を裂く斬撃 (第3形態): warning, cuts [普通, 極], half width, damage
  fz:[3,8],fx:8,                                                    // where a giant's fist can land (his own frame: metres in front, metres to the side). Real arm length: he crouches and leans to get there
  boom:[[5.5,7,0.28],[10,11,0.5],[14.5,15,0.72]],                   // explosions around a fist / palm after it lands: [radius, count, delay] (the third ring in 第2形態 and 極)
  rainN:[22,30],rainEx:8,dkR:[3,4],dkDmg:14,dkBl:2.5,                // 炎の雨 / 墨の雨 (pillars all over the yard) and 闇の波紋 (dark rings that blind)
  hp2:0.6,                                                          // 第2形態: each giant has its own HP = the form's HP x hp2
- aa:{up:0.9,y0:2.25,dy:0.6,cd:[2.6,1.8],tel:0.45,v:17,dmg:16,shN:[2,3],shV:42,shDmg:12,cd3:[1.6,1.1],sv3:34,dmg3:18},// 対空 (anti-air): a player in the air (y > up) gets a ring at jump height + fast shots (1st/2nd form) or an upward slash (3rd), cooldown [普通, 極]; y0 = the lowest of the three rings (a little above a standing player's head), dy = the gap
+ aa:{up:0.35,y0:2.25,dy:0.6,cd:[2.6,1.8],tel:0.15,v:17,tt:0.42,vmax:90,dmg:16,shN:[2,3],shV:42,shDmg:12,cd3:[1.6,1.1],sv3:34,dmg3:18},// 対空 (anti-air): a player in the air (y > up) gets a ring at jump height + fast shots (1st/2nd form) or an upward slash (3rd), cooldown [普通, 極]; the ring reaches the jumper tt s after it starts (speed v .. vmax), so it lands while they are still in the air; y0 = the lowest of the three rings (a little above a standing player's head), dy = the gap
  m3:{spd:7.6,keep:[5,9],cd:[0.25,0.5],m1:0.3,m2:0.45,m3:0.32,m4:0.42,m5:0.26,sv:30,dmg:20,dashV:24,dashT:0.4,dashDmg:22,spinR:3.4,spinDmg:20,ring:14,m5N:6},
   pats:[['fist','firerain','palm','flines','volley','darkring','double','breath','inkrain','fist','spin','palm','suck','flines','fireball','wave','summon'],
   ['palm','fist','firerain','flines','inkrain','fireball','darkring','double','volley','breath','palm','fist','flines','firerain','darkring','summon'],
@@ -156,7 +156,7 @@ if(b.phase>2){if(Math.hypot(P.x-b.x,P.z-b.z)>24)return;b.aaT=K.cd3[ex];const t=M
  for(const o of ex?[-0.12,0,0.12]:[-0.07,0.07]){const fx=Math.sin(a+o),fz=Math.cos(a+o);shots.push({id:++eidN,k:14,x:b.x+fx*1.2,y:1.4,z:b.z+fz*1.2,vx:fx*K.sv3,vy:(y-1.4)/Math.max(0.15,t),vz:fz*K.sv3,r:0.6,dmg:K.dmg3,g:0,life:1.6,bl:0})}
  ev('txt','昇閃！',r1(b.x),3.8,r1(b.z),60,'ink');return}
 b.aaT=K.cd[ex];const As=shAncs(b);let gi=0,bd=1e9;As.forEach((A,i)=>{const d=Math.hypot(A.x-P.x,A.z-P.z);if(shAlive(b,i)&&d<bd){bd=d;gi=i}});const A=As[gi],o=ancW(A,0,0,6),mo=shMouth(b,b.phase===2?gi===0:false);
-ev('shAir',r1(o.x),r1(o.z),b.phase===2?gi:2);
+ev('shAir',r1(o.x),r1(o.z),b.phase===2?gi:2,r1(clamp(Math.hypot(P.x-o.x,P.z-o.z)/K.tt,K.v,K.vmax)));
 for(let j=0;j<K.shN[ex];j++){const t=Math.hypot(P.x-mo[0],P.z-mo[2])/K.shV,tx=P.x+(P.vx||0)*t+rnd(-1,1)*j,tz=P.z+(P.vz||0)*t+rnd(-1,1)*j,ty=(P.y||0)+1.1,dx=tx-mo[0],dy=ty-mo[1],dz=tz-mo[2],l=Math.hypot(dx,dy,dz)||1;
  shots.push({id:++eidN,k:0,x:mo[0],y:mo[1],z:mo[2],vx:dx/l*K.shV,vy:dy/l*K.shV,vz:dz/l*K.shV,r:0.8,dmg:K.shDmg,g:0,life:2})}}
 // ---- 第3形態: the white oni with two swords (host) ----
@@ -204,8 +204,8 @@ const shPx=(p,z)=>{const m=(p.z0+p.z1)/2;return[p.x0+p.k0*(z-m),p.x1+p.k1*(z-m)]
 function shInPanel(p,x,z,pad){if(z<p.z0+pad||z>p.z1-pad)return false;const e=shPx(p,z);return x>e[0]+pad&&x<e[1]-pad}
 function shTick(dt,live){const K=BT.shiro;
 for(let i=shz.length-1;i>=0;i--){const h=shz[i],t0=h.t;h.t+=dt;
- if(h.k==='air'){const A=K.aa,r=h.t*A.v;if(r>60){shz.splice(i,1);continue}if(h.t<0||!live||h.hit)continue;// three rings just above head height: only jumping players get hit
-  const r0=Math.max(0,t0)*A.v,dd=Math.hypot(pl.x-h.x,pl.z-h.z);// swept: the ring passed the player this frame, and the player's body (feet pl.y .. head pl.y+1.85) reaches the lowest ring
+ if(h.k==='air'){const A=K.aa,r=h.t*h.v;if(r>60){shz.splice(i,1);continue}if(h.t<0||!live||h.hit)continue;// three rings just above head height: only jumping players get hit
+  const r0=Math.max(0,t0)*h.v,dd=Math.hypot(pl.x-h.x,pl.z-h.z);// swept: the ring passed the player this frame, and the player's body (feet pl.y .. head pl.y+1.85) reaches the lowest ring
   if(pl.y+1.85>A.y0-0.3&&dd>r0-1.2&&dd<r+1.2){h.hit=1;hurtPlayer(A.dmg,h.x,h.z);addText('撃チ落トサレタ！',W/2,H*0.62,{size:54,st:'hurt',life:0.5})}continue}
  if(h.k==='suck'){if(h.t>K.suDur){shz.splice(i,1);continue}if(h.t<0||!live)continue;
   const dx=-pl.x,dz=K.suZ-pl.z,d=Math.hypot(dx,dz)||1,v=K.suV*(1+0.35*sat(1-d/30))*(pl.dashT>0?0.35:pl.y>0.05?0.8:1)*Math.min(1,h.t*3);pl.x+=dx/d*v*dt;pl.z+=dz/d*v*dt;collide(pl,0.5);
@@ -234,7 +234,7 @@ shDark(x,z,n){const K=BT.shiro;snd('roar',0.6);addText('闇ノ波紋！',W/2,H*0
 shLines(ox,oz,a0,nl,c){snd('boom',0.5);addText(c?'焔ノ筋！':'墨ノ筋！',W/2,H*0.3,{size:86,st:c?'boom':'ink',life:0.7});for(let j=0;j<nl;j++){const a=a0+(j-(nl-1)/2)*0.26;for(let i=0;i<15;i++){const d=3+i*2.8;addErupt(ox+Math.sin(a)*d,oz+Math.cos(a)*d,c,0.7+i*0.07)}}},
 // explosions in rings around a fist / palm that has just landed (c 1 fire, 0 ink; n rings)
 shBoom(x,z,c,n){const K=BT.shiro;explode(x,1,z,3.2,{quiet:1,ink:!c});fxRing(x,0.2,z,K.boom[n-1][0]*2,c?C.orange:C.darkP,0.4);for(let k=0;k<n;k++){const[r,m,dl]=K.boom[k],a0=k*0.4;for(let i=0;i<m;i++){const a=a0+i*TAU/m;addErupt(x+Math.sin(a)*r,z+Math.cos(a)*r,c,dl)}}},
-shAir(x,z,c){const K=BT.shiro.aa;shz.push({k:'air',x,z,t:-K.tel,c});snd('whoosh');addText('空ヘ逃ゲルナ!!',W/2,H*0.3,{size:84,st:c===0?'boom':'ink',life:0.8});lines(0.4,'#16121f')},
+shAir(x,z,c,v){const K=BT.shiro.aa;shz.push({k:'air',x,z,t:-K.tel,c,v:v||K.v});snd('whoosh');addText('空ヘ逃ゲルナ!!',W/2,H*0.3,{size:84,st:c===0?'boom':'ink',life:0.8});lines(0.4,'#16121f')},
 shFall(i){const b=boss,A=b?shAncs(b)[i]:null;if(A){for(let j=0;j<4;j++)explode(A.x+rnd(-5,5),rnd(8,24),A.z+rnd(-5,5),3,{quiet:1,ink:1});fxBlobs(A.x,10,A.z,20,12,C.inkD,0.5)}flash(0.5);shake(0.8);stopT(0.12);snd('boom',1);
  addText(i?'黒鬼 撃破！':'赤鬼 撃破！',W/2,H*0.32,{size:100,st:i?'ink':'boom',life:1.3});addText('残ルハ'+(i?'赤':'黒')+'！',W/2,H*0.48,{size:56,st:'hurt',life:1.3})},
 shLand(x,z){explode(x,0.8,z,2.6,{ink:1,text:'ズドンッ！！'});fxRing(x,0.1,z,14,C.white,0.5);fxStar(x,1.5,z,8,C.white,0.2);flash(0.6);shake(0.9);stopT(0.12);snd('boom',1);snd('clank');
@@ -317,7 +317,7 @@ else if(st==='m4'&&u<K.m4+0.16&&bl(26)){const s=3+Math.sin(now*20)*0.4;put(RING,
 function shDraw(){if(!shz.length)return;const K=BT.shiro,NF=F_UNLIT|F_NOCAST;
 for(const h of shz){
  if(h.k==='air'){const A=K.aa,col=h.c===0?C.red:h.c===1?C.darkP:C.white;if(h.t<0){if(Math.sin(now*30)>-0.3){put(RING,h.x,A.y0+A.dy,h.z,0,0,0,4,1,4,col,0,0,NF);put(RING,h.x,0.12,h.z,0,0,0,6,1,6,C.red,0,0,NF)}continue}
-  const r=h.t*A.v;for(let j=0;j<3;j++)put(RING2,h.x,A.y0+j*A.dy,h.z,0,0,0,r*2,1,r*2,j===1?C.white:col,0,0,NF);continue}
+  const r=h.t*h.v;for(let j=0;j<3;j++)put(RING2,h.x,A.y0+j*A.dy,h.z,0,0,0,r*2,1,r*2,j===1?C.white:col,0,0,NF);continue}
  if(h.k==='suck'){const z0=K.suZ;if(h.t<0){if(Math.sin(now*24)>-0.2){put(RING,0,0.13,z0,0,0,0,K.suR*2,1,K.suR*2,C.red,0,0,NF);put(RING,0,0.13,z0,0,0,0,K.suR*1.2,1,K.suR*1.2,C.red,0,0,NF)}continue}
   put(CYL,0,0.09,z0,0,0,0,K.suR*2,0.02,K.suR*2,C.inkD,0,0,NF|F_NOEDGE);put(RING,0,0.13,z0,0,0,0,K.suR*2,1,K.suR*2,C.red,0,0,NF);
   for(let i=0;i<26;i++){const a=(i/26-0.5)*2.9+Math.sin(i*7.3)*0.05,r=4+((-now*20+i*9.7)%30+30)%30,y=0.6+(i%4)*1.3+r*0.05;mPush();mT(Math.sin(a)*r,y,z0+Math.cos(a)*r);mRY(a);mS(0.14,0.14,2.6+r*0.06);emit(BOX,C.white,0,0,NF,0);mPop()}
@@ -337,7 +337,7 @@ function shHUD(b){ctx.save();ctx.lineWidth=3;ctx.strokeStyle=INK;for(let i=0;i<3
  ctx.fillStyle=live?['#a04cff','#ff3b30','#ffd91a'][i]:'#fff';ctx.beginPath();ctx.moveTo(x,y-9);ctx.lineTo(x+8,y);ctx.lineTo(x,y+9);ctx.lineTo(x-8,y);ctx.closePath();ctx.fill();ctx.stroke()}ctx.restore();
 if(b.phase===2&&b.hp2&&b.m2&&b.st!=='brk'){gauge(480,28,256,24,sat(b.hp2[0]/b.m2),'#ff3b30','赤鬼');gauge(744,28,256,24,sat(b.hp2[1]/b.m2),'#5a4f86','黒鬼')}// 第2形態: one bar each
 txt('第'+'一二三'[b.phase-1]+'形態',440,70,20,'#fff',INK,5);if(b.st==='brk'||b.st==='rise')return;const k=(now*3|0)%2;
-txt(['胸の黒い印を撃て！','額の巴を撃て！','弱点なし！ 斬撃は跳んでかわせ！'][b.phase-1],740,100,22,k?'#ffd91a':'#fff',INK,6)}
+txt(['弱点：胸の黒い印','弱点：額の巴','弱点なし！ 斬撃は跳んでかわせ！'][b.phase-1],740,100,22,k?'#ffd91a':'#fff',INK,6)}
 // hit spheres [x,y,z,r,×damage]: the live weak point first (aim assist and the demo AI aim at the first one)
 function shSph(e){const W=SH_WEAK,B=SH_BODY,ph=e.phase,bd=e.bd||[];
 if(ph>2&&!(e.st==='brk'&&e.stT<1.3)){const y=e.y||0,k=SN_S3/1.15;return[[e.x,y+1.25*k,e.z,0.75*k,1],[e.x,y+2.05*k,e.z,0.45*k,1],[e.x,y+0.5*k,e.z,0.5*k,1]]}

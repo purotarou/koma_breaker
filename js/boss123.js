@@ -56,7 +56,7 @@ else if(st==='volley'){b.mouth=1;const fb=b.bk==='aka'||b.bk==='shiro'&&b.n===1,
  if(b.stT>0.4+n*0.17+0.4)idle(p2?0.6:1.1)}
 else if(st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);const n=K.sumN[pi]+G.np-1;for(let i=0;i<n;i++)spawnNear(b.bk==='kraken'?['octo','hishaku','wani'][(i+b.phase)%3]:b.bk==='aka'?(i%2?'gun':'bom'):b.bk==='shiro'?(i%2&&b.phase>1?'shadeR':i%2?'shade':'imp'):'imp');if(p2&&b.bk==='beta')spawnNear('lan');if(G.ex)spawnNear('crow')}if(b.stT>1.3)idle(1)}
 else if(st==='wave'){const tel=K.waveTel,u=b.stT,n=K.waveN[pi];b.mouth=u<tel?0.6:1;const sx=b.bk==='shiro'?5.5:6.5,sz=b.bk==='shiro'?SN_Z+9:-14.5;for(let i=0;i<2;i++){const h=hands[i],k=Math.min(1,dt*(u<tel?5:30));h.x+=((i?sx:-sx)-h.x)*k;h.y+=((u<tel?15:1.1)-h.y)*k;h.z+=(sz-h.z)*k}
- if(!b.k&&u>=tel+0.1){b.k=1;ev('smash',-sx,sz);ev('smash',sx,sz);for(let i=0;i<n;i++)ev('lwave',r2(i*0.95))}if(u>tel+0.1+n*0.95+0.3)idle(0.6)}
+ if(!b.k&&u>=tel+0.1){b.k=1;ev('smash',-sx,sz);ev('smash',sx,sz);for(let i=0;i<n;i++)ev('lwave',r2(i*0.95),b.bk==='shiro'?r1(BZ0+0.5):undefined)}if(u>tel+0.1+n*0.95+0.3)idle(0.6)}
 else if(st==='breath'){b.mouth=1;if(!b.k&&b.stT>=K.brTel){b.k=1;ev('breath',r2(b.p0),K.brN[pi],b.p1||0,b.bk==='shiro'?r1(shBrO(b)[1]):-17)}if(b.stT>K.brTel+1.3)idle(p2?0.5:0.9)}
 else if(st==='spin'){b.mouth=1;if(!b.k){b.k=1;ev('spin',b.p0)}if(b.stT>K.spinTel+(3.2+K.spinGap)/K.spinW+0.2)idle(0.6)}
 else if(st==='sweep'){const tel=K.swTel[pi],dur=K.swDur[pi],per=tel+dur+0.35,i=Math.min(b.n-1,Math.floor(b.stT/per)),q=b.stT-i*per,dir=b.p0*(i%2?-1:1),h=hands[b.ah],a0=-dir*1.3;let a=a0,y=3.2+Math.sin(b.t*30)*0.15;
@@ -82,7 +82,7 @@ const K=BT.aka,a0=rot?PI/4:0,sh=boss&&boss.bk==='shiro',nd=sh?8:4,nn=K.crossN+(s
  for(let j=0;j<nd;j++){const a=a0+j*TAU/nd;for(let i=1;i<=nn;i++)addFire(x+Math.sin(a)*(1.8+i*3.4),z+Math.cos(a)*(1.8+i*3.4),1.9,K.crossLife,0.25+i*0.14)}},
 breath(a0,n,ox,oz){ox=ox||0;oz=oz==null?-17:oz;snd('roar',0.6);sfxAt('ゴォォォ',ox,22,oz-2,{size:90,st:'boom',life:0.9});shake(0.4);for(let j=0;j<n;j++){const a=a0+(j-(n-1)/2)*0.42;for(let i=0;i<12;i++){const d=6+i*3.6;addFire(ox+Math.sin(a)*d,oz+Math.cos(a)*d,2.0,BT.aka.brLife,i*0.06)}}},// ox, oz: where the fire starts (5面: shBrO)
 spin(dir){spins.push({dir,t:-BT.aka.spinTel});snd('charge');addText('メラメラ',W/2,H*0.26,{size:90,st:'boom',life:0.9})},
-lwave(dl){lwaves.push({z:-13,dl,hit:false});if(!dl){snd('roar',0.5);addText('ザザァ…',W/2,H*0.28,{size:100,st:'ink',life:0.9})}},
+lwave(dl,z){lwaves.push({z:z==null?-13:z,dl,hit:false});if(!dl){snd('roar',0.5);addText('ザザァ…',W/2,H*0.28,{size:100,st:'ink',life:0.9})}},
 sweep(dir,dur,R,d){sweeps.push({dir,t:0,dur,hit:false,R:R||BT.nyudo.swR,d:d||BT.nyudo.swDmg});snd('whoosh');snd('boom',0.5);lines(0.6,'#c20020');shake(0.4);addText('ブォン！',W/2,H*0.3,{size:110,st:'boom',life:0.5})},
 rslam(x,z){explode(x,8,z,2.6,{text:'ガラガラ'});fxDebris(x,9,z,16,10,C.troof,0.5);shake(0.8);snd('boom',1)},
 rubble(x,z){explode(x,0.6,z,1.3,{quiet:1});fxDebris(x,0.5,z,8,7,C.troof,0.4);decals.push({x,z,r:2.4,life:5});sfxAt('ガシャ！',x,2.4,z,{size:54,st:'boom',life:0.4})},
