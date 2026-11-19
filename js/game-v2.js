@@ -76,7 +76,7 @@ function drawMenu(dt){if(G.menu==='equip'){drawEquip(dt);return}if(G.menu==='gac
 if(mn==='main'){head('モードを選ぼう');B(330,200,620,96,'ストーリー',()=>{G.menu='stage'},{col:'#ffd91a',size:46});txt('ひとりでじっくり　全５ステージ',640,316,21,'#fff',INK,6);
  B(330,346,620,96,'対戦モード',()=>{G.menu='vs';net.err=''},{col:'#ff8a6b',size:46});txt('みんなで撃ち合い',640,462,21,'#fff',INK,6);
  B(330,492,620,96,'協力プレイ',()=>{net.mode='coop';G.menu='online';net.err=''},{col:'#59d8ff',size:46});txt('最大４人でステージに挑む（オンライン）',640,608,21,'#fff',INK,6);B(60,628,220,56,'タイトルへ',()=>{G.state='title';G.idle=0},{size:26});
- B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null;skFocus()},{col:'#ff9ad0',size:30});txt('Lv'+SKS.lv+'・ポイント '+SKS.pt,1090,600,20,'#fff',INK,6);
+ B(960,618,260,66,'スキルツリー',()=>{G.menu='skill';skMsg=null;skFocus()},{col:'#ff9ad0',size:30});txtFit('Lv'+SKS.lv+'・ポイント '+SKS.pt,1090,600,20,'#fff',INK,6,'center',250);
  B(680,624,250,64,null,()=>openEquip('main'),{col:'#ffb35a'});txt('装備',812,646,28,INK);txt(WPN[wpCur()].name,812,672,16,'#5a3010');
  gaMenuBtn(1000,232,226,262);gaPreload();gaUpBadge(926,628);
 }

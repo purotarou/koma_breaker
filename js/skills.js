@@ -188,6 +188,8 @@ function skReset(){let r=0,k=0;for(const n of SKN)if(skOwn(n.id)){r+=n.c0-SKRESP
 const XPK=[[1.25,1.2],[1.5,1.4],[1.8,1.6],[2.15,1.85],[2.4,2.0],[2.6,2.15]];
 function skExp(cl){const i=G.stage,d=XPK[Math.min(i,XPK.length-1)],k=Math.max(0,(G.kills|0)-(cl?1:0));return Math.round((k*10*d[0]+(cl?150*d[1]+60*(i+1):0)+(G.gk|0)*BON.xp)*(G.ex?EXK.xp:1)*(SK.xpk||1))}
 function skGain(x){SKS.xp+=x;let up=0;while(SKS.xp>=skNeed(SKS.lv)){SKS.xp-=skNeed(SKS.lv);SKS.lv++;SKS.pt++;up++}return up}
+// 数字が桁あふれしないよう、幅 maxW に収まるまで文字を小さくして描く（レベルやポイントが3桁以上になっても枠・隣の文字に重ならない）
+function txtFit(s,x,y,size,fill,st,lw,al,maxW){s=String(s);ctx.font='900 '+size+'px '+FONT;const w=ctx.measureText(s).width;if(w>maxW)size=Math.max(10,Math.floor(size*maxW/w));txt(s,x,y,size,fill,st,lw,al)}
 // result screen level bar: the gauge fills from the old EXP, and wraps round at each level-up (one segment per level passed)
 function skSegs(l,x,rem){const g=[];for(let n=0;n<200;n++){const need=skNeed(l),room=need-x;if(rem>=room){g.push({lv:l,a:x/need,b:1});rem-=room;l++;x=0}else{g.push({lv:l,a:x/need,b:(x+rem)/need});break}}return g}
 function drawLvBar(t){const r=G.rew;if(!r||!r.xp||!r.segs||t<0)return;const sg=r.segs,L=sg.reduce((a,q)=>a+q.b-q.a,0),D=Math.min(4.2,1.0+0.6*(sg.length-1)+0.8*Math.min(1,L)),k=sat((t-0.45)/D),pos=(k<=0?0:1-Math.pow(1-k,1.8))*L;
@@ -199,7 +201,7 @@ ctx.save();ctx.translate(1118,654);ctx.rotate(-0.03);ctx.scale(s0,s0);const pw=2
 ctx.fillStyle=INK;ctx.fillRect(-pw/2+7,-ph/2+8,pw,ph);ctx.fillStyle='#ffd91a';ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(-pw/2,-ph/2,pw,ph);
 txt('経験値 ＋'+r.xp,-pw/2+14,-ph/2+17,18,INK,null,0,'left');
 if(r.up&&r.lu>0){const a=easeBack(sat(lvT<9?lvT/0.25:1));ctx.save();ctx.translate(pw/2-12,-ph/2+17);ctx.scale(Math.max(0.01,a),Math.max(0.01,a));txt('スキルＰ＋'+r.lu,0,0,20,'#e5402b','#fff',4,'right');ctx.restore()}
-ctx.save();ctx.translate(-pw/2+46,ph/2-26);ctx.scale(pop,pop);txt('Lv',-24,8,20,INK,null,0,'center');txt(String(lv),12,0,38,'#e5402b','#fff',7,'center');ctx.restore();
+ctx.save();ctx.translate(-pw/2+46,ph/2-26);ctx.scale(pop,pop);txt('Lv',-24,8,20,INK,null,0,'center');txtFit(lv,12,0,38,'#e5402b','#fff',7,'center',44);ctx.restore();
 const bx=-pw/2+88,by=ph/2-36,bw=pw-104,bh=20;ctx.fillStyle=INK;ctx.fillRect(bx-3,by-3,bw+6,bh+6);ctx.fillStyle='#fff';ctx.fillRect(bx,by,bw,bh);
 ctx.save();ctx.beginPath();ctx.rect(bx,by,bw,bh);ctx.clip();ctx.fillStyle=lvT<0.4?'#fff27a':'#2ea8e8';ctx.fillRect(bx,by,bw*fill,bh);ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(bx,by,bw*fill,bh*0.35);
 if(lvT<0.5){ctx.fillStyle='rgba(255,255,255,'+(0.8*(1-lvT/0.5))+')';ctx.fillRect(bx,by,bw,bh)}ctx.restore();
@@ -329,7 +331,7 @@ txt(touchMode?'指で動かす・２本指で拡大':'ドラッグで移動・�
 // ---- right: info panel ----
 const X=750;para(X,104,330,56,20);ctx.fillStyle=INK;ctx.fill();txt('スキルツリー',X+175,133,32,'#fff');
 para(X+6,182,480,62,16);ctx.fillStyle=INK;ctx.fill();para(X,176,480,62,16);ctx.fillStyle='#ffd91a';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.stroke();
-txt('Lv',X+36,210,22,INK);txt(String(SKS.lv),X+86,206,40,'#e5402b',INK,4);txt('スキルＰ',X+176,207,21,INK);txt(String(SKS.pt),X+248,206,40,'#e5402b',INK,4);
+txt('Lv',X+36,210,22,INK);txtFit(SKS.lv,X+90,206,40,'#e5402b',INK,4,'center',62);txt('スキルＰ',X+176,207,21,INK);txtFit(SKS.pt,X+256,206,40,'#e5402b',INK,4,'center',56);
 {const nd=skNeed(SKS.lv),bx=X+296,bw=158;ctx.fillStyle=INK;ctx.fillRect(bx-2,198,bw+4,14);ctx.fillStyle='#fff';ctx.fillRect(bx,200,bw,10);ctx.fillStyle='#35b8ff';ctx.fillRect(bx,200,bw*sat(SKS.xp/nd),10);txt('次のLvまで '+(nd-SKS.xp),bx+bw/2,224,13,INK)}
 const cy=262,ch=270;panel(X,cy,478,ch);
 const n=skSel&&SKI[skSel];
