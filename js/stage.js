@@ -19,9 +19,14 @@ box(0,6.25,z,12.6,0.6,0.55,P);box(0,7.95,z,13.2,0.62,0.95,P);box(0,8.48,z,14.2,0
 function toro(x,z){mPush();mT(x,0,z);box(0,0.2,0,1.3,0.4,1.3,C.stoneD,5);cyl(0,1.05,0,0.42,1.4,0.42,C.stone);box(0,1.85,0,1.1,0.22,1.1,C.stone);box(0,2.3,0,0.78,0.7,0.78,C.stone);
 box(0,2.3,0,0.82,0.42,0.5,C.yellow,0,0,F_UNLIT);box(0,2.3,0,0.5,0.42,0.82,C.yellow,0,0,F_UNLIT);put(PYR,0,2.95,0,0,0,0,1.6,0.6,1.6,C.stoneD);sph(0,3.32,0,0.28,0.32,0.28,C.stone);mPop();colC.push({x,z,r:0.85,h:3.4})}
 function cedar(x,z,s,R){const c=R()<.5?C.cedar:C.cedarD;cyl(x,1.5*s,z,0.8*s,3*s,0.8*s,C.trunk,9);put(CONE,x,5.5*s,z,0,0,0,6*s,7*s,6*s,c,8,0,F_SWAY);put(CONE,x,9*s,z,0,0,0,4.8*s,6*s,4.8*s,c,8,0,F_SWAY);put(CONE,x,12*s,z,0,0,0,3.4*s,5*s,3.4*s,c,8,0,F_SWAY)}
+// A side branch grows from the trunk (x+-0.055s, 2.8s) towards the nearest crown sphere and ends inside it (L = the spheres), so no branch stops short of the leaves.
+function leafyBranch(x,z,s,sg,L){const bx=x+sg*0.055*s,by=(sg>0?2.77:2.97)*s,tx=bx+sg*0.645*s*2,ty=by+1.254*s,nd=(px,py,pz,q)=>Math.hypot((px-q[0])/(q[3]/2),(py-q[1])/(q[4]/2),(pz-q[2])/(q[5]/2));
+let q=L[0],bd=1e9;for(const c of L){const d=nd(tx,ty,z,c);if(d<bd){bd=d;q=c}}
+const dx=q[0]-bx,dy=q[1]-by,dz=q[2]-z,dl=Math.hypot(dx,dy,dz),ux=dx/dl,uy=dy/dl,uz=dz/dl;let len=0.5;while(len<12&&nd(bx+ux*len,by+uy*len,z+uz*len,q)>0.55)len+=0.05;len=Math.max(len,1.8*s);
+const m=len/2;put(CYL,bx+ux*m,by+uy*m,z+uz*m,0,Math.atan2(-uz,ux),-Math.acos(uy),0.3*s,len,0.3*s,C.trunk,9)}
 // The trunk runs up into the middle sphere of the crown (its top sits 40% up that sphere), so no sky shows between trunk and leaves even while the crown sways.
 function leafy(x,z,s,R,ca,cb,col){const L=[];for(let i=0;i<7;i++){const a=i/7*TAU+R(),d=(2.4+R()*1.3)*s,rr=i<6?1.7*s:0;L.push([x+Math.cos(a)*rr,(4.4+R()*1.5+(i===6?1.4:0))*s,z+Math.sin(a)*rr,d,d*0.82,d,i%2?ca:cb])}
-const m=L[6],th=m[1]-m[4]/2+0.4*m[4];put(CYL,x,th/2-0.1*s,z,0,0,0.06,0.75*s,th,0.75*s,C.trunk,9);put(CYL,x+0.7*s,3.4*s,z,0,0,-0.8,0.3*s,1.8*s,0.3*s,C.trunk,9);put(CYL,x-0.7*s,3.6*s,z,0,0,0.8,0.3*s,1.8*s,0.3*s,C.trunk,9);
+const m=L[6],th=m[1]-m[4]/2+0.4*m[4];put(CYL,x,th/2-0.1*s,z,0,0,0.06,0.75*s,th,0.75*s,C.trunk,9);for(const sg of[1,-1])leafyBranch(x,z,s,sg,L);
 for(const q of L)sph(q[0],q[1],q[2],q[3],q[4],q[5],q[6],8,0,F_SWAY);if(col)colC.push({x,z,r:0.6*s,h:5})}
 function nobori(x,z,c){cyl(x,2.3,z,0.08,4.6,0.08,C.black);box(x,4.5,z+0.3,0.06,0.06,0.75,C.black);box(x,2.75,z+0.42,0.04,3.3,0.72,c,0,0,F_CLOTH);box(x,4.15,z+0.42,0.06,0.4,0.74,C.white,0,0,F_CLOTH);for(let i=0;i<4;i++)box(x,3.55-i*0.6,z+0.42,0.07,0.36,0.4,C.white,0,0,F_CLOTH)}
 function chochin(x,y,z,c,fl){box(x,y+0.9,z,0.05,0.3,0.05,C.black,0,0,F_SWAY);cyl(x,y+0.7,z,0.56,0.16,0.56,C.black,0,0,F_SWAY);sph(x,y,z,1.0,1.3,1.0,c,6,0,(fl||0)|F_SWAY);cyl(x,y-0.68,z,0.56,0.14,0.56,C.black,0,0,F_SWAY)}
