@@ -142,7 +142,7 @@ for(const s of[-1,1])for(let k=0;k<6;k++){const p=Math.sin(now*5+k*1.3),x=s*(1.5
 put(CONE,0,Y+1.2+Math.sin(now*4)*0.3,-38.5,0,0,0,3.6,2.4,2.6,C.seaFoam,0,0,NF);
 if(lim('bowsp',0.09)){const s=Math.random()<.5?-1:1;fxSmoke(s*rnd(1,8),Y+1.4,-37,1,1.4,C.white,2.4)}
 // stern wake: a V of foam lines and the churned trail between them
-for(let i=0;i<22;i++){const d=(i*6.6+S)%145,z=27+d,f=1-d/145,w=3.2+d*0.05;
+for(let i=0;i<22;i++){const d=(i*6.6+S)%145,z=37+d,f=1-d/145,w=3.2+d*0.05;
  for(const s of[-1,1])sph(s*(17+d*0.34),Y+0.06,z,w*f+1,0.3,4.5*f+1.5,C.seaFoam,0,0,NF);
  sph(Math.sin(d*0.21+now)*2.5,Y+0.07,z+2,8+d*0.08,0.3,4*f+2,C.seaFoam,0,0,NF)}
 // oars (櫓): the crew below rows in time; the blade dips aft, lifts and swings forward
