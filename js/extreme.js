@@ -25,7 +25,7 @@ function addErupt(x,z,c,dl){if(Math.abs(x)>BX+0.5||z>BZ1+0.5||z<BZ0-0.5)return;i
 function exGroup(){const n=G.stage>=2?2:1;for(let i=0;i<n;i++)spawnNear('crow')}
 function exTick(dt,live){for(let i=erupts.length-1;i>=0;i--){const e=erupts[i],t0=e.t;e.t+=dt;
  if(t0<0&&e.t>=0){const K=EXE[e.c],col=[C.ink,C.orange,C.stone,C.ice][e.c];fxBlobs(e.x,1,e.z,4,7,e.c===1?C.orange:col,0.2);if(e.c===2||e.c===3)fxDebris(e.x,1,e.z,4,7,col,0.3);if(lim('erS',0.09))snd('boom',0.35);
-  if(live&&!e.hit&&pl.y<2.4&&Math.hypot(pl.x-e.x,pl.z-e.z)<K.r+0.35){e.hit=true;hurtPlayer(K.dmg,e.x,e.z)}}
+  if(live&&!e.hit&&pl.y<2.4&&Math.hypot(pl.x-e.x,pl.z-e.z)<K.r+0.35){e.hit=true;const hp=pl.hp;hurtPlayer(K.dmg,e.x,e.z);if(e.c===0&&boss&&boss.bk==='shiro'&&pl.hp<hp)plBlind(BT.shiro.inkBl)}}// final boss: the black ink spikes blind
  if(e.t>0.6)erupts.splice(i,1)}}
 function exDraw(){const NF=F_UNLIT|F_NOCAST;for(const e of erupts){const K=EXE[e.c],r=K.r;
  if(e.t<0){const u=sat(1+e.t/0.9);if(Math.sin(now*26+e.s)>-0.2)put(RING,e.x,0.12,e.z,0,0,0,r*2,1,r*2,C.red,0,0,NF);put(CYL,e.x,0.09,e.z,0,0,0,r*2*u,0.02,r*2*u,C.redD,0,0,NF|F_NOEDGE);continue}

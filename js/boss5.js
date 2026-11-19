@@ -27,9 +27,9 @@ BT.shiro={hp:9000,hpF:[1,1,0.8],cd:0.32,up:[0.75,0.6],hold:[0.7,0.55],slamDmg:34
  cuTel:0.55,cuN:[3,4],cuW:1.8,cuDmg:27,                            // 地を裂く斬撃 (第3形態): warning, cuts [普通, 極], half width, damage
  fz:[3,8],fx:8,                                                    // where a giant's fist can land (his own frame: metres in front, metres to the side). Real arm length: he crouches and leans to get there
  boom:[[5.5,7,0.28],[10,11,0.5],[14.5,15,0.72]],                   // explosions around a fist / palm after it lands: [radius, count, delay] (the third ring in 第2形態 and 極)
- rainN:[22,30],rainEx:8,dkR:[3,4],dkDmg:14,dkBl:2.5,                // 炎の雨 / 墨の雨 (pillars all over the yard) and 闇の波紋 (dark rings that blind)
+ rainN:[22,30],rainEx:8,dkR:[3,4],dkDmg:14,dkBl:2.5,inkBl:2.0,                // 炎の雨 / 墨の雨 (pillars all over the yard) and 闇の波紋 (dark rings that blind)
  hp2:0.6,                                                          // 第2形態: each giant has its own HP = the form's HP x hp2
- aa:{up:0.35,y0:2.25,dy:0.6,cd:[2.6,1.8],tel:0.15,v:17,tt:0.42,vmax:90,dmg:16,shN:[2,3],shV:42,shDmg:12,cd3:[1.6,1.1],sv3:34,dmg3:18},// 対空 (anti-air): a player in the air (y > up) gets a ring at jump height + fast shots (1st/2nd form) or an upward slash (3rd), cooldown [普通, 極]; the ring reaches the jumper tt s after it starts (speed v .. vmax), so it lands while they are still in the air; y0 = the lowest of the three rings (a little above a standing player's head), dy = the gap
+ aa:{up:0.9,y0:2.45,dy:0.6,top:2.05,cd:[2.6,1.8],tel:0.45,v:17,dmg:16,shN:[2,3],shV:42,shDmg:12,cd3:[1.6,1.1],sv3:34,dmg3:18},// 対空 (anti-air): a player in the air (y > up) gets a ring at jump height + fast shots (1st/2nd form) or an upward slash (3rd), cooldown [普通, 極]; top = the hero's height (the ring hits when it touches the body as drawn); y0 = the lowest of the three rings (a little above a standing player's head), dy = the gap
  m3:{spd:7.6,keep:[5,9],cd:[0.25,0.5],m1:0.3,m2:0.45,m3:0.32,m4:0.42,m5:0.26,sv:30,dmg:20,dashV:24,dashT:0.4,dashDmg:22,spinR:3.4,spinDmg:20,ring:14,m5N:6},
   pats:[['fist','firerain','palm','flines','volley','darkring','double','breath','inkrain','fist','spin','palm','suck','flines','fireball','wave','summon'],
   ['palm','fist','firerain','flines','inkrain','fireball','darkring','double','volley','breath','palm','fist','flines','firerain','darkring','summon'],
@@ -156,7 +156,7 @@ if(b.phase>2){if(Math.hypot(P.x-b.x,P.z-b.z)>24)return;b.aaT=K.cd3[ex];const t=M
  for(const o of ex?[-0.12,0,0.12]:[-0.07,0.07]){const fx=Math.sin(a+o),fz=Math.cos(a+o);shots.push({id:++eidN,k:14,x:b.x+fx*1.2,y:1.4,z:b.z+fz*1.2,vx:fx*K.sv3,vy:(y-1.4)/Math.max(0.15,t),vz:fz*K.sv3,r:0.6,dmg:K.dmg3,g:0,life:1.6,bl:0})}
  ev('txt','昇閃！',r1(b.x),3.8,r1(b.z),60,'ink');return}
 b.aaT=K.cd[ex];const As=shAncs(b);let gi=0,bd=1e9;As.forEach((A,i)=>{const d=Math.hypot(A.x-P.x,A.z-P.z);if(shAlive(b,i)&&d<bd){bd=d;gi=i}});const A=As[gi],o=ancW(A,0,0,6),mo=shMouth(b,b.phase===2?gi===0:false);
-ev('shAir',r1(o.x),r1(o.z),b.phase===2?gi:2,r1(clamp(Math.hypot(P.x-o.x,P.z-o.z)/K.tt,K.v,K.vmax)));
+ev('shAir',r1(o.x),r1(o.z),b.phase===2?gi:2);
 for(let j=0;j<K.shN[ex];j++){const t=Math.hypot(P.x-mo[0],P.z-mo[2])/K.shV,tx=P.x+(P.vx||0)*t+rnd(-1,1)*j,tz=P.z+(P.vz||0)*t+rnd(-1,1)*j,ty=(P.y||0)+1.1,dx=tx-mo[0],dy=ty-mo[1],dz=tz-mo[2],l=Math.hypot(dx,dy,dz)||1;
  shots.push({id:++eidN,k:0,x:mo[0],y:mo[1],z:mo[2],vx:dx/l*K.shV,vy:dy/l*K.shV,vz:dz/l*K.shV,r:0.8,dmg:K.shDmg,g:0,life:2})}}
 // ---- 第3形態: the white oni with two swords (host) ----
@@ -205,8 +205,10 @@ function shInPanel(p,x,z,pad){if(z<p.z0+pad||z>p.z1-pad)return false;const e=shP
 function shTick(dt,live){const K=BT.shiro;
 for(let i=shz.length-1;i>=0;i--){const h=shz[i],t0=h.t;h.t+=dt;
  if(h.k==='air'){const A=K.aa,r=h.t*h.v;if(r>60){shz.splice(i,1);continue}if(h.t<0||!live||h.hit)continue;// three rings just above head height: only jumping players get hit
-  const r0=Math.max(0,t0)*h.v,dd=Math.hypot(pl.x-h.x,pl.z-h.z);// swept: the ring passed the player this frame, and the player's body (feet pl.y .. head pl.y+1.85) reaches the lowest ring
-  if(pl.y+1.85>A.y0-0.3&&dd>r0-1.2&&dd<r+1.2){h.hit=1;hurtPlayer(A.dmg,h.x,h.z);addText('撃チ落トサレタ！',W/2,H*0.62,{size:54,st:'hurt',life:0.5})}continue}
+  // the same shape as drawn: a band from 0.94 r to r (RING2) at y0, y0+dy, y0+2dy. Hit when that band passed the player this frame (swept,
+  // body radius 0.45) and one of the rings is inside the body (feet pl.y .. head pl.y+top)
+  const r0=Math.max(0,t0)*h.v,dd=Math.hypot(pl.x-h.x,pl.z-h.z),yt=A.y0+A.dy*2;
+  if(pl.y+A.top>A.y0-0.1&&pl.y<yt+0.1&&dd>r0*0.94-0.45&&dd<r+0.45){h.hit=1;hurtPlayer(A.dmg,h.x,h.z);addText('撃チ落トサレタ！',W/2,H*0.62,{size:54,st:'hurt',life:0.5})}continue}
  if(h.k==='suck'){if(h.t>K.suDur){shz.splice(i,1);continue}if(h.t<0||!live)continue;
   const dx=-pl.x,dz=K.suZ-pl.z,d=Math.hypot(dx,dz)||1,v=K.suV*(1+0.35*sat(1-d/30))*(pl.dashT>0?0.35:pl.y>0.05?0.8:1)*Math.min(1,h.t*3);pl.x+=dx/d*v*dt;pl.z+=dz/d*v*dt;collide(pl,0.5);
   if(d<K.suR&&pl.y<0.6&&lim('shsu',0.45)){const hp=pl.hp;hurtPlayer(lerp(K.suDmg[0],K.suDmg[1],sat((d-6.5)/(K.suR-6.5))),pl.x+dx/d,pl.z+dz/d);if(pl.hp<hp)addText('吸ワレル…！',W/2,H*0.62,{size:60,st:'ink',life:0.45})}}
