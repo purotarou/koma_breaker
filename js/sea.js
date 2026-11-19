@@ -38,9 +38,7 @@ hishaku:{sc:240,g:11,
   mPush();mT(e.x,e.y,e.z);mRY(e.yaw);mRZ(Math.sin(t*1.3)*0.06);mS(k,k,k);gTint=e.flash>0?1:0;
   gId=nid();put(CONE,Math.sin(t*2.5)*0.12,-0.3,-0.1,PI+0.3,0,Math.sin(t*2)*0.15,0.95,1.6,0.85,C.ghostW,0,.3);sph(0,0.75,0,1.05,1.25,0.85,C.ghostW,0,.3);gId=0;
   put(BOX,-0.11,1.06,0.37,0.2,0,-0.55,0.1,0.72,0.06,C.ghostB);put(BOX,0.11,0.98,0.39,0.2,0,0.55,0.1,0.56,0.06,C.ghostB);box(0,0.6,0.4,0.84,0.14,0.08,C.ghostB);
-  for(let i=0;i<7;i++){const a=i/7*TAU+0.2,sw=Math.sin(t*4+i*1.7)*0.25;put(CONE,Math.sin(a)*0.42+sw*0.3,-0.75,Math.cos(a)*0.38-0.1,PI+sw*0.4,0,Math.sin(a)*0.35,0.32,0.75+(i%3)*0.2,0.32,i%2?C.ghostW:C.ghostS,0,.3)}
   for(let i=0;i<3;i++){const q=e.t*1.6+i*0.8,f=(q%2)/2;sph(Math.sin(q*2)*0.3,-0.9-f*0.6,-0.5-f*1.6,0.5*(1-f)+0.1,0.4*(1-f)+0.1,0.6*(1-f)+0.1,C.ghostS,0,0,F_UNLIT|F_NOCAST)}
-  for(let i=0;i<7;i++){const a=PI-1.5+i*0.5,sw=Math.sin(t*2.2+i)*0.08;put(BOX,Math.sin(a)*0.52,1.12+sw,Math.cos(a)*0.42-0.12,-0.12,a,sw,0.14,1.3,0.1,C.inkD)}
   sph(0,1.64,0.08,0.56,0.64,0.56,C.ghostS);sph(0,1.72,-0.1,0.66,0.74,0.62,C.inkD);put(BOX,0,1.15,-0.28,0.25,0,0,0.6,1.15,0.16,C.inkD);put(BOX,0.15,1.66,0.33,0,0,0.12,0.22,0.56,0.08,C.inkD);
   for(const s of[-1,1])sph(s*0.15,1.64,0.35,0.13,0.07,0.04,C.cyan,0,0,F_UNLIT);box(0,1.43,0.35,0.16,0.05,0.03,C.inkD);put(PRISM,0,2.0,0.27,-0.3,0,0,0.3,0.24,0.04,C.white);
   put(SPH,-0.42,1.05,0.4,-1.15,0,0.22,0.26,0.78,0.26,C.ghostW);sph(-0.44,0.9,0.82,0.15,0.14,0.18,C.ghostS);
@@ -48,7 +46,7 @@ hishaku:{sc:240,g:11,
   mPush();mT(0.45,1.32,0.08);mRX(a);put(SPH,0,-0.36,0,0,0,0,0.28,0.82,0.28,C.ghostW);sph(0,-0.76,0,0.16,0.16,0.16,C.ghostS);
    put(CYL,0,-1.5,0.05,0,0,0,0.07,1.5,0.07,C.wood);put(CYL,0,-2.28,0.2,PI/2,0,0,0.52,0.42,0.52,C.woodD);put(CYL,0,-2.28,0.36,PI/2,0,0,0.42,0.1,0.42,C.inkD);
    if(st==='wind')sph(0,-2.28,0.42,0.42,0.42,0.3,C.water,0,1);mPop();
-  for(let i=0;i<3;i++){const q=t*2+i*TAU/3,x=Math.cos(q)*1.15,y=1.3+Math.sin(t*3+i)*0.25,z=Math.sin(q)*1.15;sph(x,y,z,0.36,0.36,0.36,C.ghostW,0,0,F_UNLIT);put(CONE,x,y+0.35,z,0,0,0,0.34,0.7,0.34,C.cyan,0,0,F_UNLIT|F_FLAME)}
+  for(let i=0;i<2;i++){const q=t*2+i*PI;put(CONE,Math.cos(q)*1.1,1.3+Math.sin(t*3+i)*0.2,Math.sin(q)*1.1,0,0,0,0.3,0.55,0.3,C.cyan,0,0,F_UNLIT|F_FLAME)}
   gTint=0;mPop();
   if(st==='wind'){const s=K.splR*2+Math.sin(t*20)*0.3;put(RING,e.tx,0.12,e.tz,0,0,0,s,1,s,C.red,0,0,NF)}}},
 // ---- 墨蛸 ----
