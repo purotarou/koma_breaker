@@ -33,7 +33,7 @@ const primOf=p=>{const key=p.attributes.POSITION+'/'+p.attributes.NORMAL+'/'+p.i
  const mb=new MB(),cnt=I?I.length:P.length/3,v=k=>[P[k*3],P[k*3+1],P[k*3+2]],nv=k=>N?[N[k*3],N[k*3+1],N[k*3+2]]:undefined;
  for(let t=0;t<cnt;t+=3){const a=I?I[t]:t,b=I?I[t+1]:t+1,c=I?I[t+2]:t+2;mb.tri(v(a),v(b),v(c),nv(a),nv(b),nv(c))}
  const pi=addPrim(mb),mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(let k=0;k<P.length;k++){const c=k%3;if(P[k]<mn[c])mn[c]=P[k];if(P[k]>mx[c])mx[c]=P[k]}
- bnd[pi]=[mn,mx];geo.set(key,pi);return pi};
+ bnd[pi]=[mn,mx];if(cnt===36&&mn.every(v=>Math.abs(v+0.5)<1e-3)&&mx.every(v=>Math.abs(v-0.5)<1e-3))cubePrims.add(pi);geo.set(key,pi);return pi};
 const matOf=i=>{const m=i===undefined?{}:J.materials[i],x=m.extras||{},bc=(m.pbrMetallicRoughness||{}).baseColorFactor||[1,1,1,1];
  return{c:[bc[0],bc[1],bc[2]],mat:x.kb_mat|0,gloss:+x.kb_gloss||0,fl:x.kb_flags|0,rim:+x.kb_rim||0}};
 const mats=(J.materials||[]).map((_,i)=>matOf(i)),defMat=matOf(undefined);

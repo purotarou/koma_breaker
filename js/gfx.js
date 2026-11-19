@@ -245,9 +245,18 @@ gl.bindVertexArray(null);prims.push(p);return prims.length-1}
 const BOX=addPrim(mkBox()),SPH=addPrim(mkSph(10,16)),CYL=addPrim(mkCyl(16)),CONE=addPrim(mkCone(16,false,0,0.5)),PYR=addPrim(mkCone(4,true,PI/4,0.7071)),PRISM=addPrim(mkPrism()),
 STAR=addPrim(mkStar(10,0.24,0.5,0,1)),BURST=addPrim(mkStar(14,0.2,0.5,0.45,7)),RING=addPrim(mkRing(28,0.4)),QUAD=addPrim(mkQuad()),SPIKE=addPrim(mkSph(6,10,(i,j)=>(i===0||i===6)?0.5:((i+j)%2===0?0.5:0.27)));
 const F_UNLIT=1,F_NOEDGE=2,F_NOCAST=4,F_SWAY=8,F_CLOTH=16,F_DRIFT=32,F_FLAME=64;
+// Cloth (F_CLOTH): the ripple is computed per vertex, so a plain 8-vertex box (the flag) only tilts as a whole while the thin boxes laid on it
+// (its pattern) are displaced exactly - the pattern then sank into the cloth / drifted off it. Cloth boxes are drawn from a cube subdivided every
+// ~CLOTH_STEP m along the flag (local Z; 0.3 m along its height; counted per instance from its size) so the cloth and its pattern follow the same rippling surface. cubePrims: unit-cube prims loaded from GLB (js/glb.js).
+const cubePrims=new Set(),clothP=new Map(),CLOTH_STEP=0.08;
+function mkBoxSub(D){const m=new MB();for(let i=0;i<3;i++)for(const sg of[1,-1]){const n=[0,0,0];n[i]=sg;const u=[n[2],n[0],n[1]],w=[n[1]*u[2]-n[2]*u[1],n[2]*u[0]-n[0]*u[2],n[0]*u[1]-n[1]*u[0]],da=D[(i+1)%3],db=D[(i+2)%3];
+const p=(a,b)=>[(n[0]+a*u[0]+b*w[0])*.5,(n[1]+a*u[1]+b*w[1])*.5,(n[2]+a*u[2]+b*w[2])*.5];
+for(let j=0;j<da;j++)for(let k=0;k<db;k++){const a0=-1+2*j/da,a1=-1+2*(j+1)/da,b0=-1+2*k/db,b1=-1+2*(k+1)/db;m.quad(p(a0,b0),p(a1,b0),p(a1,b1),p(a0,b1),n,n,n,n)}}return m}
+function clothPrim(){const d=[Math.hypot(M[0],M[1],M[2]),Math.hypot(M[4],M[5],M[6]),Math.hypot(M[8],M[9],M[10])].map((s,i)=>Math.max(1,Math.min(40,Math.ceil(s/(i===2?CLOTH_STEP:0.3)))));
+d[0]=1;const k=d.join('x');let pi=clothP.get(k);if(pi===undefined){pi=addPrim(mkBoxSub(d));clothP.set(k,pi)}return pi}
 let curLayer=1,idS=0,idD=0,gTint=0,gId=0,gIce=0;// gIce: frozen enemies (weapons.js) are drawn icy pale blue
 function nid(){return curLayer===0?(1+(idS=(idS+1)%110)):(112+(idD=(idD+1)%140))}
-function emit(pi,c,mat,gloss,fl,rim){const b=prims[pi].b[curLayer];if(b.n>=b.cap){const nd=new Float32Array(b.cap*2*FL);nd.set(b.d);b.d=nd;b.cap*=2}
+function emit(pi,c,mat,gloss,fl,rim){if((fl&F_CLOTH)&&(pi===BOX||cubePrims.has(pi)))pi=clothPrim();const b=prims[pi].b[curLayer];if(b.n>=b.cap){const nd=new Float32Array(b.cap*2*FL);nd.set(b.d);b.d=nd;b.cap*=2}
 const d=b.d,o=b.n*FL;d.set(M,o);let r=c[0],g=c[1],bl=c[2];if(gTint>0){r+=(1-r)*gTint;g+=(1-g)*gTint;bl+=(1-bl)*gTint;if(gTint>0.5)fl|=1}if(gIce>0){r=r*0.4+0.55;g=g*0.4+0.8;bl=bl*0.3+0.7}
 d[o+16]=r;d[o+17]=g;d[o+18]=bl;d[o+19]=mat;d[o+20]=gId||nid();d[o+21]=gloss;d[o+22]=fl;d[o+23]=rim;b.n++;b.dirty=true}
 function put(pi,x,y,z,rx,ry,rz,sx,sy,sz,c,mat,gloss,fl,rim){mPush();mT(x,y,z);if(ry)mRY(ry);if(rx)mRX(rx);if(rz)mRZ(rz);mS(sx,sy,sz);emit(pi,c,mat||0,gloss||0,fl||0,rim||0);mPop()}
