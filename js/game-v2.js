@@ -3,14 +3,15 @@
 function resetWorld(){enemies.length=0;ices.length=0;templeDoor.t=templeDoor.target=0;G.kcP=null;shots.length=0;parts.length=0;decals.length=0;texts.length=0;balloons.length=0;items.length=0;shocks.length=0;boss=null;G.mood=0;G.bHurt=0;G.cine=0;G.kcT=-1;G.endT=-1;G.banner=null;G.paused=false;cutSp=cutBoss=0;hitStop=0;slowT=0;trauma=0;hurtA=0;musOn=0;net.picked={};net.hq=[];net.evq=[];wpReset();hazReset();G.ex=0}
 function beginGame(){setStage(G.stage);resetWorld();pl.slot=net.on?net.slot:0;const pvp=G.mode==='pvp',sp=pvp?PSPAWN[pl.slot]:SPAWN[pl.slot];resetPlayer(sp[0],sp[1],pvp?Math.atan2(sp[0],sp[1]+2):0);
 for(const o of others){const s=pvp?PSPAWN[o.slot]:SPAWN[o.slot];o.x=o.nx=s[0];o.z=o.nz=s[1];o.dead=false;o.hp=100;o.y=o.ny=0}
-Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,prevHi:getHi(G.stage),rs:0,rew:null,fuda:null,ex:pvp?0:net.on?(net.ex?1:0):(exSel&&exOpen()?1:0)});
+Object.assign(G,{state:'play',demoOn:false,wave:-1,kills:0,score:0,combo:0,time:0,dmg:0,intro:0,clearT:pvp?-1:1.4,resT:0,np:net.on?net.roster.length:1,pk:[0,0,0,0],pd:[0,0,0,0],tm:pvp?180:0,itemT:pvp?3:7,allT:0,maxc:0,gk:0,bonT:0,prevHi:getHi(G.stage),rs:0,rew:null,fuda:null,ex:pvp?0:net.on?(net.ex?1:0):(exSel&&exOpen()?1:0)});
 net.evseq=0;net.evDone=0;net.dacc={};net.pvAcc={};net.q={f:[],pk:[],kb:[],ps:[],wx:[],ef:[]};sndVol=1;musOn=1;snd('ui');eidN=0;
 if(pvp){G.banner={ch:'対戦',name:'10撃破で勝利！'};G.bannerT=0;pl.inv=2}else if(G.ex){G.banner={ch:'難易度：極',name:'強化された妖怪たち'};G.bannerT=0}else if(!net.on)say(['ここが…','漫画の中!?'],0);else{G.banner={ch:'協力',name:'力を合わせて倒せ！'};G.bannerT=0}}
 function startGame(){G.mode='solo';beginGame()}
 function spawnGroup(g){for(const k in g){if(MBS[k]){MBS[k]();continue}/* 中ボス (midboss.js) */const n=Math.round(g[k]*(1+0.5*(G.np-1))*(G.ex?EXK.more:1));for(let i=0;i<n;i++)spawnNear(k)}if(G.ex)exGroup()}
-function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.boss){spawnBoss();if(!STG[G.stage].monk)ev('say','全テヲ',STG[G.stage].line,1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
+function startWave(i){G.wave=i;G.grp=1;G.waveT=0;G.clearT=-1;const w=WAVESET[G.stage][i];ev('ban',w.ch,w.name);if(w.bonus){bonusStart();if(w.say)ev('say',w.say[0],w.say[1],0)}else if(w.boss){spawnBoss();if(!STG[G.stage].monk)ev('say','全テヲ',STG[G.stage].line,1)}else{spawnGroup(w.g[0]);if(w.say)ev('say',w.say[0],w.say[1],0)}}
 function updateWaves(dt){G.time+=dt;if(G.clearT>=0){G.clearT-=dt;if(G.clearT<0)startWave(G.wave+1);return}if(G.wave<0)return;const w=WAVESET[G.stage][G.wave];G.waveT+=dt;
 if(w.boss){if(G.endT>=0){G.endT+=RDT;if(G.endT>2.3){G.state='clear';G.resT=0;snd('ui');saveHi();skReward(1)}}return}
+if(w.bonus)return bonusUpd(dt);// 番外編 (bonus.js)
 if(G.grp<w.g.length){if(enemies.length<=1||G.waveT>G.grp*12){spawnGroup(w.g[G.grp]);G.grp++}}
 else if(enemies.length===0){G.clearT=2.8;ev('heal');ev('ban','撃破！','体力回復 ＋30');if(G.wave===WAVESET[G.stage].length-2)ev('say','次で','最後だ…!',0);else ev('say','よし、','次！',0)}}
 function gameOver(){G.state='over';G.resT=0;musOn=0;skReward(0);if(!net.on){slowT=2;slowK=0.3}}

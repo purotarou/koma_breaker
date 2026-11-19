@@ -65,12 +65,12 @@ else if(b.st==='volley'){b.mouth=1;const n=p2?8:5,want=Math.floor((b.stT-0.4)/0.
 else if(b.st==='rows'){if(exRows(b,dt,hands)){b.ah=-1;b.st='idle';b.stT=0;b.cdT=0.8}}
 else if(b.st==='summon'){b.mouth=1;if(!b.sm&&b.stT>0.5){b.sm=true;ev('roar',0);for(let i=0;i<(p2?4:3)+G.np-1;i++)spawnNear(STG[G.stage].bom&&i%2?'bom':'imp');if(p2)spawnNear('lan');if(G.ex)spawnNear('crow')}if(b.stT>1.3){b.sm=false;b.st='idle';b.stT=0;b.cdT=1}}}
 // ================= DRAW ENTITIES =================
-function drawImp(e){const s=e.sc;let sq=1,hop=0,lean=0,arm=0.5;mPush();
+function drawImp(e){const s=e.sc,au=e.type==='au';let sq=1,hop=0,lean=0,arm=0.5;mPush();
 if(e.st==='spawn'){const u=e.stT/0.7,k=0.3+0.7*easeBack(Math.min(1,u));mT(e.x,-1.2*(1-easeOut(Math.min(1,u))),e.z);mRY(e.yaw);mS(s*k,s*k,s*k)}
 else{if(e.st==='chase'){hop=Math.abs(Math.sin(e.t*9))*0.22;sq=1+Math.sin(e.t*18)*0.06}else if(e.st==='wind'){sq=0.72;arm=1.6}else if(e.st==='lunge'){sq=1.2;lean=0.5;arm=2.2;hop=0.3}else if(e.st==='fuse'){sq=1+0.35*sat(e.stT/FT.bom.fuse)+Math.sin(e.t*50)*0.04;arm=2.4}mT(e.x,hop,e.z);mRY(e.yaw);mRX(lean);mS(s,s*sq,s)}
-gTint=e.flash>0||(e.st==='fuse'&&Math.sin(e.t*44)>0)?1:0;sph(0,0.62,0,1.02,0.98,0.94,e.v?C.red:C.ink,0,1,0,1);if(e.v){cyl(0,1.2,0,0.07,0.3,0.07,C.black);put(SPIKE,0,1.44,0,e.t*9,e.t*7,0,0.34,0.34,0.34,C.yellow,0,0,F_UNLIT)}
-for(const d of[-1,1]){put(CONE,d*0.27,1.13,0.04,0,0,-d*0.4,0.2,0.46,0.2,e.v?C.gold:C.red,0,.6);put(SPH,d*0.2,0.72,0.4,0,0,d*0.25,0.28,0.3,0.14,C.white);sph(d*0.19,0.7,0.46,0.1,0.12,0.06,C.red,0,0,F_UNLIT);
-put(BOX,d*0.21,0.88,0.43,0,0,d*0.45,0.34,0.08,0.1,C.inkD);put(SPH,d*0.56,0.6,0.05,0,0,d*(0.4+arm),0.17,0.5,0.17,C.ink,0,1);sph(d*0.22,0.08,0.06+Math.sin(e.t*9+d)*0.12*(e.st==='chase'?1:0),0.3,0.16,0.4,C.inkD)}
+gTint=e.flash>0||(e.st==='fuse'&&Math.sin(e.t*44)>0)?1:0;sph(0,0.62,0,1.02,0.98,0.94,au?C.goldB:e.v?C.red:C.ink,0,1,0,1);if(e.v){cyl(0,1.2,0,0.07,0.3,0.07,C.black);put(SPIKE,0,1.44,0,e.t*9,e.t*7,0,0.34,0.34,0.34,C.yellow,0,0,F_UNLIT)}
+for(const d of[-1,1]){put(CONE,d*0.27,1.13,0.04,0,0,-d*0.4,0.2,0.46,0.2,au?C.goldL:e.v?C.gold:C.red,0,.6);put(SPH,d*0.2,0.72,0.4,0,0,d*0.25,0.28,0.3,0.14,C.white);sph(d*0.19,0.7,0.46,0.1,0.12,0.06,C.red,0,0,F_UNLIT);
+put(BOX,d*0.21,0.88,0.43,0,0,d*0.45,0.34,0.08,0.1,C.inkD);put(SPH,d*0.56,0.6,0.05,0,0,d*(0.4+arm),0.17,0.5,0.17,au?C.goldB:C.ink,0,1);sph(d*0.22,0.08,0.06+Math.sin(e.t*9+d)*0.12*(e.st==='chase'?1:0),0.3,0.16,0.4,au?C.goldD:C.inkD)}
 box(0,0.4,0.42,0.46,0.13,0.1,C.tongue);for(let i=0;i<4;i++)put(CONE,-0.165+i*0.11,0.44,0.47,PI,0,0,0.09,0.12,0.06,C.white);gTint=0;mPop();if(e.st==='fuse')put(RING,e.x,0.12,e.z,0,0,0,5.6,1,5.6,C.red,0,0,F_UNLIT|F_NOCAST)}
 function drawLan(e){const ch=e.st==='charge'?e.stT/0.5:0,k=(e.st==='spawn'?easeBack(Math.min(1,e.stT/0.5)):1)*(1+ch*0.25);
 mPush();mT(e.x,e.y,e.z);mRY(e.yaw);mRZ(Math.sin(e.t*1.7)*0.12);mS(k,k,k);gTint=e.flash>0?1:0;

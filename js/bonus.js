@@ -1,6 +1,6 @@
 'use strict';
 // ================= 番外編（ボーナスステージ） =================
-// WAVESET の波に {bonus:1} と書くと、その波は制限時間つきのボーナスステージになる（今は5面「荒海の船上」の最終話の直前）。
+// WAVESET の波に {bonus:1} と書くと、その波は制限時間つきのボーナスステージになる（今は6面「墨の池」の最終話シロヌキの直前）。
 // 出てくるのは最初の雑魚「墨鬼」(imp) の金色版「金の墨鬼」(FOE.au、通信の型は 'a') だけ。体当たりはせず、プレイヤーから逃げ回る。
 // 墨鬼より少し硬く、足が速く、次から次へと湧く。倒すと経験値が特大（G.gk＝倒した数。skExp が BON.xp ずつ足す）。
 // 時間切れで残った金の墨鬼は逃げて消え（経験値なし）、次の波へ進む。ホストが進行を計算し、G.gk と G.bonT はスナップショットの g で送る。
@@ -9,7 +9,7 @@
 // see この距離より近いプレイヤーから逃げる / cap 同時に出ている数（＋人数ごとに capN） / every 湧く間隔(秒) / first 始まりにまとめて出す数
 // xp 1体の経験値（墨鬼は 10×ステージの倍率≒24。極・スキルの経験値倍率も掛かる） / sc 点数 / g 必殺ゲージ
 const BON={dur:30,hp:62,spd:7.6,see:15,cap:10,capN:3,every:0.45,first:6,xp:250,sc:1000,g:6};
-Object.assign(C,{goldD:hex(0xa8720f),goldL:hex(0xffe27a)});
+Object.assign(C,{goldB:hex(0xffc21f),goldD:hex(0xc98a10),goldL:hex(0xfff0a0)});
 STY.gold={halo:'#fff',ink:'#16121f',f0:'#fffbd0',f1:'#f0a800'};
 const bonusOn=()=>G.mode!=='pvp'&&G.wave>=0&&!!(WAVESET[G.stage]&&WAVESET[G.stage][G.wave]&&WAVESET[G.stage][G.wave].bonus);
 const bonXp=()=>Math.round(BON.xp*(G.ex?EXK.xp:1)*(SK.xpk||1));
@@ -25,7 +25,7 @@ FOE.au={sc:BON.sc,g:BON.g,
   fx-=wl(e.x,BX-m);fx+=wl(-e.x,BX-m);fz-=wl(e.z,BZ1-m);fz+=wl(-e.z,-BZ0-m);
   const fl=Math.hypot(fx,fz)||1,k=Math.min(1,dt*6);e.hx+=(fx/fl-e.hx)*k;e.hz+=(fz/fl-e.hz)*k;
   // 近くにプレイヤーがいると全速力。ときどき横っ跳びで向きを変える
-  e.jt-=dt;if(e.jt<=0&&near>0.2){e.jt=rnd(0.9,1.8);e.bt=0.3;const s=Math.random()<.5?-1:1;e.bx=e.hz*s;e.bz=-e.hx*s;if(lim('auj',0.5))ev('txt','ピョン',r1(e.x),2.2,r1(e.z),40,'gold')}
+  e.jt-=dt;if(e.jt<=0&&near>0.2){e.jt=rnd(0.9,1.8);e.bt=0.3;const s=Math.random()<.5?-1:1;e.bx=e.hz*s;e.bz=-e.hx*s;if(lim('auj',0.5))ev('txt','サッ',r1(e.x),2.2,r1(e.z),40,'gold')}
   const sp=e.spd*(near>0?0.7+0.3*Math.min(1,near*3):0.4);let mx=e.hx,mz=e.hz,sk=1;if(e.bt>0){e.bt-=dt;mx=e.hx*0.4+e.bx;mz=e.hz*0.4+e.bz;sk=1.6}
   const ml=Math.hypot(mx,mz)||1;e.x+=mx/ml*sp*sk*dt;e.z+=mz/ml*sp*sk*dt;e.yaw+=angDiff(Math.atan2(mx,mz),e.yaw)*Math.min(1,dt*10)},
  sph(e){return[[e.x,e.y+0.62*e.sc,e.z,0.68*e.sc,1]]},
@@ -54,5 +54,5 @@ function bonHUD(){if(!bonusOn())return;const t=Math.max(0,G.bonT||0),s=Math.ceil
  ctx.save();ctx.translate(W/2,52);ctx.rotate(-0.02);const p=hot?1+0.15*Math.max(0,1-(Math.ceil(t)-t)*3):1;
  para(-150,-36,300,72,14);ctx.fillStyle=INK;ctx.fill();para(-146,-32,292,64,12);ctx.fillStyle='#ffd91a';ctx.fill();
  txt('ボーナス',-82,-1,26,INK,null,0,'center');ctx.save();ctx.translate(62,0);ctx.scale(p,p);txt(t>0?String(s):'終了',0,0,t>0?44:34,hot?'#ff3b30':'#fff',INK,8,'center');ctx.restore();
- txt('秒',122,10,18,INK,null,0,'center');ctx.restore();
+ if(t>0)txt('秒',122,10,18,INK,null,0,'center');ctx.restore();
  txt('金の墨鬼 ×'+(G.gk|0),W/2,112,26,'#ffe27a',INK,7,'center')}
