@@ -344,7 +344,8 @@ put(CYL,0,24.8,-7.0,0,0,PI/2,0.55,27,0.55,C.woodD);put(CYL,0,12.6,-7.2,0,0,PI/2,
 {const N=12,pz=x=>-7.4-1.5*(1-(x/12.4)*(x/12.4));for(let i=0;i<N;i++){const x0=-12.4+i*24.8/N,x1=x0+24.8/N;along(x0,pz(x0),x1,pz(x1),len=>{box(0,18.7,0,len+0.06,11.6,0.22,i%2?C.sailS:C.sail,2);if(i)box(-len/2,18.7,0,0.06,11.6,0.3,C.ropeG);for(const y of[13.3,15.1,23.7])box(0,y,0,len+0.08,0.16,0.34,C.woodD)})}
  const ez=pz(0)+0.26;box(0,17.8,ez,5.0,4.2,0.1,C.red);put(PRISM,0,21.1,ez,0,0,0,5.0,2.4,0.1,C.red);box(0,18.1,ez+0.04,3.5,3.2,0.1,C.white);put(PRISM,0,20.6,ez+0.04,0,0,0,3.5,1.6,0.1,C.white);
  for(const[x,y]of[[-0.7,18.8],[0.7,18.8],[0,17.4],[0,19.9]])box(x,y,ez+0.08,0.5,0.5,0.1,C.inkD);
- for(const x of[-12.4,-6,6,12.4])rope(x,12.7,pz(x),x*0.4,0.1,-1.2,0.07)}
+ for(const x of[-12.4,-6,6,12.4]){const s=Math.sign(x);rope(x,12.7,pz(x),s*(1.2+0.2),Math.abs(x)>9?1.42:1.22,-3.9-0.2,0.07)}
+ for(const s of[-1,1])for(const y of[1.0,1.12,1.24,1.36,1.48])put(CYL,s*1.2,y,-3.9,0,y*2.1,0.06*(y>1.2?1:-1),0.58,0.1,0.58,C.rope)}
 //#rigging
 for(const s of[-1,1])for(const z of[-15,-11,-1,3]){rope(0,25.6,-6,s*17.6,1.19,z,0.1);sph(s*17.7,1.42,z,0.36,0.36,0.2,C.woodD);box(s*18.0,0.6,z,0.1,1.5,0.18,C.iron)}rope(0,25.6,-6,0,1.19,-31.6,0.12);rope(0,26,-6,0,11.2,30,0.1);
 //#flags

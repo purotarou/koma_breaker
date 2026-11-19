@@ -147,7 +147,7 @@ wpLunge(dt);if(inp.jump&&!cine){if(pl.y<=0.001){pl.vy=8.4*SK.jump;pl.aj=0;pl.jt=
  else if(SK.dj&&!pl.aj){pl.aj=1;pl.vy=11*SK.jump;snd('jump');fxRing(pl.x,pl.y,pl.z,1.8,C.white,0.2);fxStar(pl.x,pl.y+0.2,pl.z,1.2,C.white,0.1);addText('タタンッ',W*0.3+rnd(-60,60),H*0.74,{size:60,st:'cyan',life:0.4})}}inp.jump=false;
 if(pl.jt>=0){pl.jt+=dt;if(SK.sj&&!G.demoOn&&!jumpHeld()){if(pl.jt<0.14)pl.vy=Math.min(pl.vy,3.2*SK.jump);pl.jt=-1}else if(pl.jt>=0.14)pl.jt=-1}// short tap = small jump, normal press = full jump
 if(pl.y>0||pl.vy>0){pl.vy-=22*SK.grav*dt;pl.y+=pl.vy*dt;if(pl.y<=0){pl.y=0;pl.aj=0;if(pl.vy<-4){pl.land=1;fxSmoke(pl.x,0.2,pl.z,4,0.5,C.smoke,2.5);fxRing(pl.x,0.1,pl.z,2.6,C.white,0.2);snd('land');shake(0.12)}pl.vy=0}}
-pl.x+=pl.vx*dt;pl.z+=pl.vz*dt;collide(pl,0.5);if(boss){const mk=boss.monk,cx=mk?boss.x:0,cz=mk?boss.z:-21.5,R=mk?MK_R+0.5:7.5,dx=pl.x-cx,dz=pl.z-cz,d=Math.hypot(dx,dz)||1;if(d<R&&!(mk&&(boss.y>2||boss.st==='drop'))){pl.x=cx+dx/d*R;pl.z=cz+dz/d*R}}
+pl.x+=pl.vx*dt;pl.z+=pl.vz*dt;collide(pl,0.5);if(boss&&!(boss.bk==='shiro'&&!boss.mob)){const mk=boss.monk,sw=boss.bk==='shiro',cx=mk||sw?boss.x:0,cz=mk||sw?boss.z:-21.5,R=mk?MK_R+0.5:sw?1.3:7.5,dx=pl.x-cx,dz=pl.z-cz,d=Math.hypot(dx,dz)||1;if(d<R&&!((mk||sw)&&(boss.y>2||boss.st==='drop'))){pl.x=cx+dx/d*R;pl.z=cz+dz/d*R}}
 pl.moving=lerp(pl.moving,pl.y>0?0:Math.min(1,Math.hypot(pl.vx,pl.vz)/5),k);pl.bob+=dt*9*pl.moving;
 pl.dashCd-=dt;pl.inv-=dt;pl.cool-=dt*SK.aspd;pl.flashT-=dt;pl.kick*=Math.exp(-10*dt);pl.rec*=Math.exp(-14*dt);pl.tilt*=Math.exp(-6*dt);
 if(pl.reload>0){pl.reload-=dt;if(pl.reload<=0)pl.ammo=SK.mag}if(inp.reload&&!pl.sp)startReload();inp.reload=false;

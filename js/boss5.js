@@ -22,16 +22,16 @@ const SH_WEAK=2.5,SH_BODY=0.5,SH_BRK=2.6,
 // where they stand in 第2形態 (x = ±SN_SX at z SN_SZ, facing the middle), the white oni's scale (height 2.7), the 第2形態 break (they walk to the sides)
 BT.shiro={hp:9000,hpF:[1,1,0.8],cd:0.32,up:[0.75,0.6],hold:[0.7,0.55],slamDmg:34,up2:0.9,volN:[10,13],ballN:[9,12],ballDmg:17,sumN:[2,3],waveTel:0.9,waveN:[1,2],
  brTel:0.9,brN:[3,5],spinTel:1.1,spinW:0.62,spinGap:0.85,
- suTel:1.0,suDur:3.0,suV:3.8,suR:9,suDmg:[17,6],suZ:-14,          // 吸い込み (第1形態): telegraph, pull time, pull speed (m/s), hurt radius, damage near / far, centre z
+ suTel:1.0,suDur:3.6,suV:5.8,suR:9,suDmg:[17,6],suZ:-20,          // 吸い込み (第1形態): telegraph, pull time, pull speed (m/s), hurt radius, damage near / far, centre z
  koTel:[2.0,1.5],koDmg:36,koN:[4,5],                               // 白抜き (第3形態): warning (first / later waves), damage, waves [普通, 極]
  cuTel:0.55,cuN:[3,4],cuW:1.8,cuDmg:27,                            // 地を裂く斬撃 (第3形態): warning, cuts [普通, 極], half width, damage
  fz:[3,8],fx:8,                                                    // where a giant's fist can land (his own frame: metres in front, metres to the side). Real arm length: he crouches and leans to get there
  boom:[[5.5,7,0.28],[10,11,0.5],[14.5,15,0.72]],                   // explosions around a fist / palm after it lands: [radius, count, delay] (the third ring in 第2形態 and 極)
  rainN:[22,30],rainEx:8,dkR:[3,4],dkDmg:14,dkBl:2.5,                // 炎の雨 / 墨の雨 (pillars all over the yard) and 闇の波紋 (dark rings that blind)
  hp2:0.6,                                                          // 第2形態: each giant has its own HP = the form's HP x hp2
- aa:{up:0.9,cd:[2.6,1.8],tel:0.45,v:17,dmg:16,shN:[2,3],shV:42,shDmg:12,cd3:[1.6,1.1],sv3:34,dmg3:18},// 対空 (anti-air): a player in the air (y > up) gets a ring at jump height + fast shots (1st/2nd form) or an upward slash (3rd), cooldown [普通, 極]
+ aa:{up:0.9,y0:2.25,dy:0.6,cd:[2.6,1.8],tel:0.45,v:17,dmg:16,shN:[2,3],shV:42,shDmg:12,cd3:[1.6,1.1],sv3:34,dmg3:18},// 対空 (anti-air): a player in the air (y > up) gets a ring at jump height + fast shots (1st/2nd form) or an upward slash (3rd), cooldown [普通, 極]; y0 = the lowest of the three rings (a little above a standing player's head), dy = the gap
  m3:{spd:7.6,keep:[5,9],cd:[0.25,0.5],m1:0.3,m2:0.45,m3:0.32,m4:0.42,m5:0.26,sv:30,dmg:20,dashV:24,dashT:0.4,dashDmg:22,spinR:3.4,spinDmg:20,ring:14,m5N:6},
- pats:[['fist','firerain','palm','flines','volley','darkring','double','breath','inkrain','fist','spin','palm','suck','flines','fireball','wave','summon'],
+  pats:[['fist','firerain','palm','flines','volley','darkring','double','breath','inkrain','fist','spin','palm','suck','flines','fireball','wave','summon'],
   ['palm','fist','firerain','flines','inkrain','fireball','darkring','double','volley','breath','palm','fist','flines','firerain','darkring','summon'],
   ['m1','m2','m3','mcut','m1','koma','m4','m5','m1','summon'],
   ['fist','firerain','pillar','palm','flines','darkring','double','breath','inkrain','rows','spin','palm','suck','flines','fireball','wave','summon'],   // 極 (pillar / chase / rows: js/extreme.js)
@@ -81,7 +81,8 @@ hRot('thigh_R',HX,tR-air*0.5,H);hRot('shin_R',HX,kR,H);hRot('foot_R',HX,-(tR+kR)
 hRot('thigh_R',HZ,-a*0.25,H);hRot('thigh_L',HZ,a*0.25,H);
 const br=Math.sin(now*1.7+o.x)*0.025;hRot('hips',HY,(o.twist||0)*0.4+0.14*s*mv,H);hRot('spine',HX,(o.lean||0)*0.55+0.06*mv,H);hRot('chest',HX,(o.lean||0)*0.45+br,H);hRot('chest',HY,(o.twist||0)*0.6-0.1*s*mv,H);
 hRot('head',HX,-(o.mouth||0)*0.4-(o.lean||0)*0.5+(o.look||0),H);hRot('head',HY,o.lookY||0,H);
-heroGlobals(-a*0.3+0.03*mv*Math.abs(c),H);
+heroGlobals(0,H);// plant the feet: the lowest heel / toe (rest pose: on the ground) goes to y 0, so a crouching / walking giant never sinks into the floor
+if(air)heroGlobals(-a*0.3,H);else{let lo=9;for(const n of['foot_R','foot_L']){const i=H.bi[n],h=H.head[i],R=H.GR[i],t=H.GT[i];for(const dz of[-0.05,0.2]){const r=m3v(R,[0,-h[1],dz]);lo=Math.min(lo,t[1]+r[1])}}heroGlobals(-lo,H)}
 for(const sd of['R','L']){const q=o.arms&&o.arms[sd],sg=sd==='R'?-1:1,sh=H.GT[H.bi['upperarm_'+sd]];let t;
  let tw=null;if(q&&q.w){const f=snM(o,q.w),u=v3n([f[0]-sh[0],f[1]-sh[1],f[2]-sh[2]]);tw=[f[0]-u[0]*0.12,f[1]-u[1]*0.12,f[2]-u[2]*0.12]}
  if(q&&q.m){t=[sh[0]+q.m[0],sh[1]+q.m[1],sh[2]+q.m[2]];if(tw)t=[lerp(t[0],tw[0],q.f),lerp(t[1],tw[1],q.f),lerp(t[2],tw[2],q.f)]}// f: from the model pose to the world fist
@@ -187,7 +188,7 @@ if(st==='summon'){b.mouth=1;if(u>0.9)end();return true}
 if(st==='chase'){if(exBoss(b,dt,[b.hL,b.hR],true))end();return true}
 end();return true}
 // ---- hazards (every peer, own player) ----
-function shKomaLay(seed,n){const R=mulberry(seed),z0=-12.6,z1=BZ1-0.4,x0=-BX+0.4,x1=BX-0.4,waves=[],P=[];const hs=[];let tot=0;for(let i=0;i<3;i++){hs.push(0.8+R()*0.5);tot+=hs[i]}
+function shKomaLay(seed,n){const R=mulberry(seed),z0=BZ0+0.4,z1=BZ1-0.4,x0=-BX+0.4,x1=BX-0.4,waves=[],P=[];const hs=[];let tot=0;for(let i=0;i<3;i++){hs.push(0.8+R()*0.5);tot+=hs[i]}
 let z=z0;for(let i=0;i<3;i++){const h=(z1-z0)*hs[i]/tot,m=2+(R()*2|0),ws=[];let tw=0;for(let j=0;j<m;j++){ws.push(0.7+R()*0.7);tw+=ws[j]}let x=x0;
  // slanted gutters like a manga page: each vertical cut leans a little (k = x shift per metre of z)
  for(let j=0;j<m;j++){const w=(x1-x0)*ws[j]/tw;P.push({x0:x,x1:x+w,z0:z,z1:z+h,row:i,k0:0,k1:0});x+=w}z+=h}
@@ -203,10 +204,11 @@ const shPx=(p,z)=>{const m=(p.z0+p.z1)/2;return[p.x0+p.k0*(z-m),p.x1+p.k1*(z-m)]
 function shInPanel(p,x,z,pad){if(z<p.z0+pad||z>p.z1-pad)return false;const e=shPx(p,z);return x>e[0]+pad&&x<e[1]-pad}
 function shTick(dt,live){const K=BT.shiro;
 for(let i=shz.length-1;i>=0;i--){const h=shz[i],t0=h.t;h.t+=dt;
- if(h.k==='air'){const A=K.aa,r=h.t*A.v;if(r>60){shz.splice(i,1);continue}if(h.t<0||!live||h.hit)continue;// the ring at jump height: only players in the air
-  if(pl.y>0.7&&Math.abs(Math.hypot(pl.x-h.x,pl.z-h.z)-r)<1.4){h.hit=1;hurtPlayer(A.dmg,h.x,h.z);addText('撃チ落トサレタ！',W/2,H*0.62,{size:54,st:'hurt',life:0.5})}continue}
+ if(h.k==='air'){const A=K.aa,r=h.t*A.v;if(r>60){shz.splice(i,1);continue}if(h.t<0||!live||h.hit)continue;// three rings just above head height: only jumping players get hit
+  const r0=Math.max(0,t0)*A.v,dd=Math.hypot(pl.x-h.x,pl.z-h.z);// swept: the ring passed the player this frame, and the player's body (feet pl.y .. head pl.y+1.85) reaches the lowest ring
+  if(pl.y+1.85>A.y0-0.3&&dd>r0-1.2&&dd<r+1.2){h.hit=1;hurtPlayer(A.dmg,h.x,h.z);addText('撃チ落トサレタ！',W/2,H*0.62,{size:54,st:'hurt',life:0.5})}continue}
  if(h.k==='suck'){if(h.t>K.suDur){shz.splice(i,1);continue}if(h.t<0||!live)continue;
-  const dx=-pl.x,dz=K.suZ-pl.z,d=Math.hypot(dx,dz)||1,v=K.suV*(pl.dashT>0?0.2:pl.y>0.05?0.55:1)*Math.min(1,h.t*3);pl.x+=dx/d*v*dt;pl.z+=dz/d*v*dt;collide(pl,0.5);
+  const dx=-pl.x,dz=K.suZ-pl.z,d=Math.hypot(dx,dz)||1,v=K.suV*(1+0.35*sat(1-d/30))*(pl.dashT>0?0.35:pl.y>0.05?0.8:1)*Math.min(1,h.t*3);pl.x+=dx/d*v*dt;pl.z+=dz/d*v*dt;collide(pl,0.5);
   if(d<K.suR&&pl.y<0.6&&lim('shsu',0.45)){const hp=pl.hp;hurtPlayer(lerp(K.suDmg[0],K.suDmg[1],sat((d-6.5)/(K.suR-6.5))),pl.x+dx/d,pl.z+dz/d);if(pl.hp<hp)addText('吸ワレル…！',W/2,H*0.62,{size:60,st:'ink',life:0.45})}}
  else if(h.k==='koma'){const L=h.L,n=L.waves.length;if(h.w>=n){h.ct+=dt;if(h.t>0.7)shz.splice(i,1);continue}const tl=h.w?K.koTel[1]:K.koTel[0];
   if(h.t>=tl){const on=L.waves[h.w];FXE_shNuki(L.P,on);if(live&&pl.y<3)for(let j=0;j<L.P.length;j++)if(on[j]&&shInPanel(L.P[j],pl.x,pl.z,0.1)){hurtPlayer(K.koDmg,pl.x,pl.z+1);break}
@@ -314,8 +316,8 @@ else if(st==='m3'&&u<K.m3&&bl(30)){const L=K.dashV*K.dashT;lineT(b.yaw,L,1.6);pu
 else if(st==='m4'&&u<K.m4+0.16&&bl(26)){const s=3+Math.sin(now*20)*0.4;put(RING,b.x,0.12,b.z,0,0,0,s,1,s,C.red,0,0,NF);put(RING,b.x,0.12,b.z,0,0,0,s*3,1,s*3,C.red,0,0,NF)}}
 function shDraw(){if(!shz.length)return;const K=BT.shiro,NF=F_UNLIT|F_NOCAST;
 for(const h of shz){
- if(h.k==='air'){const A=K.aa,col=h.c===0?C.red:h.c===1?C.darkP:C.white;if(h.t<0){if(Math.sin(now*30)>-0.3){put(RING,h.x,2.4,h.z,0,0,0,4,1,4,col,0,0,NF);put(RING,h.x,0.12,h.z,0,0,0,6,1,6,C.red,0,0,NF)}continue}
-  const r=h.t*A.v;for(const y of[1.6,2.4,3.2])put(RING2,h.x,y,h.z,0,0,0,r*2,1,r*2,y===2.4?C.white:col,0,0,NF);continue}
+ if(h.k==='air'){const A=K.aa,col=h.c===0?C.red:h.c===1?C.darkP:C.white;if(h.t<0){if(Math.sin(now*30)>-0.3){put(RING,h.x,A.y0+A.dy,h.z,0,0,0,4,1,4,col,0,0,NF);put(RING,h.x,0.12,h.z,0,0,0,6,1,6,C.red,0,0,NF)}continue}
+  const r=h.t*A.v;for(let j=0;j<3;j++)put(RING2,h.x,A.y0+j*A.dy,h.z,0,0,0,r*2,1,r*2,j===1?C.white:col,0,0,NF);continue}
  if(h.k==='suck'){const z0=K.suZ;if(h.t<0){if(Math.sin(now*24)>-0.2){put(RING,0,0.13,z0,0,0,0,K.suR*2,1,K.suR*2,C.red,0,0,NF);put(RING,0,0.13,z0,0,0,0,K.suR*1.2,1,K.suR*1.2,C.red,0,0,NF)}continue}
   put(CYL,0,0.09,z0,0,0,0,K.suR*2,0.02,K.suR*2,C.inkD,0,0,NF|F_NOEDGE);put(RING,0,0.13,z0,0,0,0,K.suR*2,1,K.suR*2,C.red,0,0,NF);
   for(let i=0;i<26;i++){const a=(i/26-0.5)*2.9+Math.sin(i*7.3)*0.05,r=4+((-now*20+i*9.7)%30+30)%30,y=0.6+(i%4)*1.3+r*0.05;mPush();mT(Math.sin(a)*r,y,z0+Math.cos(a)*r);mRY(a);mS(0.14,0.14,2.6+r*0.06);emit(BOX,C.white,0,0,NF,0);mPop()}
