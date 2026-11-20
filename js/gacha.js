@@ -18,7 +18,8 @@ const GA_IMG={};
 function gaImg(id){let m=GA_IMG[id];if(!m){m=GA_IMG[id]=new Image();m.src='assets/gacha/cut_'+(GA_PIC[id]||id)+'.webp'}return m.complete&&m.naturalWidth>0?m:null}
 function gaPreload(){for(const id of GA_IDS)gaImg(id)}
 // ---- reward (called once per game from skReward) ----
-function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>5)return;if((GA.paid[i]|0)>=2){GA.f+=1;G.fuda=1;gaSave();return}// 3回目以降は毎回1枚
+function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>5)return;if(G.mode==='coop'){GA.f+=i+1;G.fuda=i+1;gaSave();return}// 協力プレイは回数制限なし：毎回ステージ番号ぶん
+if((GA.paid[i]|0)>=2){GA.f+=1;G.fuda=1;gaSave();return}// ひとりは3回目以降は毎回1枚
 GA.paid[i]=(GA.paid[i]|0)+1;GA.f+=i+1;G.fuda=i+1;gaSave()}
 // ---- draw logic ----
 const gaFull=id=>!!WS.own[id]&&wtTp(id)>=WT_MAX,gaPool=()=>{const P=GA_IDS.filter(id=>!gaFull(id));return P.length?P:GA_IDS.slice()};// 全部が最大なら全部が出る（重なるとスキルP）
