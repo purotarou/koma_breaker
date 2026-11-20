@@ -133,7 +133,8 @@ if(gc)ctx.restore();
 if(G.state==='title')drawTitle(dt);else if(G.state==='menu')drawMenu(dt);else if(G.state==='clear'||G.state==='over')drawResult();
 if(play&&G.intro<0.9){const u=easeOut(G.intro/0.9),hw=lerp(170,W/2+20,u),hh=lerp(96,H/2+20,u);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H/2-hh);ctx.fillRect(0,H/2+hh,W,H);ctx.fillRect(0,0,W/2-hw,H);ctx.fillRect(W/2+hw,0,W,H);ctx.strokeStyle=INK;ctx.lineWidth=8;ctx.strokeRect(W/2-hw,H/2-hh,hw*2,hh*2);
 ctx.globalAlpha=1-u;ctx.lineWidth=5;ctx.strokeRect(40,40,430,250);ctx.strokeRect(40,310,430,370);ctx.strokeRect(W-470,40,430,150);ctx.strokeRect(W-470,210,430,470);ctx.globalAlpha=1}
-if(play&&G.paused){ctx.fillStyle='rgba(22,18,31,.6)';ctx.fillRect(0,0,W,H);txt('ポーズ',W/2,210,90,'#fff',INK,14);if(net.on)txt('（オンライン中はゲームは止まりません）',W/2,280,22,'#fff',INK,6);B(390,310,500,86,'つづける',()=>{G.paused=false},{col:'#ffd91a',size:42});B(390,418,500,86,'設定',()=>openSet(),{col:'#59d8ff',size:40});B(390,526,500,86,net.on?'退出してメニューへ':'メニューへもどる',()=>startWipe(toMenu),{size:38})}
+if(play&&G.paused){ctx.fillStyle='rgba(22,18,31,.6)';ctx.fillRect(0,0,W,H);txt('ポーズ',W/2,210,90,'#fff',INK,14);if(net.on)txt(G.mode==='coop'?'（協力プレイ中は、みんなのゲームが止まります）':'（オンライン中はゲームは止まりません）',W/2,280,22,'#fff',INK,6);B(390,310,500,86,'つづける',()=>{G.paused=false},{col:'#ffd91a',size:42});B(390,418,500,86,'設定',()=>openSet(),{col:'#59d8ff',size:40});B(390,526,500,86,net.on?'退出してメニューへ':'メニューへもどる',()=>startWipe(toMenu),{size:38})}
+else if(play){const pb=pausedBy();if(pb){ctx.fillStyle='rgba(22,18,31,.6)';ctx.fillRect(0,0,W,H);txt('ポーズ中',W/2,250,90,'#fff',INK,14);txt('P'+(pb.slot+1)+' がポーズしています　再開をまっています…',W/2,340,28,'#fff',INK,6)}}
 if(setOpen)drawSettings();else drawMenuPop();if(wipe.on)drawWipe();ctx.strokeStyle='#fff';ctx.lineWidth=14;ctx.strokeRect(0,0,W,H);ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeRect(9.5,9.5,W-19,H-19)}
 // ================= MAIN (v2) =================
 let GDT=0;
@@ -179,7 +180,7 @@ else if(G.kcT>=0)killCam(dt);
 else{const s=trauma*trauma;cam.x=pl.x;cam.z=pl.z;cam.y=1.62+pl.y-pl.land*0.14+Math.abs(Math.sin(pl.bob))*0.05*pl.moving-(pl.dead?Math.min(1.1,pl.deadT*1.2):0);cam.yaw=pl.yaw+rnd(-1,1)*s*0.04;cam.pitch=pl.pitch+pl.kick+rnd(-1,1)*s*0.04;cam.roll=pl.tilt+rnd(-1,1)*s*0.05+(pl.dead?Math.min(0.5,pl.deadT*0.5):0);
 cam.fov=lerp(cam.fov,((tpsOn()?72:80)+(pl.dashT>0?14:0)+(pl.sp===2&&spLock()?10:0)-(pl.sp===1?8:0))*PI/180,Math.min(1,dt*10));if(tpsOn())tpsCam(dt);monkCam()}seaCam();camUpdate()}
 function update(dt){RDT=dt;now+=dt;G.t+=dt;let g=dt;if(net.on){hitStop=0;slowT=0}if(hitStop>0){hitStop-=dt;g=0}else if(slowT>0){slowT-=dt;g=dt*slowK}
-const paused=G.paused&&!net.on&&G.state==='play';if(paused)g=0;GDT=g;
+const paused=G.state==='play'&&((G.paused&&(!net.on||G.mode==='coop'))||!!pausedBy());if(paused)g=0;GDT=g;
 if(wipe.on){wipe.t+=dt/0.6;if(wipe.t>=0.5&&!wipe.done){wipe.done=true;wipe.cb()}if(wipe.t>=1)wipe.on=false}
 const gd=gaDemoRun(),demo=(G.state==='title'&&G.demoOn)||gd,sv0=sndVol;
 if((G.state==='menu'&&!gd)||(G.state==='title'&&!G.demoOn)){if(G.state==='title'){G.idle+=dt;if(G.idle>5)startWipe(demoStart)}gaUpdate(g);updateParts(g)}

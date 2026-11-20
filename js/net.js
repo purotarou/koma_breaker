@@ -33,12 +33,14 @@ function netJoin(code){const bi=+code[0]-1;if(!(bi>=0&&bi<BROKERS.length)||code.
 netOpen([bi],()=>'komabreaker/v2/r'+code,()=>{net.st='部屋を探しています…';net.hostSeen=now},()=>netLeave(failMsg()))}
 function netLeave(err){if(net.ready)netSend({t:'x',h:net.host?1:0});const was=net.on;net.on=false;netClose();others.length=0;net.err=err||'';if(G.state!=='menu'&&G.state!=='title'&&was){resetWorld();G.state='menu'}if(G.state==='menu')G.menu='online';G.mode='solo';G.np=1;G.paused=false}
 const lobbyMsg=()=>({t:'l',r:net.roster.map(r=>[r.id,r.slot]),m:net.mode,s:net.stage,x:net.ex?1:0,go:net.started});
+// coop: while anyone is paused the whole game stands still on every device (the pause flag rides on the 'p' message; stale ones are ignored)
+function pausedBy(){if(!net.on||G.mode!=='coop'||G.state!=='play')return null;for(const o of others)if(o.pz&&now-o.last<3)return o;return null}
 function dropPeer(id){const i=net.roster.findIndex(r=>r.id===id);if(i>=0)net.roster.splice(i,1);syncOthers()}
 function syncOthers(){for(let i=others.length-1;i>=0;i--)if(!net.roster.find(r=>r.id===others[i].id))others.splice(i,1);
 for(const r of net.roster){if(r.id===net.id){net.slot=r.slot;pl.slot=r.slot;continue}let o=others.find(q=>q.id===r.id);if(!o){const sp=SPAWN[r.slot];o={id:r.id,slot:r.slot,x:sp[0],z:sp[1],y:0,yaw:0,pitch:0,nx:sp[0],nz:sp[1],ny:0,nyaw:0,np:0,vx:0,vz:0,hp:100,dead:false,flash:0,fireT:0,wt:0,mv:0,gx:sp[0],gy:1.3,gz:sp[1],last:now,sp:0,pow:0,wp:0,ak:0,at:9,hc:0,rb:0};others.push(o)}o.slot=r.slot}}
 function setRoster(r){net.roster=r.map(a=>({id:a[0],slot:a[1]}));syncOthers()}
 function pvTally(k,v){if(k>=0&&k<4&&k!==v)G.pk[k]++;G.pd[v]++}
-function onPState(m){const o=others.find(q=>q.id===m.i);if(!o)return;const s=m.s;o.vx=(s[0]-o.nx)/0.08;o.vz=(s[1]-o.nz)/0.08;o.nx=s[0];o.nz=s[1];o.ny=s[2];o.nyaw=s[3];o.np=s[4];o.hp=s[5];const wasDead=o.dead;o.dead=!!(s[6]&1);o.sp=s[6]&2;o.pow=s[6]&4;o.rb=s[6]&24;o.gf=(s[6]>>5)&3;o.bar=!!(s[6]&128);o.wp=s[7]|0;o.hc=s[10]||0;if(s[8]!=null)wpOtherAct(o,s[8],s[9]|0);o.last=now;
+function onPState(m){const o=others.find(q=>q.id===m.i);if(!o)return;o.pz=!!m.z;const s=m.s;o.vx=(s[0]-o.nx)/0.08;o.vz=(s[1]-o.nz)/0.08;o.nx=s[0];o.nz=s[1];o.ny=s[2];o.nyaw=s[3];o.np=s[4];o.hp=s[5];const wasDead=o.dead;o.dead=!!(s[6]&1);o.sp=s[6]&2;o.pow=s[6]&4;o.rb=s[6]&24;o.gf=(s[6]>>5)&3;o.bar=!!(s[6]&128);o.wp=s[7]|0;o.hc=s[10]||0;if(s[8]!=null)wpOtherAct(o,s[8],s[9]|0);o.last=now;
 if(wasDead&&!o.dead){o.x=o.nx;o.z=o.nz;fxStar(o.x,1,o.z,3,C.white,0.12)}if(!wasDead&&o.dead){fxBlobs(o.x,1,o.z,12,6,PCOL[o.slot],0.16);fxStar(o.x,1,o.z,3,C.white,0.12);if(G.mode==='pvp'&&lim('pd',0.3))sfxAt('ドシャッ',o.x,2.6,o.z,{size:56,st:'ink',life:0.5})}
 if(m.f)for(const f of m.f){fxTracer(o.gx,o.gy,o.gz,f[0],f[1],f[2],o.pow?C.orange:C.white,0.06);fxStar(f[0],f[1],f[2],0.6,C.white,0.07);o.fireT=0.06;if(lim('rs'+o.slot,0.1)){const v=sndVol;sndVol=v*clamp(1.2-Math.hypot(o.x-pl.x,o.z-pl.z)/30,0.15,0.7);snd('shot');sndVol=v}}
 if(m.w)for(const a of m.w)wfxPlay(o,a);
@@ -87,6 +89,7 @@ function netTick(dt){if(!net.on||!net.ready)return;const q=net.q;
 if(G.state==='menu'){if(net.host){net.lobT-=dt;if(net.lobT<=0){net.lobT=0.5;for(const r of net.roster.slice())if(r.id!==net.id&&now-(net.seen[r.id]||0)>7)dropPeer(r.id);netSend(lobbyMsg())}}
  else{net.joinT-=dt;if(net.joinT<=0){net.joinT=1;netSend({t:'j'})}if(now-net.hostSeen>9)netLeave(net.roster.length?'ホストとの接続が切れました':'部屋が見つかりませんでした')}return}
 net.sendT-=dt;if(net.sendT<=0){net.sendT=0.08;const m={t:'p',s:[r2(pl.x),r2(pl.z),r2(pl.y),r2(pl.yaw),r2(pl.pitch),Math.ceil(pl.hp),(pl.dead?1:0)|(pl.sp===2&&!pl.wp?2:0)|(pl.pow>0?4:0)|(pl.rOn?8:0)|(pl.rOn===2?16:0)|w2Flags(),pl.wp|0,pl.an|0,pl.ak|0,pl.hon?r1(pl.hc):0]};// 7- weapon, action counter + kind, hammer charge (weapons.js)
+ if(G.paused&&G.mode==='coop')m.z=1;// paused: everyone's game stops (coop only)
  if(q.f.length){m.f=q.f.slice(-10);q.f=[]}if(q.wx&&q.wx.length){m.w=q.wx.slice(-10);q.wx=[]}if(q.ef&&q.ef.length){m.ef=q.ef.slice(-24);q.ef=[]}if(q.pk.length){m.pk=q.pk;q.pk=[]}if(q.kb.length){m.kb=q.kb;q.kb=[]}if(q.ps.length){m.ps=q.ps;q.ps=[]}
  let a=[];for(const k in net.dacc)a.push([+k,Math.round(net.dacc[k])]);if(a.length){m.d=a;net.dacc={}}a=[];for(const k in net.pvAcc)a.push([+k,Math.round(net.pvAcc[k])]);if(a.length){m.pv=a;net.pvAcc={}}netSend(m)}
 if(net.host){for(const r of net.roster.slice())if(r.id!==net.id&&now-(net.seen[r.id]||0)>7)dropPeer(r.id);net.snapT-=dt;if(net.snapT<=0){net.snapT=0.1;netSend(snapMsg())}}
