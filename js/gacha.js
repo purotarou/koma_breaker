@@ -18,7 +18,7 @@ const GA_IMG={};
 function gaImg(id){let m=GA_IMG[id];if(!m){m=GA_IMG[id]=new Image();m.src='assets/gacha/cut_'+(GA_PIC[id]||id)+'.webp'}return m.complete&&m.naturalWidth>0?m:null}
 function gaPreload(){for(const id of GA_IDS)gaImg(id)}
 // ---- reward (called once per game from skReward) ----
-function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>5)return;if((GA.paid[i]|0)>=2){G.fuda=0;return}
+function gaReward(cl){G.fuda=null;if(!cl)return;const i=G.stage;if(i<0||i>5)return;if((GA.paid[i]|0)>=2){GA.f+=1;G.fuda=1;gaSave();return}// 3回目以降は毎回1枚
 GA.paid[i]=(GA.paid[i]|0)+1;GA.f+=i+1;G.fuda=i+1;gaSave()}
 // ---- draw logic ----
 const gaFull=id=>!!WS.own[id]&&wtTp(id)>=WT_MAX,gaPool=()=>{const P=GA_IDS.filter(id=>!gaFull(id));return P.length?P:GA_IDS.slice()};// 全部が最大なら全部が出る（重なるとスキルP）
@@ -77,7 +77,7 @@ drawLogo(250,70,0.34);head('武器ガチャ');gearBtn(W-86,24);
 gaGiftBtn(790,28,58,58);
 // wallet + where the 札 come from
 const wx=W-420,wy=28;para(wx+5,wy+6,300,58,14);ctx.fillStyle=INK;ctx.fill();para(wx,wy,300,58,14);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.stroke();gaFuda(wx+44,wy+29,1,-0.15);txt('コマ札',wx+74,wy+30,22,INK,null,0,'left');txt(String(GA.f),wx+272,wy+30,42,'#e5402b',INK,4,'right');
-txt('ステージクリアでもらえる',wx+150,wy+82,15,'#fff',INK,5);for(let i=0;i<6;i++){const cx=wx+2+i*50,cy=wy+110,left=2-(GA.paid[i]|0);para(cx,cy-14,47,28,6);ctx.fillStyle=left>0?'#fff':'#9a9db4';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.stroke();txt((i+1)+'面',cx+16,cy+1,12,INK);txt('＋'+(i+1),cx+37,cy+1,12,left>0?'#e5402b':'#555a70')}
+txt('ステージクリアでもらえる',wx+150,wy+82,15,'#fff',INK,5);for(let i=0;i<6;i++){const cx=wx+2+i*50,cy=wy+110,left=2-(GA.paid[i]|0);para(cx,cy-14,47,28,6);ctx.fillStyle=left>0?'#fff':'#9a9db4';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.stroke();txt((i+1)+'面',cx+16,cy+1,12,INK);txt('＋'+(left>0?i+1:1),cx+37,cy+1,12,left>0?'#e5402b':'#555a70')}
 txt('各ステージ2回まで（のこり：白）',wx+150,wy+140,13,'#fff',INK,4);
 // highlight caption (right side)
 gaBackUI(w);
