@@ -8,6 +8,23 @@ const SS={x:0,v:0,id:null,px:0,mv:0,lp:null,CW:300,CH:408,GAP:24,Y:196,X0:44};
 const ssP=()=>SS.CW+SS.GAP,ssTot=()=>STG.length*ssP()-SS.GAP+SS.X0*2,ssMax=()=>Math.max(0,ssTot()-W);
 // stages open in order: one is playable once the one before it has been cleared (the developer 超強化 switch opens all)
 const stOpen=n=>n===0||!!DEV||!!SKS.clr[n-1]||!!SKS.clr[n];// (cleared already = open: 墨の池 moved to 6 behind the new stage 5)
+// ---- lobby stage row (協力プレイ ロビー): too many stages for the panel, so the row scrolls sideways (drag / swipe with inertia, wheel, ◀▶) ----
+const LB={x:0,v:0,id:null,px:0,mv:0,lp:null,init:false,RX:652,RY:380,RW:546,RH:92,BW:128,BG:10,Y:388,H:70};
+const lbP=()=>LB.BW+LB.BG,lbTot=()=>STG.length*lbP()-LB.BG,lbMax=()=>Math.max(0,lbTot()-(LB.RW-8));
+function lbOn(){return G.state==='menu'&&G.menu==='lobby'&&net.host&&!net.st&&!setOpen&&!wipe.on}
+function lbPick(n){if(!stOpen(n)){snd('clank');return}net.stage=n;net.lobT=0;setStage(n)}
+function lbTouch(ph,p,id){if(!lbOn()){LB.id=null;return false}
+if(ph==='d'){if(p.x<LB.RX||p.x>LB.RX+LB.RW||p.y<LB.RY||p.y>LB.RY+LB.RH)return false;LB.id=id;LB.px=p.x;LB.mv=0;LB.v=0;LB.lp=p;return true}
+if(LB.id!==id)return false;
+if(ph==='m'){const dx=p.x-LB.px;LB.px=p.x;LB.mv+=Math.abs(dx);LB.x=clamp(LB.x-dx,-40,lbMax()+40);LB.v=lerp(LB.v,-dx*60,0.5);LB.lp=p;return true}
+LB.id=null;if(LB.mv<14&&LB.lp){LB.v=0;const q=LB.lp.x-(LB.RX+4)+LB.x,n=Math.floor(q/lbP());if(n>=0&&n<STG.length&&q-n*lbP()<LB.BW&&LB.lp.y>=LB.Y&&LB.lp.y<=LB.Y+LB.H)lbPick(n)}return true}
+function lbWheel(e){if(!lbOn())return false;const r=uic.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width,py=(e.clientY-r.top)*H/r.height;if(px<LB.RX||px>LB.RX+LB.RW||py<LB.RY||py>LB.RY+LB.RH)return false;LB.v+=(Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY)*6;return true}
+function lbDraw(){const m=lbMax(),dt=1/60;if(!LB.init){LB.init=true;LB.x=clamp((net.stage||0)*lbP()-(LB.RW-LB.BW)/2,0,m)}
+if(LB.id===null){LB.x+=LB.v*dt;LB.v*=Math.exp(-5*dt);const c=clamp(LB.x,0,m);if(c!==LB.x){LB.x=lerp(LB.x,c,Math.min(1,dt*12));LB.v=0}}
+ctx.save();ctx.beginPath();ctx.rect(LB.RX,LB.RY,LB.RW,LB.RH);ctx.clip();
+for(let n=0;n<STG.length;n++){const x=LB.RX+4+n*lbP()-LB.x;if(x>LB.RX+LB.RW||x+LB.BW+8<LB.RX)continue;B(x,LB.Y,LB.BW,LB.H,STG[n].name,null,{sk:10,col:net.stage===n?'#ffd91a':stOpen(n)?'#fff':'#8a8a99',size:STG[n].name.length>4?19:22})}
+if(m>0&&Math.sin(now*6)>-0.3){if(LB.x<m-8)txt('▶',LB.RX+LB.RW-18,LB.Y+LB.H/2,34,'#ffd91a',INK,8);if(LB.x>8)txt('◀',LB.RX+18,LB.Y+LB.H/2,34,'#ffd91a',INK,8)}
+ctx.restore()}
 function ssOn(){return G.state==='menu'&&G.menu==='stage'&&!setOpen&&!wipe.on}
 function ssTouch(ph,p,id){if(!ssOn()){SS.id=null;return false}
 if(ph==='d'){if(p.y<SS.Y-8||p.y>SS.Y+SS.CH+12)return false;SS.id=id;SS.px=p.x;SS.mv=0;SS.v=0;SS.lp=p;return true}
