@@ -88,4 +88,5 @@
 ## 作業ルール
 - 開発ブランチ: `main`。**今後の作業はすべて `main` で行う**（作業ツリー(worktree)・`claude/*` などの作業用ブランチは作らない）。
 - 変更後は動作確認し、問題なければ commit して push する。
+- **push の前に `python3 tools/bump_version.py` を実行する**（index.html の js/css の `?v=` を今の日時に更新し、GitHub Pages / iPad Safari が古い js を使い続けるのを防ぐ。変更を commit に含めること）。
 - 確認できていないことは、できたと言わずに報告する。
